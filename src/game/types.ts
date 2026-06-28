@@ -4,6 +4,8 @@ export type Vector = {
 };
 
 export type FishKind = "basic" | "support" | "future";
+export type FishTypeId = "tilapia" | "salmon" | "parrotfish" | "mahi-mahi" | "grouper" | "support";
+export type FishClass = "normal" | "common" | "fast" | "tank" | "support";
 export type SharkKind = "basic" | "fast" | "center" | "barracuda" | "eel";
 export type LevelType = "fight" | "shop" | "investment" | "special" | "reward" | "recruit";
 export type GameScreen = "home" | "saves" | "combat" | "choice" | "pause" | "gameover";
@@ -24,6 +26,8 @@ export type LevelConfig = {
 export type Fish = {
   id: string;
   kind: FishKind;
+  typeId: FishTypeId;
+  className: FishClass;
   pos: Vector;
   vel: Vector;
   radius: number;
@@ -57,6 +61,7 @@ export type RunState = {
   level: number;
   fishCount: number;
   supportCount: number;
+  fishCounts: Partial<Record<FishTypeId, number>>;
   currency: number;
   invested: number;
   schoolEnergy: number;

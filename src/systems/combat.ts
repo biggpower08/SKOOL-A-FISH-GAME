@@ -1,4 +1,5 @@
 import type { Fish, LevelConfig, Shark, Vector } from "../game/types";
+import { ROUND_ONE_TARGET_CATCH_RATE } from "./levels";
 import { distance } from "./vector";
 
 export type SharkAttackResult = {
@@ -31,7 +32,15 @@ export const schoolCenter = (fish: Fish[]): Vector => {
 
 const attackCatchRatio = (config: LevelConfig): number => {
   const hardMode = Math.max(0, config.level - 70);
-  return Math.min(0.42, 0.18 + (config.level - 1) * 0.0018 + hardMode * 0.003);
+  return Math.min(0.42, ROUND_ONE_TARGET_CATCH_RATE + (config.level - 1) * 0.0018 + hardMode * 0.003);
+};
+
+const damageForFish = (fish: Fish, config: LevelConfig): number => {
+  if (fish.kind === "support") {
+    return 34 + config.level * 0.7;
+  }
+
+  return 1 + config.level * 0.08;
 };
 
 export const applySharkAttack = (
@@ -58,13 +67,14 @@ export const applySharkAttack = (
   let damagedSupport = 0;
 
   for (const item of chosen) {
-    if (item.candidate.kind === "support") {
-      item.candidate.health -= 34 + config.level * 0.7;
-      damagedSupport += 1;
+    item.candidate.health -= damageForFish(item.candidate, config);
 
-      if (item.candidate.health > 0) {
-        continue;
-      }
+    if (item.candidate.kind === "support") {
+      damagedSupport += 1;
+    }
+
+    if (item.candidate.health > 0) {
+      continue;
     }
 
     if (!item.candidate.caught) {

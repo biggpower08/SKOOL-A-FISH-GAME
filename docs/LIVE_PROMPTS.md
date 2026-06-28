@@ -10,7 +10,7 @@ prompt files.
 - Sharks are enemies.
 - Use Ponytail discipline.
 - Start with circles, not sprites.
-- Black background first.
+- Black/dark aquatic background first.
 - Flocking first.
 - Minimal text.
 - Many levels should just be fish vs sharks.
@@ -55,6 +55,13 @@ Currency is earned through:
 - possible shark starvation bonuses
 
 Currency should not directly buy normal fish.
+
+Round rewards should start as meaningful Shells, not single digits. Early fight
+rewards should land around 100-200 Shells, with a simple upward curve such as
+`150 + level * 10`. Reward nodes can add a small bonus.
+
+Healing, investment, and recruitment should appear on intervals or level-path
+nodes. Most levels should remain ordinary fish-vs-shark fights.
 
 Development currency editing can exist for testing. Simple controls like `[` to
 decrease Shells and `]` to increase Shells are enough. Do not build a debug
@@ -157,6 +164,63 @@ First implementation should start with an artifact section placeholder icon,
 a simple data shape if needed, and 3 to 6 example artifacts only when gameplay
 requires them.
 
+The active combat screen should include a small artifact icon/button on the
+screen edge. It can open a placeholder overlay with minimal text such as
+`Artifacts`, `No artifacts yet`, and `Future collection`. The overlay should not
+be a full inventory yet and should not create the 120-artifact system now.
+
+## Round One Balance
+
+Round one should be dangerous and predictable before upgrades matter.
+
+- Default campaign start is 20 normal fish plus one support fish.
+- Sharks are visibly faster than individual basic/common fish.
+- Round-one shark attacks target roughly 18% of available fish.
+- With 20 starting normal fish, the first round should reliably remove around
+  four fish when the shark gets an attack.
+- Preserve the shark starvation win condition.
+- Later outcomes can swing based on fish types, upgrades, artifacts, shark
+  types, and level scaling.
+
+Use named balance constants for default fish count, round-one target catch rate,
+round-one catch count, shark speed, shark acceleration, attack cooldown, attack
+radius, and reward values when practical.
+
+## Fish Types and Side UI
+
+Fish types are active gameplay data while still using placeholder circles.
+
+Current fish types:
+
+- Tilapia: common/normal, low health, stable schooling, number fish.
+- Salmon: normal, medium health, medium speed, reliable generalist.
+- Parrotfish: fast, higher speed, better evasion, lower durability.
+- Mahi-mahi: fast, very high speed, low-medium health, high evasion.
+- Grouper: tank, high health, slow speed, survives pressure.
+- Support Fish: support/healing identity, medium durability, supports school
+  energy and needs visible health.
+
+The side UI should stay compact:
+
+- level number
+- fish remaining/count
+- Shells
+- compact fish type rows with type marker, label/count, class implied by label,
+  and health pips or group health
+- compact shark type/hunger rows
+- artifact edge icon
+- pause/home access through existing controls
+
+Avoid long active-combat descriptions, verbose path text, energy explanations,
+and crowded side text.
+
+## Background and Water Direction
+
+The background should remain dark but not flat black forever. Use subtle
+Canvas-only animated dark blue, purple, black, and gray shading. Avoid obvious
+entity-centered pulsating circles during combat. If ripples remain, keep them
+very subtle and non-distracting.
+
 ## Home / Exit / Leave Run Flow
 
 The game needs a clear way to leave the current screen or return home.
@@ -194,9 +258,12 @@ End Run, or Save and Return Home instead.
 - Shark speed is higher than basic fish speed by default.
 - Starting shark attacks target roughly 18% of fish in the attack window.
 - A level path preview shows current and upcoming level icons.
+- Fish type HUD shows compact counts and health pips by fish type.
 - Enemy HUD summarizes active shark types and hunger.
 - Shells are visible in the HUD.
-- Ambient Canvas ripples are always active around fish and sharks.
+- Combat background uses subtle animated dark water shading instead of obvious
+  entity-centered ripple circles.
+- Artifact edge icon opens a minimal placeholder overlay.
 
 ## Planned Fish Type Order
 

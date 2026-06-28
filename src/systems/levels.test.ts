@@ -44,4 +44,21 @@ describe("createLevelConfig", () => {
     expect(createLevelConfig(21).type).toBe("recruit");
     expect(createLevelConfig(35).type).toBe("recruit");
   });
+
+  it("pays meaningful shells and scales rewards upward", () => {
+    const levelOne = createLevelConfig(1);
+    const levelTen = createLevelConfig(10);
+
+    expect(levelOne.rewardCurrency).toBeGreaterThanOrEqual(100);
+    expect(levelOne.rewardCurrency).toBeLessThanOrEqual(200);
+    expect(levelTen.rewardCurrency).toBeGreaterThan(levelOne.rewardCurrency);
+  });
+
+  it("keeps healing and investment to interval nodes", () => {
+    const levels = Array.from({ length: 30 }, (_, index) => createLevelConfig(index + 1));
+    const choiceLevels = levels.filter((level) => ["shop", "investment", "special", "reward", "recruit"].includes(level.type));
+
+    expect(choiceLevels.length).toBeLessThan(12);
+    expect(levels.filter((level) => level.type === "investment")).toHaveLength(2);
+  });
 });

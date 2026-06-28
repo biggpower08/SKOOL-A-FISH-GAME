@@ -1,10 +1,14 @@
 import type { ChoiceId, LevelConfig, RunState } from "../game/types";
+import { defaultFishCounts } from "./fishTypes";
 import { clamp } from "./vector";
+
+export const STARTING_FISH_COUNT = 20;
 
 export const createNewRun = (): RunState => ({
   level: 1,
-  fishCount: 32,
+  fishCount: STARTING_FISH_COUNT,
   supportCount: 1,
+  fishCounts: defaultFishCounts(),
   currency: 0,
   invested: 0,
   schoolEnergy: 100,
@@ -27,6 +31,10 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
     return {
       ...run,
       fishCount: run.fishCount + 5,
+      fishCounts: {
+        ...run.fishCounts,
+        tilapia: (run.fishCounts.tilapia ?? 0) + 5,
+      },
     };
   }
 
@@ -34,6 +42,10 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
     return {
       ...run,
       fishCount: run.fishCount + 3,
+      fishCounts: {
+        ...run.fishCounts,
+        salmon: (run.fishCounts.salmon ?? 0) + 3,
+      },
     };
   }
 
@@ -41,6 +53,10 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
     return {
       ...run,
       fishCount: run.fishCount + 1,
+      fishCounts: {
+        ...run.fishCounts,
+        grouper: (run.fishCounts.grouper ?? 0) + 1,
+      },
     };
   }
 

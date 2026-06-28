@@ -1,4 +1,5 @@
-import type { Bounds, Fish } from "../game/types";
+import type { Bounds, Fish, FishTypeId } from "../game/types";
+import { fishTypes } from "../systems/fishTypes";
 
 let fishId = 0;
 
@@ -7,51 +8,58 @@ const nextFishId = (): string => {
   return `fish-${fishId}`;
 };
 
-export const createSchool = (basicCount: number, supportCount: number, bounds: Bounds): Fish[] => {
+const addFish = (school: Fish[], typeId: FishTypeId, index: number, centerX: number, centerY: number): void => {
+  const definition = fishTypes[typeId];
+  const angle = index * 2.399;
+  const ring = definition.placeholderKind === "support" ? 26 : 12 + (index % 9) * 4.5;
+
+  school.push({
+    id: nextFishId(),
+    kind: definition.placeholderKind,
+    typeId,
+    className: definition.className,
+    pos: {
+      x: centerX + Math.cos(angle) * ring,
+      y: centerY + Math.sin(angle) * ring,
+    },
+    vel: {
+      x: Math.cos(angle + 0.7) * 0.5,
+      y: Math.sin(angle + 0.7) * 0.5,
+    },
+    radius: definition.radius,
+    maxSpeed: definition.maxSpeed,
+    health: definition.maxHealth,
+    maxHealth: definition.maxHealth,
+    threatened: false,
+    caught: false,
+  });
+};
+
+export const createSchool = (
+  basicCount: number,
+  supportCount: number,
+  bounds: Bounds,
+  fishCounts?: Partial<Record<FishTypeId, number>>,
+): Fish[] => {
   const centerX = bounds.width * 0.42;
   const centerY = bounds.height * 0.5;
   const school: Fish[] = [];
+  const counts = { ...(fishCounts ?? { tilapia: basicCount }) };
 
-  for (let index = 0; index < supportCount; index += 1) {
-    school.push({
-      id: nextFishId(),
-      kind: "support",
-      pos: {
-        x: centerX + Math.cos(index) * 26,
-        y: centerY + Math.sin(index) * 26,
-      },
-      vel: { x: 0.35, y: 0 },
-      radius: 7,
-      maxSpeed: 1.55,
-      health: 100,
-      maxHealth: 100,
-      threatened: false,
-      caught: false,
-    });
+  if (!counts.tilapia && basicCount > 0) {
+    counts.tilapia = basicCount;
   }
 
-  for (let index = 0; index < basicCount; index += 1) {
-    const angle = index * 2.399;
-    const ring = 12 + (index % 9) * 4.5;
+  counts.support = supportCount;
 
-    school.push({
-      id: nextFishId(),
-      kind: "basic",
-      pos: {
-        x: centerX + Math.cos(angle) * ring,
-        y: centerY + Math.sin(angle) * ring,
-      },
-      vel: {
-        x: Math.cos(angle + 0.7) * 0.5,
-        y: Math.sin(angle + 0.7) * 0.5,
-      },
-      radius: 4,
-      maxSpeed: 1.85,
-      health: 1,
-      maxHealth: 1,
-      threatened: false,
-      caught: false,
-    });
+  let index = 0;
+  for (const typeId of ["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper", "support"] as FishTypeId[]) {
+    const count = counts[typeId] ?? 0;
+
+    for (let typeIndex = 0; typeIndex < count; typeIndex += 1) {
+      addFish(school, typeId, index, centerX, centerY);
+      index += 1;
+    }
   }
 
   return school;

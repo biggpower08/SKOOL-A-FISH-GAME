@@ -12,6 +12,30 @@ describe("entities", () => {
     expect(school.every((fish) => fish.radius > 0 && !fish.caught)).toBe(true);
   });
 
+  it("creates named fish types with distinct placeholder stats", () => {
+    const school = createSchool(
+      0,
+      1,
+      { width: 600, height: 400 },
+      {
+        salmon: 2,
+        tilapia: 3,
+        grouper: 1,
+        parrotfish: 1,
+        "mahi-mahi": 1,
+      },
+    );
+
+    expect(school.filter((fish) => fish.typeId === "salmon")).toHaveLength(2);
+    expect(school.filter((fish) => fish.typeId === "support")).toHaveLength(1);
+    expect(school.find((fish) => fish.typeId === "grouper")?.maxHealth).toBeGreaterThan(
+      school.find((fish) => fish.typeId === "tilapia")?.maxHealth ?? 0,
+    );
+    expect(school.find((fish) => fish.typeId === "mahi-mahi")?.maxSpeed).toBeGreaterThan(
+      school.find((fish) => fish.typeId === "salmon")?.maxSpeed ?? 0,
+    );
+  });
+
   it("creates sharks from level config and moves them toward the school", () => {
     const config = createLevelConfig(12);
     const sharks = createSharks(config, { width: 600, height: 400 });

@@ -8,6 +8,8 @@ describe("updateFlocking", () => {
       {
         id: "fish-1",
         kind: "basic",
+        typeId: "tilapia",
+        className: "common",
         pos: { x: 100, y: 100 },
         vel: { x: 0, y: 0 },
         radius: 4,
@@ -20,6 +22,8 @@ describe("updateFlocking", () => {
       {
         id: "fish-2",
         kind: "basic",
+        typeId: "tilapia",
+        className: "common",
         pos: { x: 112, y: 101 },
         vel: { x: 0, y: 0 },
         radius: 4,

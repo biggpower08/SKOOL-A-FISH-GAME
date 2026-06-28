@@ -6,8 +6,11 @@ describe("upgrades", () => {
   it("starts with managed fish and one support fish", () => {
     expect(createNewRun()).toMatchObject({
       level: 1,
-      fishCount: 32,
+      fishCount: 20,
       supportCount: 1,
+      fishCounts: {
+        tilapia: 20,
+      },
       schoolEnergy: 100,
     });
   });
@@ -15,14 +18,15 @@ describe("upgrades", () => {
   it("adds fish without adding a faction system", () => {
     const run = applyChoice({ ...createNewRun(), level: 8 }, "tilapia");
 
-    expect(run.fishCount).toBeGreaterThan(32);
+    expect(run.fishCount).toBeGreaterThan(20);
+    expect(run.fishCounts.tilapia).toBe(25);
     expect(run.supportCount).toBe(1);
   });
 
   it("recruits support fish through recruitment choices", () => {
     const run = applyChoice({ ...createNewRun(), level: 8 }, "support");
 
-    expect(run.fishCount).toBe(32);
+    expect(run.fishCount).toBe(20);
     expect(run.supportCount).toBe(2);
   });
 

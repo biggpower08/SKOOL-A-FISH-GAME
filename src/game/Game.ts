@@ -16,6 +16,8 @@ export class Game {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly overlay: HTMLDivElement;
+  private readonly artifactButton: HTMLButtonElement;
+  private readonly artifactPanel: HTMLDivElement;
   private screen: GameScreen = "home";
   private run: RunState | null = null;
   private config: LevelConfig = createLevelConfig(1);
@@ -41,7 +43,15 @@ export class Game {
     this.ctx = context;
     this.overlay = document.createElement("div");
     this.overlay.className = "overlay";
-    container.replaceChildren(this.canvas, this.overlay);
+    this.artifactButton = document.createElement("button");
+    this.artifactButton.type = "button";
+    this.artifactButton.className = "artifact-edge-button hidden";
+    this.artifactButton.textContent = "A";
+    this.artifactButton.title = "Artifacts";
+    this.artifactButton.addEventListener("click", () => this.toggleArtifactPanel());
+    this.artifactPanel = document.createElement("div");
+    this.artifactPanel.className = "artifact-panel hidden";
+    container.replaceChildren(this.canvas, this.artifactButton, this.artifactPanel, this.overlay);
 
     window.addEventListener("resize", this.resize);
     window.addEventListener("keydown", this.handleKeyDown);
@@ -112,6 +122,7 @@ export class Game {
 
   private showHome(): void {
     this.screen = "home";
+    this.hideArtifactPanel();
     renderHome(this.overlay, {
       hasSave: hasSavedRun(),
       onContinue: () => this.continueCampaign(),
@@ -130,6 +141,7 @@ export class Game {
 
   private showPause(): void {
     this.screen = "pause";
+    this.hideArtifactPanel();
     renderPause(this.overlay, {
       onContinue: () => this.resumeCombat(),
       onHome: () => this.returnHome(),
@@ -145,10 +157,12 @@ export class Game {
 
     this.screen = "combat";
     clearOverlay(this.overlay);
+    this.showArtifactAccess();
   }
 
   private showSaves(): void {
     this.screen = "saves";
+    this.hideArtifactPanel();
     renderSaves(this.overlay, {
       run: loadRun(),
       onBack: () => this.showHome(),
@@ -173,8 +187,9 @@ export class Game {
 
     this.screen = "combat";
     clearOverlay(this.overlay);
+    this.showArtifactAccess();
     this.config = createLevelConfig(this.run.level);
-    this.fish = createSchool(this.run.fishCount, this.run.supportCount, this.combatBounds());
+    this.fish = createSchool(this.run.fishCount, this.run.supportCount, this.combatBounds(), this.run.fishCounts);
     this.sharks = createSharks(this.config, this.combatBounds());
     this.elapsed = 0;
     this.victoryFeedback = 0;
@@ -262,18 +277,26 @@ export class Game {
 
     const livingBasic = this.fish.filter((candidate) => candidate.kind === "basic" && !candidate.caught).length;
     const livingSupport = this.fish.filter((candidate) => candidate.kind === "support" && !candidate.caught).length;
+    const fishCounts = this.fish
+      .filter((candidate) => !candidate.caught && candidate.kind !== "support")
+      .reduce<RunState["fishCounts"]>((counts, candidate) => {
+        counts[candidate.typeId] = (counts[candidate.typeId] ?? 0) + 1;
+        return counts;
+      }, {});
     this.run = applyLevelReward(
       {
         ...this.run,
         level: this.run.level + 1,
         fishCount: livingBasic,
         supportCount: livingSupport,
+        fishCounts,
         schoolEnergy: clamp(this.run.schoolEnergy + 7, 0, 110),
       },
       this.config,
     );
     saveRun(this.run);
     this.screen = "choice";
+    this.hideArtifactPanel();
     renderChoice(this.overlay, {
       run: this.run,
       isRecruitment: createLevelConfig(this.run.level).type === "recruit",
@@ -297,11 +320,53 @@ export class Game {
     const bestLevel = Math.max(this.run?.bestLevel ?? 1, this.config.level);
     clearRun();
     this.screen = "gameover";
+    this.hideArtifactPanel();
     renderGameOver(this.overlay, {
       bestLevel,
       onHome: () => this.showHome(),
       onNewCampaign: () => this.newCampaign(),
     });
+  }
+
+  private showArtifactAccess(): void {
+    this.artifactButton.classList.remove("hidden");
+  }
+
+  private toggleArtifactPanel(): void {
+    if (this.screen !== "combat") {
+      return;
+    }
+
+    const isOpen = !this.artifactPanel.classList.contains("hidden");
+
+    if (isOpen) {
+      this.artifactPanel.className = "artifact-panel hidden";
+      this.artifactPanel.replaceChildren();
+      return;
+    }
+
+    const title = document.createElement("h2");
+    title.textContent = "Artifacts";
+    const empty = document.createElement("p");
+    empty.textContent = "No artifacts yet";
+    const future = document.createElement("p");
+    future.textContent = "Future collection";
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "Close";
+    close.addEventListener("click", () => this.closeArtifactPanel());
+    this.artifactPanel.className = "artifact-panel";
+    this.artifactPanel.replaceChildren(title, empty, future, close);
+  }
+
+  private closeArtifactPanel(): void {
+    this.artifactPanel.className = "artifact-panel hidden";
+    this.artifactPanel.replaceChildren();
+  }
+
+  private hideArtifactPanel(): void {
+    this.artifactButton.classList.add("hidden");
+    this.closeArtifactPanel();
   }
 
   private render(time: number): void {

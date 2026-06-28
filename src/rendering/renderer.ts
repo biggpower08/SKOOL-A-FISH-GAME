@@ -1,4 +1,5 @@
 import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
+import { fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
 
 const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, fill: string): void => {
@@ -70,7 +71,24 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
 };
 
 export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
-  ctx.fillStyle = "#000000";
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, "#010205");
+  gradient.addColorStop(0.32, "#07111c");
+  gradient.addColorStop(0.7, "#0b0712");
+  gradient.addColorStop(1, "#11151b");
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+};
+
+const drawWaterShade = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
+  const pulse = (Math.sin(time * 0.00035) + 1) * 0.5;
+  const x = width * (0.28 + pulse * 0.24);
+  const y = height * (0.34 + (1 - pulse) * 0.18);
+  const glow = ctx.createRadialGradient(x, y, 40, x, y, Math.max(width, height) * 0.9);
+  glow.addColorStop(0, "rgba(42, 70, 94, 0.18)");
+  glow.addColorStop(0.46, "rgba(35, 42, 74, 0.08)");
+  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+  ctx.fillStyle = glow;
   ctx.fillRect(0, 0, width, height);
 };
 
@@ -85,29 +103,14 @@ export const drawCombat = (
   time = 0,
 ): void => {
   drawBackground(ctx, width, height);
-
-  for (const shark of sharks) {
-    if (shark.health <= 0 && !shark.starved) {
-      continue;
-    }
-
-    drawAmbientRipple(ctx, shark.pos.x, shark.pos.y, shark.radius * 1.7, time, 0.12);
-  }
-
-  fish.forEach((candidate, index) => {
-    if (candidate.caught || index % 3 !== 0) {
-      return;
-    }
-
-    drawAmbientRipple(ctx, candidate.pos.x, candidate.pos.y, candidate.radius * 2.8, time + index * 19, 0.035);
-  });
+  drawWaterShade(ctx, width - hudWidth(), height, time);
 
   for (const candidate of fish) {
     if (candidate.caught) {
       continue;
     }
 
-    const fill = candidate.threatened ? "#ff4058" : candidate.kind === "support" ? "#bdefff" : "#ffffff";
+    const fill = candidate.threatened ? "#ff4058" : fishTypes[candidate.typeId].color;
     drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
 
     if (candidate.kind === "support") {
@@ -131,6 +134,7 @@ export const drawCombat = (
 
 export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
   drawBackground(ctx, width, height);
+  drawWaterShade(ctx, width - hudWidth(), height, time);
 
   const usableWidth = width - hudWidth();
 
@@ -139,7 +143,7 @@ export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, heig
     const x = usableWidth * 0.48 + Math.cos(angle) * (42 + (index % 6) * 12);
     const y = height * 0.5 + Math.sin(angle * 1.2) * (28 + (index % 5) * 10);
     if (index % 3 === 0) {
-      drawAmbientRipple(ctx, x, y, 10, time + index * 11, 0.03);
+      drawAmbientRipple(ctx, x, y, 10, time + index * 11, 0.012);
     }
     drawCircle(ctx, x, y, 3.5, "#ffffff");
   }

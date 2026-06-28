@@ -1,5 +1,10 @@
 import type { LevelConfig, LevelPathStep, LevelType, SharkKind } from "../game/types";
 
+export const ROUND_ONE_TARGET_CATCH_RATE = 0.18;
+export const ROUND_ONE_TARGET_CATCH_COUNT = 4;
+export const EARLY_ROUND_SHELL_REWARD = 150;
+export const SHELL_REWARD_PER_LEVEL = 10;
+
 const levelTypeFor = (level: number): LevelType => {
   if (level === 1 || level === 70) {
     return "fight";
@@ -118,10 +123,10 @@ export const createLevelConfig = (level: number): LevelConfig => {
     type,
     sharkCount,
     sharkHealth: Math.round(66 + levelPressure * 6.5 + hardMode * 13),
-    sharkSpeed: Number((2.08 + Math.min(1.45, safeLevel * 0.014) + hardMode * 0.012).toFixed(2)),
+    sharkSpeed: Number((2.7 + Math.min(1.35, safeLevel * 0.013) + hardMode * 0.012).toFixed(2)),
     sharkAttackRate: Number(Math.max(1.55, 4.25 - Math.min(2, safeLevel * 0.028) - hardMode * 0.02).toFixed(2)),
     fishThreatRadius: Math.round(106 + Math.min(58, safeLevel * 0.68) + specialBonus * 16),
-    rewardCurrency: Math.round(6 + safeLevel * 0.8 + (type === "reward" ? 14 : 0)),
+    rewardCurrency: EARLY_ROUND_SHELL_REWARD + safeLevel * SHELL_REWARD_PER_LEVEL + (type === "reward" ? 50 : 0),
     sharkTypes: sharkTypesFor(safeLevel, type, sharkCount),
   };
 };

@@ -11,7 +11,7 @@ Build the first GitHub Pages-ready prototype for a fish-school autobattler rogue
 
 - The player manages fish.
 - Sharks are enemies.
-- The first prototype uses simple circles on a black background.
+- The first prototype uses simple circles on a dark aquatic background.
 - Flocking comes before polish.
 - The game should be playable in a browser and deployable to GitHub Pages.
 - The GitHub Pages target is `https://biggpower08.github.io/SKOOL-A-FISH-GAME/`.
@@ -35,7 +35,7 @@ Use this as a stop sign before adding anything.
 - Player manages fish.
 - Sharks are enemy units and enemy waves.
 - Start with circles, not sprites.
-- Start with a black background.
+- Start with a black/dark aquatic background.
 - Flocking first.
 - Minimal text.
 - Many levels should just be fish vs sharks.
@@ -70,9 +70,10 @@ The first playable implementation should include:
 - Starting shark attacks catching about 18% of nearby or available fish.
 - Side HUD with shark health.
 - Side HUD with shark type counts and hunger/composition summary.
-- Side HUD with support fish health bars when support fish exist.
+- Side HUD with compact fish type counts and health pips.
 - Level path preview showing current and upcoming level types.
-- Constant subtle Canvas ripples around fish and larger ripples around sharks.
+- Subtle Canvas water shading; avoid distracting entity-centered ripple circles.
+- Artifact edge icon with a placeholder overlay.
 - Between-level choices: recruit on recruitment nodes, buy placeholder artifacts, invest currency, heal/replenish energy, go home, or end run.
 - Basic localStorage save/continue support.
 
@@ -133,7 +134,8 @@ Initial fish:
 
 - Basic Fish: small white circle, flocks, turns red when threatened, can be caught.
 - Support Fish: slightly larger white/blue circle, visible side health bar, simple support effect.
-- Future Fish Placeholder: data structure only; no faction system yet.
+- Tilapia, Salmon, Parrotfish, Mahi-mahi, Grouper, and Support Fish: named
+  placeholder-circle fish types with distinct early stats; no faction system yet.
 
 Initial sharks:
 
@@ -178,7 +180,7 @@ Acceptance checks:
 - Game opens to a basic home screen.
 - `New Campaign` starts a run.
 - `Continue Campaign` reads localStorage when available.
-- Fish appear as small white circles on black.
+- Fish appear as small placeholder circles on a dark aquatic canvas.
 - Sharks appear as large dark circles.
 - Fish flock and flee.
 - Fish turn red near sharks.
@@ -189,8 +191,9 @@ Acceptance checks:
 - Starved sharks stop and show X eyes.
 - Enemy composition counts are visible in the side HUD.
 - The level path preview shows current and upcoming levels.
-- Ambient ripples are visible but subtle.
-- Support fish health bars are visible when support fish exist.
+- Combat water shading is visible but subtle.
+- Fish type health pips are visible when fish exist.
+- Artifact edge icon opens a placeholder overlay.
 - Between-level choices exist.
 - Fish are not directly bought with currency.
 - Healing does not revive dead fish.

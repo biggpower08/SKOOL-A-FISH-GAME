@@ -1,4 +1,5 @@
 import type { RunState } from "../game/types";
+import { defaultFishCounts } from "./fishTypes";
 
 const SAVE_KEY = "skool-a-fish-game-save";
 
@@ -33,7 +34,18 @@ export const loadRun = (): RunState | null => {
 
   try {
     const parsed = JSON.parse(raw) as StoredRun;
-    return parsed.version === 1 ? parsed.run : null;
+
+    if (parsed.version !== 1) {
+      return null;
+    }
+
+    return {
+      ...parsed.run,
+      fishCounts: parsed.run.fishCounts ?? {
+        ...defaultFishCounts(),
+        tilapia: parsed.run.fishCount,
+      },
+    };
   } catch {
     return null;
   }

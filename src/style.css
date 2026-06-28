@@ -88,6 +88,53 @@ button:disabled {
   font-size: 14px;
 }
 
+.artifact-edge-button {
+  position: fixed;
+  top: 78px;
+  right: 198px;
+  z-index: 4;
+  width: 36px;
+  min-height: 36px;
+  border-radius: 50%;
+  padding: 0;
+  font-weight: 700;
+  background: #101820;
+}
+
+.artifact-edge-button.hidden,
+.artifact-panel.hidden {
+  display: none;
+}
+
+.artifact-panel {
+  position: fixed;
+  top: 122px;
+  right: 198px;
+  z-index: 5;
+  width: 178px;
+  padding: 14px;
+  border: 1px solid #34414c;
+  border-radius: 6px;
+  background: rgba(4, 8, 12, 0.94);
+}
+
+.artifact-panel h2 {
+  margin: 0 0 10px;
+  font-size: 16px;
+}
+
+.artifact-panel p {
+  margin: 4px 0;
+  color: #a9b4c0;
+  font-size: 13px;
+}
+
+.artifact-panel button {
+  width: 100%;
+  min-height: 34px;
+  margin-top: 12px;
+}
+
 @media (max-width: 620px) {
   button {
     width: min(210px, calc(100vw - 36px));
@@ -95,5 +142,10 @@ button:disabled {
 
   .overlay h1 {
     font-size: 28px;
+  }
+
+  .artifact-edge-button,
+  .artifact-panel {
+    right: 198px;
   }
 }

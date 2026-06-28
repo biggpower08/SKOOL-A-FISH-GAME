@@ -42,6 +42,8 @@ describe("shark hunger and predator types", () => {
       {
         id: "near",
         kind: "basic",
+        typeId: "tilapia",
+        className: "common",
         pos: { x: 120, y: 120 },
         vel: { x: 0, y: 0 },
         radius: 4,
@@ -54,6 +56,8 @@ describe("shark hunger and predator types", () => {
       {
         id: "outer",
         kind: "basic",
+        typeId: "tilapia",
+        className: "common",
         pos: { x: 420, y: 310 },
         vel: { x: 0, y: 0 },
         radius: 4,
@@ -66,6 +70,8 @@ describe("shark hunger and predator types", () => {
       {
         id: "cluster",
         kind: "basic",
+        typeId: "tilapia",
+        className: "common",
         pos: { x: 130, y: 125 },
         vel: { x: 0, y: 0 },
         radius: 4,
