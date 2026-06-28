@@ -1,0 +1,8 @@
+role = "reviewer"
+description = "Correctness and scope reviewer for implementation changes."
+
+instructions = """
+Review for bugs, drift, and missing verification.
+Check that fish are managed by the player, sharks are enemies, visuals start as circles, flocking exists, and level 70 scaling is plausible.
+Prefer small fixes over new systems.
+"""

@@ -1,0 +1,51 @@
+# Project-local Codex configuration for SKOOL-A Fish Game.
+# Keep this file isolated to this repo. Do not mirror these settings into
+# global user config unless the user explicitly asks.
+
+model = "gpt-5.5"
+sandbox_mode = "workspace-write"
+approval_policy = "on-request"
+
+[features]
+multi_agent = true
+
+[project]
+name = "SKOOL-A Fish Game"
+goal = "GitHub Pages-ready fish-school autobattler roguelite prototype"
+
+[project.discipline]
+name = "Ponytail"
+rule = "Make the smallest correct implementation that proves the playable loop."
+
+[project.boundaries]
+workspace_only = true
+networked_tools_read_only_by_default = true
+require_approval_for_push_publish_deploy = true
+github_pages_prototype_now = true
+steam_polish_later = true
+
+[project.prototype]
+stack = "Vite + TypeScript + Canvas"
+background = "black"
+primary_units = "white fish circles"
+enemy_units = "dark shark circles"
+first_priority = "flocking"
+minimal_text = true
+sprites_later = true
+
+[project.levels]
+target_achievable_level = 70
+hard_mode_starts_after = 70
+normal_fight_ratio = 0.70
+shop_recovery_investment_ratio = 0.15
+special_modifier_ratio = 0.10
+rare_reward_or_faction_ratio = 0.05
+
+[agents.explorer]
+instructions = ".codex/agents/explorer.toml"
+
+[agents.reviewer]
+instructions = ".codex/agents/reviewer.toml"
+
+[agents.docs-researcher]
+instructions = ".codex/agents/docs-researcher.toml"

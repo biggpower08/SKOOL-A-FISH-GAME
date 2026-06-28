@@ -1,0 +1,94 @@
+import type { Fish, LevelConfig, Shark, Vector } from "../game/types";
+import { distance } from "./vector";
+
+export type SharkAttackResult = {
+  caught: number;
+  damagedSupport: number;
+};
+
+export const aliveFish = (fish: Fish[]): Fish[] => fish.filter((candidate) => !candidate.caught);
+
+export const schoolCenter = (fish: Fish[]): Vector => {
+  const alive = aliveFish(fish);
+
+  if (alive.length === 0) {
+    return { x: 0, y: 0 };
+  }
+
+  const total = alive.reduce<Vector>(
+    (sum, candidate) => ({
+      x: sum.x + candidate.pos.x,
+      y: sum.y + candidate.pos.y,
+    }),
+    { x: 0, y: 0 },
+  );
+
+  return {
+    x: total.x / alive.length,
+    y: total.y / alive.length,
+  };
+};
+
+const attackCatchRatio = (config: LevelConfig): number => {
+  const hardMode = Math.max(0, config.level - 70);
+  return Math.min(0.42, 0.18 + (config.level - 1) * 0.0018 + hardMode * 0.003);
+};
+
+export const applySharkAttack = (
+  fish: Fish[],
+  shark: Shark,
+  config: LevelConfig,
+  random: () => number = Math.random,
+): SharkAttackResult => {
+  const available = aliveFish(fish);
+  const inRange = available.filter((candidate) => distance(candidate.pos, shark.pos) <= shark.attackRadius);
+  const candidates = inRange.length > 0 ? inRange : available.slice(0, Math.max(1, Math.round(available.length * 0.1)));
+
+  if (candidates.length === 0) {
+    return { caught: 0, damagedSupport: 0 };
+  }
+
+  const catchCount = Math.min(candidates.length, Math.max(1, Math.round(candidates.length * attackCatchRatio(config))));
+  const chosen = candidates
+    .map((candidate) => ({ candidate, roll: random() }))
+    .sort((a, b) => a.roll - b.roll)
+    .slice(0, catchCount);
+
+  let caught = 0;
+  let damagedSupport = 0;
+
+  for (const item of chosen) {
+    if (item.candidate.kind === "support") {
+      item.candidate.health -= 34 + config.level * 0.7;
+      damagedSupport += 1;
+
+      if (item.candidate.health > 0) {
+        continue;
+      }
+    }
+
+    if (!item.candidate.caught) {
+      item.candidate.caught = true;
+      caught += 1;
+    }
+  }
+
+  return { caught, damagedSupport };
+};
+
+export const applySchoolPressure = (fish: Fish[], sharks: Shark[], dt: number): void => {
+  const alive = aliveFish(fish);
+  const activeSharks = sharks.filter((shark) => shark.health > 0);
+
+  if (alive.length === 0 || activeSharks.length === 0) {
+    return;
+  }
+
+  const supportCount = alive.filter((candidate) => candidate.kind === "support").length;
+  const pressure = (alive.length * 0.15 + supportCount * 0.32) * dt;
+  const damagePerShark = pressure / activeSharks.length;
+
+  for (const shark of activeSharks) {
+    shark.health = Math.max(0, shark.health - damagePerShark);
+  }
+};
