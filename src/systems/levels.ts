@@ -5,6 +5,10 @@ const levelTypeFor = (level: number): LevelType => {
     return "fight";
   }
 
+  if (level % 14 === 7) {
+    return "recruit";
+  }
+
   if (level % 20 === 0) {
     return "reward";
   }
@@ -17,7 +21,7 @@ const levelTypeFor = (level: number): LevelType => {
     return "special";
   }
 
-  if (level % 7 === 0) {
+  if (level % 11 === 0) {
     return "shop";
   }
 
@@ -59,6 +63,10 @@ const pathIconFor = (type: LevelType): string => {
     return "+";
   }
 
+  if (type === "recruit") {
+    return "+";
+  }
+
   if (type === "special") {
     return "!";
   }
@@ -77,6 +85,10 @@ const pathLabelFor = (type: LevelType): string => {
 
   if (type === "investment") {
     return "Recover";
+  }
+
+  if (type === "recruit") {
+    return "Recruit";
   }
 
   if (type === "special") {

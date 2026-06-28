@@ -13,9 +13,16 @@ describe("upgrades", () => {
   });
 
   it("adds fish without adding a faction system", () => {
-    const run = applyChoice({ ...createNewRun(), level: 8 }, "fish");
+    const run = applyChoice({ ...createNewRun(), level: 8 }, "tilapia");
 
     expect(run.fishCount).toBeGreaterThan(32);
+    expect(run.supportCount).toBe(1);
+  });
+
+  it("recruits support fish through recruitment choices", () => {
+    const run = applyChoice({ ...createNewRun(), level: 8 }, "support");
+
+    expect(run.fishCount).toBe(32);
     expect(run.supportCount).toBe(2);
   });
 
@@ -30,10 +37,17 @@ describe("upgrades", () => {
   });
 
   it("lets the shop replenish school energy", () => {
-    const run = applyChoice({ ...createNewRun(), currency: 6, schoolEnergy: 50 }, "shop");
+    const run = applyChoice({ ...createNewRun(), currency: 6, fishCount: 12, schoolEnergy: 50 }, "heal");
 
     expect(run.currency).toBe(1);
-    expect(run.fishCount).toBe(34);
+    expect(run.fishCount).toBe(12);
     expect(run.schoolEnergy).toBe(84);
+  });
+
+  it("spends currency on a placeholder artifact without adding fish", () => {
+    const run = applyChoice({ ...createNewRun(), currency: 12, fishCount: 10 }, "artifact");
+
+    expect(run.currency).toBe(4);
+    expect(run.fishCount).toBe(10);
   });
 });

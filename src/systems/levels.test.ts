@@ -19,7 +19,7 @@ describe("createLevelConfig", () => {
 
     expect(levelSeventyFive.sharkHealth).toBeGreaterThan(levelSeventy.sharkHealth);
     expect(levelSeventyFive.sharkSpeed).toBeGreaterThanOrEqual(levelSeventy.sharkSpeed);
-    expect(["fight", "shop", "investment", "special", "reward"]).toContain(levelSeventyFive.type);
+    expect(["fight", "shop", "investment", "special", "reward", "recruit"]).toContain(levelSeventyFive.type);
   });
 
   it("keeps most sampled levels as plain fights", () => {
@@ -35,7 +35,13 @@ describe("createLevelConfig", () => {
     expect(preview).toHaveLength(5);
     expect(preview[0].level).toBe(6);
     expect(preview[0].current).toBe(true);
-    expect(preview.map((step) => step.icon)).toContain("$");
+    expect(preview.map((step) => step.icon)).toContain("+");
     expect(preview.every((step) => step.label.length > 0)).toBe(true);
+  });
+
+  it("uses planned recruitment nodes instead of direct fish purchases", () => {
+    expect(createLevelConfig(7).type).toBe("recruit");
+    expect(createLevelConfig(21).type).toBe("recruit");
+    expect(createLevelConfig(35).type).toBe("recruit");
   });
 });

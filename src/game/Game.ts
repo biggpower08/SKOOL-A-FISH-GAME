@@ -7,7 +7,7 @@ import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { applyChoice, applyLevelReward, createNewRun } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
-import { clearOverlay, renderChoice, renderGameOver, renderHome, renderSaves } from "../ui/screens";
+import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
 import type { Bounds, ChoiceId, Fish, GameScreen, LevelConfig, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 188;
@@ -44,6 +44,7 @@ export class Game {
     container.replaceChildren(this.canvas, this.overlay);
 
     window.addEventListener("resize", this.resize);
+    window.addEventListener("keydown", this.handleKeyDown);
     this.resize();
   }
 
@@ -61,6 +62,33 @@ export class Game {
     this.canvas.style.width = `${this.width}px`;
     this.canvas.style.height = `${this.height}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  };
+
+  private readonly handleKeyDown = (event: KeyboardEvent): void => {
+    if (event.key === "Escape") {
+      if (this.screen === "combat") {
+        this.showPause();
+        return;
+      }
+
+      if (this.screen === "pause") {
+        this.resumeCombat();
+      }
+    }
+
+    if (!this.run) {
+      return;
+    }
+
+    if (event.key === "]") {
+      this.run.currency += 5;
+      saveRun(this.run);
+    }
+
+    if (event.key === "[") {
+      this.run.currency = Math.max(0, this.run.currency - 5);
+      saveRun(this.run);
+    }
   };
 
   private readonly loop = (time: number): void => {
@@ -90,6 +118,33 @@ export class Game {
       onNewCampaign: () => this.newCampaign(),
       onSaves: () => this.showSaves(),
     });
+  }
+
+  private returnHome(): void {
+    if (this.run) {
+      saveRun(this.run);
+    }
+
+    this.showHome();
+  }
+
+  private showPause(): void {
+    this.screen = "pause";
+    renderPause(this.overlay, {
+      onContinue: () => this.resumeCombat(),
+      onHome: () => this.returnHome(),
+      onEndRun: () => this.endRun(),
+    });
+  }
+
+  private resumeCombat(): void {
+    if (!this.run) {
+      this.showHome();
+      return;
+    }
+
+    this.screen = "combat";
+    clearOverlay(this.overlay);
   }
 
   private showSaves(): void {
@@ -221,7 +276,10 @@ export class Game {
     this.screen = "choice";
     renderChoice(this.overlay, {
       run: this.run,
+      isRecruitment: createLevelConfig(this.run.level).type === "recruit",
       onChoose: (choice) => this.choose(choice),
+      onHome: () => this.returnHome(),
+      onEndRun: () => this.endRun(),
     });
   }
 
@@ -260,5 +318,6 @@ export class Game {
   destroy(): void {
     window.cancelAnimationFrame(this.animationId);
     window.removeEventListener("resize", this.resize);
+    window.removeEventListener("keydown", this.handleKeyDown);
   }
 }

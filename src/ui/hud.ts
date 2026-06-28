@@ -80,10 +80,11 @@ export const drawHud = (
   ctx.font = "12px system-ui, sans-serif";
   ctx.fillText(`L ${config.level}`, x + 18, 28);
   ctx.fillText(`Fish ${fish.filter((candidate) => !candidate.caught).length}`, x + 72, 28);
+  ctx.fillText(`Shells ${run.currency}`, x + 18, 43);
 
-  drawBar(ctx, x + 18, 47, 132, 9, run.schoolEnergy / 110, "#e8f4ff");
+  drawBar(ctx, x + 18, 58, 132, 9, run.schoolEnergy / 110, "#e8f4ff");
   ctx.fillStyle = "#8f9aa7";
-  ctx.fillText("Energy", x + 18, 73);
+  ctx.fillText("Energy", x + 18, 84);
 
   ctx.fillStyle = "#8f9aa7";
   ctx.fillText("Path", x + 18, pathY);

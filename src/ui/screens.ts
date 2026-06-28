@@ -9,7 +9,10 @@ type HomeHandlers = {
 
 type ChoiceHandlers = {
   run: RunState;
+  isRecruitment: boolean;
   onChoose: (choice: ChoiceId) => void;
+  onHome: () => void;
+  onEndRun: () => void;
 };
 
 type SavesHandlers = {
@@ -21,6 +24,12 @@ type GameOverHandlers = {
   bestLevel: number;
   onHome: () => void;
   onNewCampaign: () => void;
+};
+
+type PauseHandlers = {
+  onContinue: () => void;
+  onHome: () => void;
+  onEndRun: () => void;
 };
 
 const button = (label: string, onClick: () => void, disabled = false): HTMLButtonElement => {
@@ -61,11 +70,27 @@ export const renderHome = (overlay: HTMLElement, handlers: HomeHandlers): void =
 
 export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): void => {
   overlay.className = "overlay menu compact";
+
+  if (handlers.isRecruitment) {
+    overlay.replaceChildren(
+      title(`Level ${handlers.run.level}`),
+      button("+5 Tilapia", () => handlers.onChoose("tilapia")),
+      button("+3 Salmon", () => handlers.onChoose("salmon")),
+      button("+1 Grouper", () => handlers.onChoose("grouper")),
+      button("+1 Support", () => handlers.onChoose("support")),
+      button("Home", handlers.onHome),
+      button("End Run", handlers.onEndRun),
+    );
+    return;
+  }
+
   overlay.replaceChildren(
     title(`Level ${handlers.run.level}`),
-    button("Add Fish", () => handlers.onChoose("fish")),
+    button("Artifact", () => handlers.onChoose("artifact"), handlers.run.currency < 8),
     button("Invest", () => handlers.onChoose("invest")),
-    button("Replenish", () => handlers.onChoose("shop")),
+    button("Heal", () => handlers.onChoose("heal"), handlers.run.currency < 5),
+    button("Home", handlers.onHome),
+    button("End Run", handlers.onEndRun),
   );
 };
 
@@ -92,5 +117,15 @@ export const renderGameOver = (overlay: HTMLElement, handlers: GameOverHandlers)
     note(`Best ${handlers.bestLevel}`),
     button("New Campaign", handlers.onNewCampaign),
     button("Home", handlers.onHome),
+  );
+};
+
+export const renderPause = (overlay: HTMLElement, handlers: PauseHandlers): void => {
+  overlay.className = "overlay menu compact";
+  overlay.replaceChildren(
+    title("Paused"),
+    button("Continue", handlers.onContinue),
+    button("Home", handlers.onHome),
+    button("End Run", handlers.onEndRun),
   );
 };

@@ -23,13 +23,31 @@ export const applyLevelReward = (run: RunState, config: LevelConfig): RunState =
 };
 
 export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
-  if (choice === "fish") {
-    const supportGain = run.level >= 6 && run.level % 4 === 0 ? 1 : 0;
-
+  if (choice === "tilapia") {
     return {
       ...run,
-      fishCount: run.fishCount + 5 + Math.floor(run.level / 18),
-      supportCount: Math.min(5, run.supportCount + supportGain),
+      fishCount: run.fishCount + 5,
+    };
+  }
+
+  if (choice === "salmon") {
+    return {
+      ...run,
+      fishCount: run.fishCount + 3,
+    };
+  }
+
+  if (choice === "grouper") {
+    return {
+      ...run,
+      fishCount: run.fishCount + 1,
+    };
+  }
+
+  if (choice === "support") {
+    return {
+      ...run,
+      supportCount: Math.min(5, run.supportCount + 1),
     };
   }
 
@@ -43,10 +61,16 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
     };
   }
 
+  if (choice === "artifact") {
+    return {
+      ...run,
+      currency: Math.max(0, run.currency - 8),
+    };
+  }
+
   return {
     ...run,
     currency: Math.max(0, run.currency - 5),
-    fishCount: run.fishCount + (run.currency >= 5 ? 2 : 1),
     schoolEnergy: clamp(run.schoolEnergy + 34, 0, 110),
   };
 };

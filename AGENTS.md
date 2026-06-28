@@ -2,6 +2,9 @@
 
 These instructions apply to this repository only.
 
+For design prompts, balance notes, sprite prompts, and future rules, use
+`docs/LIVE_PROMPTS.md` as the source of truth.
+
 ## Project North Star
 
 Build the first GitHub Pages-ready prototype for a fish-school autobattler roguelite.
@@ -38,6 +41,9 @@ Use this as a stop sign before adding anything.
 - Many levels should just be fish vs sharks.
 - Clear round end: shark starves or fish lose.
 - Level path should preview what is coming.
+- Fish are recruited through level events, not bought directly with currency.
+- Currency is for artifacts, healing, investment, and future shop effects.
+- Dead fish stay dead for the run.
 - Level 70 should be achievable with a strong run.
 - Level 70+ should be difficult.
 - Fish factions are later.
@@ -67,7 +73,7 @@ The first playable implementation should include:
 - Side HUD with support fish health bars when support fish exist.
 - Level path preview showing current and upcoming level types.
 - Constant subtle Canvas ripples around fish and larger ripples around sharks.
-- Between-level choices: add fish, invest currency, or replenish fish energy.
+- Between-level choices: recruit on recruitment nodes, buy placeholder artifacts, invest currency, heal/replenish energy, go home, or end run.
 - Basic localStorage save/continue support.
 
 The flocking loop should stay close to:
@@ -186,6 +192,10 @@ Acceptance checks:
 - Ambient ripples are visible but subtle.
 - Support fish health bars are visible when support fish exist.
 - Between-level choices exist.
+- Fish are not directly bought with currency.
+- Healing does not revive dead fish.
+- Player can return home or end a run.
+- Browser app does not try to close the tab.
 - Level scaling can reach about level 70.
 - Level 70+ is difficult through stat scaling.
 - No finished sprites are required.

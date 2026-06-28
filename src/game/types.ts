@@ -5,9 +5,9 @@ export type Vector = {
 
 export type FishKind = "basic" | "support" | "future";
 export type SharkKind = "basic" | "fast" | "center" | "barracuda" | "eel";
-export type LevelType = "fight" | "shop" | "investment" | "special" | "reward";
-export type GameScreen = "home" | "saves" | "combat" | "choice" | "gameover";
-export type ChoiceId = "fish" | "invest" | "shop";
+export type LevelType = "fight" | "shop" | "investment" | "special" | "reward" | "recruit";
+export type GameScreen = "home" | "saves" | "combat" | "choice" | "pause" | "gameover";
+export type ChoiceId = "tilapia" | "salmon" | "grouper" | "support" | "artifact" | "invest" | "heal";
 
 export type LevelConfig = {
   level: number;
