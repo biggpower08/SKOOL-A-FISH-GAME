@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createLevelConfig } from "./levels";
+import { createLevelConfig, createLevelPathPreview } from "./levels";
 
 describe("createLevelConfig", () => {
   it("keeps level 70 achievable before hard mode scaling starts", () => {
@@ -27,5 +27,15 @@ describe("createLevelConfig", () => {
     const fightCount = levels.filter((level) => level.type === "fight").length;
 
     expect(fightCount / levels.length).toBeGreaterThan(0.68);
+  });
+
+  it("previews the current and upcoming level path with icons", () => {
+    const preview = createLevelPathPreview(6, 5);
+
+    expect(preview).toHaveLength(5);
+    expect(preview[0].level).toBe(6);
+    expect(preview[0].current).toBe(true);
+    expect(preview.map((step) => step.icon)).toContain("$");
+    expect(preview.every((step) => step.label.length > 0)).toBe(true);
   });
 });

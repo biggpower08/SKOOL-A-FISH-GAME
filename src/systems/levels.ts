@@ -1,4 +1,4 @@
-import type { LevelConfig, LevelType } from "../game/types";
+import type { LevelConfig, LevelPathStep, LevelType, SharkKind } from "../game/types";
 
 const levelTypeFor = (level: number): LevelType => {
   if (level === 1 || level === 70) {
@@ -24,21 +24,108 @@ const levelTypeFor = (level: number): LevelType => {
   return "fight";
 };
 
+const sharkTypesFor = (level: number, type: LevelType, sharkCount: number): SharkKind[] => {
+  const types: SharkKind[] = ["basic"];
+
+  if (level >= 8 || type === "special") {
+    types.push("fast");
+  }
+
+  if (level >= 16) {
+    types.push("center");
+  }
+
+  if (level >= 28 || type === "special") {
+    types.push("barracuda");
+  }
+
+  if (level >= 55 && type === "special") {
+    types.push("eel");
+  }
+
+  while (types.length < sharkCount) {
+    types.push(types[types.length % Math.max(1, types.length)]);
+  }
+
+  return types.slice(0, sharkCount);
+};
+
+const pathIconFor = (type: LevelType): string => {
+  if (type === "shop") {
+    return "$";
+  }
+
+  if (type === "investment") {
+    return "+";
+  }
+
+  if (type === "special") {
+    return "!";
+  }
+
+  if (type === "reward") {
+    return "*";
+  }
+
+  return "o";
+};
+
+const pathLabelFor = (type: LevelType): string => {
+  if (type === "shop") {
+    return "Shop";
+  }
+
+  if (type === "investment") {
+    return "Recover";
+  }
+
+  if (type === "special") {
+    return "Special";
+  }
+
+  if (type === "reward") {
+    return "Reward";
+  }
+
+  return "Fight";
+};
+
 export const createLevelConfig = (level: number): LevelConfig => {
   const safeLevel = Math.max(1, Math.floor(level));
   const type = levelTypeFor(safeLevel);
   const hardMode = Math.max(0, safeLevel - 70);
   const levelPressure = Math.pow(safeLevel, 1.12);
   const specialBonus = type === "special" ? 1 : 0;
+  const sharkCount = Math.min(
+    8,
+    1 + Math.floor((safeLevel - 1) / 12) + (safeLevel >= 24 ? 1 : 0) + specialBonus + Math.floor(hardMode / 16),
+  );
 
   return {
     level: safeLevel,
     type,
-    sharkCount: Math.min(8, 1 + Math.floor((safeLevel - 1) / 12) + specialBonus + Math.floor(hardMode / 16)),
+    sharkCount,
     sharkHealth: Math.round(66 + levelPressure * 6.5 + hardMode * 13),
-    sharkSpeed: Number((0.72 + Math.min(1.32, safeLevel * 0.018) + hardMode * 0.012).toFixed(2)),
+    sharkSpeed: Number((2.08 + Math.min(1.45, safeLevel * 0.014) + hardMode * 0.012).toFixed(2)),
     sharkAttackRate: Number(Math.max(1.55, 4.25 - Math.min(2, safeLevel * 0.028) - hardMode * 0.02).toFixed(2)),
     fishThreatRadius: Math.round(106 + Math.min(58, safeLevel * 0.68) + specialBonus * 16),
     rewardCurrency: Math.round(6 + safeLevel * 0.8 + (type === "reward" ? 14 : 0)),
+    sharkTypes: sharkTypesFor(safeLevel, type, sharkCount),
   };
+};
+
+export const createLevelPathPreview = (currentLevel: number, count = 6): LevelPathStep[] => {
+  const safeCurrent = Math.max(1, Math.floor(currentLevel));
+
+  return Array.from({ length: count }, (_, index) => {
+    const config = createLevelConfig(safeCurrent + index);
+
+    return {
+      level: config.level,
+      type: config.type,
+      icon: pathIconFor(config.type),
+      label: pathLabelFor(config.type),
+      current: index === 0,
+    };
+  });
 };

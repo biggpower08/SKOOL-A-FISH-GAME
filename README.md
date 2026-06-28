@@ -6,6 +6,10 @@ Current discipline: circles first, black background first, flocking first.
 
 Live target: https://biggpower08.github.io/SKOOL-A-FISH-GAME/
 
+Current prototype includes flocking fish, hunger-based shark starvation, level
+path preview, enemy composition HUD, placeholder shark types, and subtle Canvas
+water ripples.
+
 ## Commands
 
 ```bash

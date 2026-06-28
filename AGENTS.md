@@ -36,6 +36,8 @@ Use this as a stop sign before adding anything.
 - Flocking first.
 - Minimal text.
 - Many levels should just be fish vs sharks.
+- Clear round end: shark starves or fish lose.
+- Level path should preview what is coming.
 - Level 70 should be achievable with a strong run.
 - Level 70+ should be difficult.
 - Fish factions are later.
@@ -55,9 +57,16 @@ The first playable implementation should include:
 - Fish turning red when a shark gets close.
 - Sharks automatically chasing the school.
 - Sharks attacking periodically.
+- Shark hunger draining over time.
+- Shark hunger restoring when a shark catches fish.
+- Round victory when all active sharks starve or expire.
+- Starved sharks stopping and showing X eyes or an equivalent clear visual.
 - Starting shark attacks catching about 18% of nearby or available fish.
 - Side HUD with shark health.
+- Side HUD with shark type counts and hunger/composition summary.
 - Side HUD with support fish health bars when support fish exist.
+- Level path preview showing current and upcoming level types.
+- Constant subtle Canvas ripples around fish and larger ripples around sharks.
 - Between-level choices: add fish, invest currency, or replenish fish energy.
 - Basic localStorage save/continue support.
 
@@ -122,8 +131,11 @@ Initial fish:
 
 Initial sharks:
 
-- Basic Shark: large dark circle, chases school or nearest fish, attacks periodically, visible health.
-- Difficult Shark Placeholder: data structure only; do not implement many shark types yet.
+- Basic Shark: large dark circle, targets the closest fish, attacks periodically, visible hunger/health.
+- Fast Shark: dark circle with a speed mark, faster chase speed, lower hunger/health.
+- Pack-Center Shark: dark circle with a center dot, targets the school center.
+- Barracuda/Striker: thin dark oval, targets isolated or outer fish.
+- Eel Placeholder: data structure support only until line attacks are needed.
 
 ## Suggested Structure
 
@@ -165,8 +177,13 @@ Acceptance checks:
 - Fish flock and flee.
 - Fish turn red near sharks.
 - Sharks chase and attack automatically.
+- Sharks are faster than individual basic fish by default.
 - Starting shark attacks catch about 18% of nearby or available fish.
-- Shark health is visible in a side HUD.
+- Shark hunger/health is visible in a side HUD.
+- Starved sharks stop and show X eyes.
+- Enemy composition counts are visible in the side HUD.
+- The level path preview shows current and upcoming levels.
+- Ambient ripples are visible but subtle.
 - Support fish health bars are visible when support fish exist.
 - Between-level choices exist.
 - Level scaling can reach about level 70.

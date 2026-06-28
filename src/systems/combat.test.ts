@@ -17,22 +17,30 @@ const makeFish = (count: number): Fish[] =>
     caught: false,
   }));
 
+const makeShark = (overrides: Partial<Shark> = {}): Shark => ({
+  id: "shark-1",
+  kind: "basic",
+  pos: { x: 120, y: 100 },
+  vel: { x: 0, y: 0 },
+  radius: 24,
+  health: 100,
+  maxHealth: 100,
+  hunger: 60,
+  maxHunger: 60,
+  hungerDrain: 1,
+  speed: 2.2,
+  acceleration: 0.22,
+  attackCooldown: 0,
+  attackRate: 4,
+  attackRadius: 150,
+  starved: false,
+  ...overrides,
+});
+
 describe("applySharkAttack", () => {
   it("catches roughly 18 percent of starting available fish", () => {
     const fish = makeFish(50);
-    const shark: Shark = {
-      id: "shark-1",
-      kind: "basic",
-      pos: { x: 120, y: 100 },
-      vel: { x: 0, y: 0 },
-      radius: 24,
-      health: 100,
-      maxHealth: 100,
-      speed: 1,
-      attackCooldown: 0,
-      attackRate: 4,
-      attackRadius: 150,
-    };
+    const shark = makeShark();
 
     const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
 
@@ -54,19 +62,9 @@ describe("applySharkAttack", () => {
       threatened: false,
       caught: false,
     });
-    const shark: Shark = {
-      id: "shark-1",
-      kind: "basic",
+    const shark = makeShark({
       pos: { x: 100, y: 100 },
-      vel: { x: 0, y: 0 },
-      radius: 24,
-      health: 100,
-      maxHealth: 100,
-      speed: 1,
-      attackCooldown: 0,
-      attackRate: 4,
-      attackRadius: 150,
-    };
+    });
 
     const rolls: number[] = [1, 1, 1, 1, 0];
     const result = applySharkAttack(fish, shark, createLevelConfig(1), () => rolls.shift() ?? 1);

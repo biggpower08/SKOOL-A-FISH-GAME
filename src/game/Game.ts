@@ -1,7 +1,7 @@
 import { createSchool } from "../entities/School";
 import { createSharks, updateSharks } from "../entities/Shark";
 import { drawCombat, drawIdleScene } from "../rendering/renderer";
-import { aliveFish, applySchoolPressure, applySharkAttack } from "../systems/combat";
+import { aliveFish, applySchoolPressure, applySharkAttack, drainSharkHunger } from "../systems/combat";
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
@@ -25,6 +25,7 @@ export class Game {
   private height = 540;
   private lastTime = 0;
   private elapsed = 0;
+  private victoryFeedback = 0;
   private animationId = 0;
 
   constructor(container: HTMLElement) {
@@ -121,6 +122,7 @@ export class Game {
     this.fish = createSchool(this.run.fishCount, this.run.supportCount, this.combatBounds());
     this.sharks = createSharks(this.config, this.combatBounds());
     this.elapsed = 0;
+    this.victoryFeedback = 0;
     saveRun(this.run);
   }
 
@@ -133,6 +135,16 @@ export class Game {
     const bounds = this.combatBounds();
     this.elapsed += dt;
 
+    if (this.victoryFeedback > 0) {
+      this.victoryFeedback -= dt;
+
+      if (this.victoryFeedback <= 0) {
+        this.completeLevel();
+      }
+
+      return;
+    }
+
     updateFlocking(this.fish, this.sharks, {
       ...bounds,
       threatRadius: this.config.fishThreatRadius,
@@ -141,7 +153,7 @@ export class Game {
     updateSharks(this.sharks, this.fish, bounds, step);
 
     for (const shark of this.sharks) {
-      if (shark.health <= 0) {
+      if (shark.health <= 0 || shark.starved) {
         continue;
       }
 
@@ -155,9 +167,10 @@ export class Game {
     }
 
     applySchoolPressure(this.fish, this.sharks, dt);
+    drainSharkHunger(this.sharks, dt);
 
     const supportCount = this.fish.filter((candidate) => candidate.kind === "support" && !candidate.caught).length;
-    const activeSharks = this.sharks.filter((shark) => shark.health > 0).length;
+    const activeSharks = this.sharks.filter((shark) => shark.health > 0 && !shark.starved).length;
     this.run.schoolEnergy = clamp(
       this.run.schoolEnergy + supportCount * dt * 0.55 - activeSharks * dt * (0.08 + this.config.level * 0.003),
       0,
@@ -169,11 +182,17 @@ export class Game {
       return;
     }
 
-    const defeated = this.sharks.every((shark) => shark.health <= 0);
-    const outlasted = this.elapsed >= this.levelDuration();
+    const starved = this.sharks.every((shark) => shark.starved || shark.health <= 0);
+    const expired = this.elapsed >= this.levelDuration();
 
-    if (defeated || outlasted) {
-      this.completeLevel();
+    if (starved || expired) {
+      for (const shark of this.sharks) {
+        shark.starved = true;
+        shark.hunger = 0;
+        shark.vel = { x: 0, y: 0 };
+      }
+
+      this.victoryFeedback = 1.2;
     }
   }
 
@@ -231,7 +250,7 @@ export class Game {
     this.ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
 
     if (this.screen === "combat" && this.run) {
-      drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks);
+      drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks, time);
       return;
     }
 

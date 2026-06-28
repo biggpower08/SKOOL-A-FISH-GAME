@@ -38,10 +38,15 @@ describe("updateFlocking", () => {
       radius: 24,
       health: 100,
       maxHealth: 100,
-      speed: 1,
+      hunger: 60,
+      maxHunger: 60,
+      hungerDrain: 1,
+      speed: 2.2,
+      acceleration: 0.22,
       attackCooldown: 0,
       attackRate: 4,
       attackRadius: 140,
+      starved: false,
     };
 
     updateFlocking(fish, [shark], {

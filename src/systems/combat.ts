@@ -73,12 +73,31 @@ export const applySharkAttack = (
     }
   }
 
+  if (caught > 0) {
+    shark.hunger = Math.min(shark.maxHunger, shark.hunger + caught * (5.5 + config.level * 0.08));
+  }
+
   return { caught, damagedSupport };
+};
+
+export const drainSharkHunger = (sharks: Shark[], dt: number): void => {
+  for (const shark of sharks) {
+    if (shark.health <= 0 || shark.starved) {
+      continue;
+    }
+
+    shark.hunger = Math.max(0, shark.hunger - shark.hungerDrain * dt);
+
+    if (shark.hunger === 0) {
+      shark.starved = true;
+      shark.vel = { x: 0, y: 0 };
+    }
+  }
 };
 
 export const applySchoolPressure = (fish: Fish[], sharks: Shark[], dt: number): void => {
   const alive = aliveFish(fish);
-  const activeSharks = sharks.filter((shark) => shark.health > 0);
+  const activeSharks = sharks.filter((shark) => shark.health > 0 && !shark.starved);
 
   if (alive.length === 0 || activeSharks.length === 0) {
     return;
