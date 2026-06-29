@@ -1,16 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { createLevelConfig } from "./levels";
-import { applyChoice, applyLevelReward, createNewRun } from "./upgrades";
+import { applyArtifactReward, applyChoice, applyLevelReward, createNewRun, rewardFlowForCompletedLevel } from "./upgrades";
 
 describe("upgrades", () => {
   it("starts with managed fish and one support fish", () => {
     expect(createNewRun()).toMatchObject({
       level: 1,
-      fishCount: 20,
+      fishCount: 36,
       supportCount: 1,
       fishCounts: {
-        tilapia: 20,
+        tilapia: 36,
       },
+      ownedArtifacts: [],
       schoolEnergy: 100,
     });
   });
@@ -18,16 +19,24 @@ describe("upgrades", () => {
   it("adds fish without adding a faction system", () => {
     const run = applyChoice({ ...createNewRun(), level: 8 }, "tilapia");
 
-    expect(run.fishCount).toBeGreaterThan(20);
-    expect(run.fishCounts.tilapia).toBe(25);
+    expect(run.fishCount).toBeGreaterThan(36);
+    expect(run.fishCounts.tilapia).toBe(41);
     expect(run.supportCount).toBe(1);
   });
 
   it("recruits support fish through recruitment choices", () => {
     const run = applyChoice({ ...createNewRun(), level: 8 }, "support");
 
-    expect(run.fishCount).toBe(20);
+    expect(run.fishCount).toBe(36);
     expect(run.supportCount).toBe(2);
+  });
+
+  it("recruits fast fish through adoption choices", () => {
+    const parrotfish = applyChoice(createNewRun(), "parrotfish");
+    const mahi = applyChoice(createNewRun(), "mahi-mahi");
+
+    expect(parrotfish.fishCounts.parrotfish).toBe(2);
+    expect(mahi.fishCounts["mahi-mahi"]).toBe(2);
   });
 
   it("supports investment and later returns", () => {
@@ -53,5 +62,20 @@ describe("upgrades", () => {
 
     expect(run.currency).toBe(4);
     expect(run.fishCount).toBe(10);
+  });
+
+  it("awards owned artifacts once", () => {
+    const first = applyArtifactReward(createNewRun(), "bubble-net");
+    const second = applyArtifactReward(first, "bubble-net");
+
+    expect(first.ownedArtifacts).toEqual(["bubble-net"]);
+    expect(second.ownedArtifacts).toEqual(["bubble-net"]);
+  });
+
+  it("alternates reward popups by completed level interval", () => {
+    expect(rewardFlowForCompletedLevel(1)).toBe("none");
+    expect(rewardFlowForCompletedLevel(3)).toBe("artifact");
+    expect(rewardFlowForCompletedLevel(5)).toBe("recruit");
+    expect(rewardFlowForCompletedLevel(15)).toBe("recruit");
   });
 });

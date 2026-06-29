@@ -45,6 +45,7 @@ export const loadRun = (): RunState | null => {
         ...defaultFishCounts(),
         tilapia: parsed.run.fishCount,
       },
+      ownedArtifacts: parsed.run.ownedArtifacts ?? [],
     };
   } catch {
     return null;

@@ -50,6 +50,16 @@ describe("applySharkAttack", () => {
     expect(fish.filter((candidate) => candidate.caught)).toHaveLength(4);
   });
 
+  it("catches six to seven fish from a 36 fish round-one school", () => {
+    const fish = makeFish(36);
+    const shark = makeShark();
+
+    const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
+
+    expect(result.caught).toBeGreaterThanOrEqual(6);
+    expect(result.caught).toBeLessThanOrEqual(7);
+  });
+
   it("catches roughly 18 percent of starting available fish", () => {
     const fish = makeFish(50);
     const shark = makeShark();

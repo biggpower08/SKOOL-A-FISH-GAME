@@ -169,15 +169,27 @@ screen edge. It can open a placeholder overlay with minimal text such as
 `Artifacts`, `No artifacts yet`, and `Future collection`. The overlay should not
 be a full inventory yet and should not create the 120-artifact system now.
 
+Current artifact panel rules:
+
+- Title must be `Artifacts`.
+- Use a 5-column grid when space allows.
+- Show the six basic starter artifacts: Shark Tooth Charm, Bubble Net, School
+  Bell, Pearl Cache, Kelp Bandage, and Drift Scale.
+- Future/unknown slots should say `Hidden`.
+- Hidden slots can use a tiny fog/cloud placeholder animation.
+- Keep cards short: icon, name, rarity/status, and one short effect.
+- Do not build the full 120-artifact collection yet.
+
 ## Round One Balance
 
 Round one should be dangerous and predictable before upgrades matter.
 
-- Default campaign start is 20 normal fish plus one support fish.
+- Default campaign start should be around 30-40 normal fish plus one support
+  fish. Current target is 36 Tilapia plus one Support Fish.
 - Sharks are visibly faster than individual basic/common fish.
 - Round-one shark attacks target roughly 18% of available fish.
-- With 20 starting normal fish, the first round should reliably remove around
-  four fish when the shark gets an attack.
+- With 36 starting normal fish, the first round should reliably remove around
+  six to seven fish when the shark gets an attack.
 - Preserve the shark starvation win condition.
 - Later outcomes can swing based on fish types, upgrades, artifacts, shark
   types, and level scaling.
@@ -229,7 +241,7 @@ entities. Fish and sharks must remain readable against the background.
 
 Active combat HUD should stay compact. Keep level, fish alive, Shells, a clean
 school energy/health bar, compact fish type health summaries, compact shark
-health/hunger summaries, and the artifact edge button.
+hunger/starvation summaries, and the artifact edge button.
 
 Avoid:
 
@@ -241,10 +253,41 @@ Avoid:
 
 Shark status bars should guard against broken values:
 
-- clamp health and hunger ratios between 0 and 1
-- guard against zero max health/hunger
-- show damaged, hungry, starved, and multi-shark summaries without overflow
+- show one clear hunger/starvation bar in the active HUD
+- avoid duplicate shark health bars during combat
+- clamp hunger ratios between 0 and 1
+- guard against zero max hunger
+- show hungry/starved and multi-shark summaries without overflow
 - keep bars compact enough that multiple shark types remain readable
+
+## Reward Popup Timing
+
+Between-level reward popups should be interval-based, not every round.
+
+Current simple rule:
+
+- every 3rd completed round: artifact choice popup
+- every 5th completed round: fish recruitment/adoption popup
+- if both happen on the same completed round, prefer fish recruitment
+- normal rounds should go straight to the next fight or use only a minimal
+  continue step if needed
+
+Fish adoption popup rules:
+
+- Fish are not bought with currency.
+- Adoption options must use `Adopt` buttons.
+- Options should cover Tilapia, Salmon, Parrotfish, Mahi-mahi, Grouper, and
+  Support Fish.
+- Each option should show a placeholder fish marker, fish name, class, short
+  identity, amount added, and `Adopt`.
+- Adopted fish join future rounds and dead fish remain dead.
+
+Artifact reward popup rules:
+
+- Artifact choices use `Take` buttons.
+- Taking an artifact adds it to owned artifacts.
+- Owned artifacts should appear in the artifact panel.
+- Keep artifact effects light; do not build the full collection now.
 
 ## Fish Movement Speed
 
@@ -292,7 +335,7 @@ End Run, or Save and Return Home instead.
 - Starting shark attacks target roughly 18% of fish in the attack window.
 - A level path preview shows current and upcoming level icons.
 - Fish type HUD shows compact counts and health pips by fish type.
-- Enemy HUD summarizes active shark health and hunger by type.
+- Enemy HUD summarizes active shark hunger/starvation by type.
 - Shells are visible in the HUD.
 - Combat background uses subtle animated dark water shading and current lines
   instead of obvious entity-centered ripple circles.

@@ -1,19 +1,32 @@
-import type { ChoiceId, LevelConfig, RunState } from "../game/types";
+import type { ArtifactId, ChoiceId, LevelConfig, RewardFlow, RunState } from "../game/types";
 import { defaultFishCounts } from "./fishTypes";
 import { clamp } from "./vector";
 
-export const STARTING_FISH_COUNT = 20;
+export const STARTING_FISH_COUNT = 36;
 
 export const createNewRun = (): RunState => ({
   level: 1,
   fishCount: STARTING_FISH_COUNT,
   supportCount: 1,
   fishCounts: defaultFishCounts(),
+  ownedArtifacts: [],
   currency: 0,
   invested: 0,
   schoolEnergy: 100,
   bestLevel: 1,
 });
+
+export const rewardFlowForCompletedLevel = (level: number): RewardFlow => {
+  if (level > 0 && level % 5 === 0) {
+    return "recruit";
+  }
+
+  if (level > 0 && level % 3 === 0) {
+    return "artifact";
+  }
+
+  return "none";
+};
 
 export const applyLevelReward = (run: RunState, config: LevelConfig): RunState => {
   const returnedInvestment = config.level % 5 === 0 ? Math.ceil(run.invested * 0.28) : 0;
@@ -27,35 +40,26 @@ export const applyLevelReward = (run: RunState, config: LevelConfig): RunState =
 };
 
 export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
-  if (choice === "tilapia") {
-    return {
-      ...run,
-      fishCount: run.fishCount + 5,
-      fishCounts: {
-        ...run.fishCounts,
-        tilapia: (run.fishCounts.tilapia ?? 0) + 5,
-      },
-    };
-  }
+  const fishToAdd =
+    choice === "tilapia"
+      ? 5
+      : choice === "salmon"
+        ? 3
+        : choice === "parrotfish" || choice === "mahi-mahi"
+          ? 2
+          : choice === "grouper"
+            ? 1
+            : 0;
 
-  if (choice === "salmon") {
-    return {
-      ...run,
-      fishCount: run.fishCount + 3,
-      fishCounts: {
-        ...run.fishCounts,
-        salmon: (run.fishCounts.salmon ?? 0) + 3,
-      },
-    };
-  }
+  if (fishToAdd) {
+    const fishChoice = choice as "tilapia" | "salmon" | "parrotfish" | "mahi-mahi" | "grouper";
 
-  if (choice === "grouper") {
     return {
       ...run,
-      fishCount: run.fishCount + 1,
+      fishCount: run.fishCount + fishToAdd,
       fishCounts: {
         ...run.fishCounts,
-        grouper: (run.fishCounts.grouper ?? 0) + 1,
+        [fishChoice]: (run.fishCounts[fishChoice] ?? 0) + fishToAdd,
       },
     };
   }
@@ -88,5 +92,16 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
     ...run,
     currency: Math.max(0, run.currency - 5),
     schoolEnergy: clamp(run.schoolEnergy + 34, 0, 110),
+  };
+};
+
+export const applyArtifactReward = (run: RunState, artifactId: ArtifactId): RunState => {
+  if (run.ownedArtifacts.includes(artifactId)) {
+    return run;
+  }
+
+  return {
+    ...run,
+    ownedArtifacts: [...run.ownedArtifacts, artifactId],
   };
 };

@@ -6,10 +6,19 @@ export type Vector = {
 export type FishKind = "basic" | "support" | "future";
 export type FishTypeId = "tilapia" | "salmon" | "parrotfish" | "mahi-mahi" | "grouper" | "support";
 export type FishClass = "normal" | "common" | "fast" | "tank" | "support";
+export type ArtifactId =
+  | "shark-tooth-charm"
+  | "bubble-net"
+  | "school-bell"
+  | "pearl-cache"
+  | "kelp-bandage"
+  | "drift-scale";
 export type SharkKind = "basic" | "fast" | "center" | "barracuda" | "eel";
 export type LevelType = "fight" | "shop" | "investment" | "special" | "reward" | "recruit";
 export type GameScreen = "home" | "saves" | "combat" | "choice" | "pause" | "gameover";
-export type ChoiceId = "tilapia" | "salmon" | "grouper" | "support" | "artifact" | "invest" | "heal";
+export type ChoiceId = FishTypeId | "artifact" | "invest" | "heal";
+export type RewardChoiceId = ChoiceId | ArtifactId;
+export type RewardFlow = "none" | "artifact" | "recruit" | "shop";
 
 export type LevelConfig = {
   level: number;
@@ -62,6 +71,7 @@ export type RunState = {
   fishCount: number;
   supportCount: number;
   fishCounts: Partial<Record<FishTypeId, number>>;
+  ownedArtifacts: ArtifactId[];
   currency: number;
   invested: number;
   schoolEnergy: number;

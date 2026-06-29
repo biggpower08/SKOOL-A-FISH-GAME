@@ -5,10 +5,11 @@ import { aliveFish, applySchoolPressure, applySharkAttack, drainSharkHunger } fr
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
-import { applyChoice, applyLevelReward, createNewRun } from "../systems/upgrades";
+import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
+import { applyArtifactReward, applyChoice, applyLevelReward, createNewRun, rewardFlowForCompletedLevel } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
-import type { Bounds, ChoiceId, Fish, GameScreen, LevelConfig, RunState, Shark } from "./types";
+import type { Bounds, Fish, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
 
@@ -283,6 +284,7 @@ export class Game {
         counts[candidate.typeId] = (counts[candidate.typeId] ?? 0) + 1;
         return counts;
       }, {});
+    const completedLevel = this.config.level;
     this.run = applyLevelReward(
       {
         ...this.run,
@@ -295,23 +297,31 @@ export class Game {
       this.config,
     );
     saveRun(this.run);
-    this.screen = "choice";
     this.hideArtifactPanel();
+    const rewardMode = rewardFlowForCompletedLevel(completedLevel);
+
+    if (rewardMode === "none") {
+      this.startLevel();
+      return;
+    }
+
+    this.screen = "choice";
     renderChoice(this.overlay, {
       run: this.run,
-      isRecruitment: createLevelConfig(this.run.level).type === "recruit",
+      mode: rewardMode,
       onChoose: (choice) => this.choose(choice),
+      onContinue: () => this.startLevel(),
       onHome: () => this.returnHome(),
       onEndRun: () => this.endRun(),
     });
   }
 
-  private choose(choice: ChoiceId): void {
+  private choose(choice: RewardChoiceId): void {
     if (!this.run) {
       return;
     }
 
-    this.run = applyChoice(this.run, choice);
+    this.run = isArtifactId(choice) ? applyArtifactReward(this.run, choice) : applyChoice(this.run, choice);
     saveRun(this.run);
     this.startLevel();
   }
@@ -347,16 +357,39 @@ export class Game {
 
     const title = document.createElement("h2");
     title.textContent = "Artifacts";
-    const empty = document.createElement("p");
-    empty.textContent = "No artifacts yet";
-    const future = document.createElement("p");
-    future.textContent = "Future collection";
+    const grid = document.createElement("div");
+    grid.className = "artifact-grid";
+
+    for (const artifact of artifactDefinitions) {
+      const artifactCard = document.createElement("div");
+      const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
+      artifactCard.className = owned ? "artifact-card owned" : "artifact-card";
+      const icon = document.createElement("div");
+      icon.className = "artifact-icon";
+      icon.textContent = "*";
+      const name = document.createElement("strong");
+      name.textContent = artifact.name;
+      const effect = document.createElement("p");
+      effect.textContent = artifact.effect;
+      const rarity = document.createElement("span");
+      rarity.textContent = owned ? artifact.rarity : "Known";
+      artifactCard.replaceChildren(icon, name, effect, rarity);
+      grid.append(artifactCard);
+    }
+
+    for (let index = 0; index < 4; index += 1) {
+      const hidden = document.createElement("div");
+      hidden.className = "artifact-card hidden-artifact";
+      hidden.textContent = "Hidden";
+      grid.append(hidden);
+    }
+
     const close = document.createElement("button");
     close.type = "button";
     close.textContent = "Close";
     close.addEventListener("click", () => this.closeArtifactPanel());
     this.artifactPanel.className = "artifact-panel";
-    this.artifactPanel.replaceChildren(title, empty, future, close);
+    this.artifactPanel.replaceChildren(title, grid, close);
   }
 
   private closeArtifactPanel(): void {

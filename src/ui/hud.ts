@@ -125,7 +125,6 @@ export const drawHud = (
     sharkMark(ctx, summary.kind, x + 23, rowY + 4);
     ctx.fillStyle = "#d8e1ea";
     ctx.fillText(`x${summary.count}`, x + 39, rowY + 8);
-    drawBar(ctx, x + 62, rowY, 70, 5, summary.totalHealth / summary.maxHealth, "#9aa7b5");
-    drawBar(ctx, x + 62, rowY + 8, 70, 5, summary.totalHunger / summary.maxHunger, "#5f7186");
+    drawBar(ctx, x + 62, rowY + 3, 70, 7, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
 };

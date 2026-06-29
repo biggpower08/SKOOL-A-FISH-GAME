@@ -1,4 +1,6 @@
-import type { ChoiceId, RunState } from "../game/types";
+import type { ArtifactId, FishTypeId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
+import { artifactDefinitions } from "../systems/artifacts";
+import { fishTypes } from "../systems/fishTypes";
 
 type HomeHandlers = {
   hasSave: boolean;
@@ -9,8 +11,9 @@ type HomeHandlers = {
 
 type ChoiceHandlers = {
   run: RunState;
-  isRecruitment: boolean;
-  onChoose: (choice: ChoiceId) => void;
+  mode: RewardFlow;
+  onChoose: (choice: RewardChoiceId) => void;
+  onContinue: () => void;
   onHome: () => void;
   onEndRun: () => void;
 };
@@ -53,6 +56,26 @@ const note = (text: string): HTMLParagraphElement => {
   return element;
 };
 
+const card = (className: string, children: HTMLElement[]): HTMLDivElement => {
+  const element = document.createElement("div");
+  element.className = className;
+  element.replaceChildren(...children);
+  return element;
+};
+
+const marker = (className: string, text: string): HTMLDivElement => {
+  const element = document.createElement("div");
+  element.className = className;
+  element.textContent = text;
+  return element;
+};
+
+const small = (text: string): HTMLParagraphElement => {
+  const element = note(text);
+  element.className = "small-note";
+  return element;
+};
+
 export const clearOverlay = (overlay: HTMLElement): void => {
   overlay.replaceChildren();
   overlay.className = "overlay hidden";
@@ -71,27 +94,62 @@ export const renderHome = (overlay: HTMLElement, handlers: HomeHandlers): void =
 export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): void => {
   overlay.className = "overlay menu compact";
 
-  if (handlers.isRecruitment) {
+  if (handlers.mode === "recruit") {
+    const options: Array<{ id: FishTypeId; amount: number; subtitle: string }> = [
+      { id: "tilapia", amount: 5, subtitle: "Stable schooling, low health." },
+      { id: "salmon", amount: 3, subtitle: "Balanced generalist." },
+      { id: "parrotfish", amount: 2, subtitle: "Fast evasion fish." },
+      { id: "mahi-mahi", amount: 2, subtitle: "Very fast, fragile." },
+      { id: "grouper", amount: 1, subtitle: "Slow durable tank." },
+      { id: "support", amount: 1, subtitle: "Restores school energy." },
+    ];
+
     overlay.replaceChildren(
-      title(`Level ${handlers.run.level}`),
-      button("+5 Tilapia", () => handlers.onChoose("tilapia")),
-      button("+3 Salmon", () => handlers.onChoose("salmon")),
-      button("+1 Grouper", () => handlers.onChoose("grouper")),
-      button("+1 Support", () => handlers.onChoose("support")),
+      title("Adopt Fish"),
+      card(
+        "choice-grid",
+        options.map((option) => {
+          const definition = fishTypes[option.id];
+          return card("choice-card", [
+            marker("fish-card-marker", "o"),
+            note(definition.label),
+            small(definition.className),
+            small(option.subtitle),
+            small(`+${option.amount} fish`),
+            button("Adopt", () => handlers.onChoose(option.id)),
+          ]);
+        }),
+      ),
       button("Home", handlers.onHome),
       button("End Run", handlers.onEndRun),
     );
     return;
   }
 
-  overlay.replaceChildren(
-    title(`Level ${handlers.run.level}`),
-    button("Artifact", () => handlers.onChoose("artifact"), handlers.run.currency < 8),
-    button("Invest", () => handlers.onChoose("invest")),
-    button("Heal", () => handlers.onChoose("heal"), handlers.run.currency < 5),
-    button("Home", handlers.onHome),
-    button("End Run", handlers.onEndRun),
-  );
+  if (handlers.mode === "artifact") {
+    const choices = artifactDefinitions.filter((artifact) => !handlers.run.ownedArtifacts.includes(artifact.id)).slice(0, 3);
+
+    overlay.replaceChildren(
+      title("Choose Artifact"),
+      card(
+        "choice-grid artifact-choice-grid",
+        choices.map((artifact) =>
+          card("choice-card", [
+            marker("artifact-card-marker", "*"),
+            note(artifact.name),
+            small(artifact.rarity),
+            small(artifact.effect),
+            button("Take", () => handlers.onChoose(artifact.id as ArtifactId)),
+          ]),
+        ),
+      ),
+      button("Home", handlers.onHome),
+      button("End Run", handlers.onEndRun),
+    );
+    return;
+  }
+
+  overlay.replaceChildren(title(`Level ${handlers.run.level}`), button("Continue", handlers.onContinue), button("Home", handlers.onHome), button("End Run", handlers.onEndRun));
 };
 
 export const renderSaves = (overlay: HTMLElement, handlers: SavesHandlers): void => {
