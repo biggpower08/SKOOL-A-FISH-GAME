@@ -4,11 +4,11 @@ import { createSharks, updateSharks } from "./Shark";
 import { createLevelConfig } from "../systems/levels";
 
 describe("entities", () => {
-  it("creates basic and support fish as placeholder circles", () => {
+  it("creates active fish as placeholder circles without support fish", () => {
     const school = createSchool(8, 2, { width: 600, height: 400 });
 
     expect(school.filter((fish) => fish.kind === "basic")).toHaveLength(8);
-    expect(school.filter((fish) => fish.kind === "support")).toHaveLength(2);
+    expect(school.filter((fish) => fish.kind === "support")).toHaveLength(0);
     expect(school.every((fish) => fish.radius > 0 && !fish.caught)).toBe(true);
   });
 
@@ -27,7 +27,7 @@ describe("entities", () => {
     );
 
     expect(school.filter((fish) => fish.typeId === "salmon")).toHaveLength(2);
-    expect(school.filter((fish) => fish.typeId === "support")).toHaveLength(1);
+    expect(school.filter((fish) => fish.typeId === "support")).toHaveLength(0);
     expect(school.find((fish) => fish.typeId === "grouper")?.maxHealth).toBeGreaterThan(
       school.find((fish) => fish.typeId === "tilapia")?.maxHealth ?? 0,
     );

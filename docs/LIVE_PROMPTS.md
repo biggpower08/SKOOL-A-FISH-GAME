@@ -42,7 +42,7 @@ Working currency name: `Shells`.
 Currency is for:
 
 - buying artifacts
-- healing or replenishing school energy
+- kelp recovery that restores missing fish toward max fish count
 - future shop effects
 - possible artifact/shop upgrades later
 
@@ -60,8 +60,9 @@ Round rewards should start as meaningful Shells, not single digits. Early fight
 rewards should land around 100-200 Shells, with a simple upward curve such as
 `150 + level * 10`. Reward nodes can add a small bonus.
 
-Healing, investment, and recruitment should appear on intervals or level-path
-nodes. Most levels should remain ordinary fish-vs-shark fights.
+Every completed round should pause at a clean intermission. Normal intermissions
+offer kelp recovery, investment, or Continue. Artifact and recruitment choices
+still happen only on their intervals or path nodes.
 
 Development currency editing can exist for testing. Simple controls like `[` to
 decrease Shells and `]` to increase Shells are enough. Do not build a debug
@@ -72,8 +73,9 @@ economy menu.
 Fish join through recruitment levels, not through normal currency purchases.
 
 Dead fish stay dead for the run. If the shark catches five fish, those fish are
-gone. Healing can restore school energy or living fish durability later, but it
-does not revive dead fish.
+gone until the player spends resources on kelp recovery. Kelp restores missing
+fish toward the current max fish count and cannot exceed capacity unless the
+player earns new fish through recruitment.
 
 New fish can join through:
 
@@ -86,7 +88,6 @@ Recruitment choices can offer fish groups such as:
 - several tilapia
 - a few salmon
 - one grouper
-- one support fish
 - a few fast fish
 - future damage or debuff fish
 
@@ -101,7 +102,7 @@ should matter, and the school should change over time.
 The shop should focus on:
 
 - buying artifacts
-- healing fish or restoring school energy
+- kelp recovery that restores missing fish toward max fish count
 - improving future rewards later
 
 The shop should not sell normal fish directly.
@@ -179,13 +180,57 @@ Current artifact panel rules:
 - Hidden slots can use a tiny fog/cloud placeholder animation.
 - Keep cards short: icon, name, rarity/status, and one short effect.
 - Do not build the full 120-artifact collection yet.
+- The current artifact panel and Hidden cards are a good direction. Do not
+  redesign them unless they conflict with a necessary gameplay fix.
+
+## Round Intermissions, Kelp, and Investment
+
+Every completed round should show a break/intermission popup. Do not show full
+artifact or recruitment choices every round, but do give the player a clean
+between-round decision.
+
+Intermission rules:
+
+- Normal rounds show `Feed Kelp`, `Invest Shells`, and `Continue`.
+- Artifact reward rounds still show artifact choices on the 3rd completed
+  round interval.
+- Recruitment rounds still show adoption choices on the 5th completed round
+  interval, and recruitment wins when both intervals line up.
+- Popup style should stay close to the existing compact overlay style.
+- The player can go Home or End Run from between-round screens.
+
+Max fish rules:
+
+- `maxFishCount` is the highest current party capacity earned this run.
+- `fishCount` is the currently alive school count.
+- `missingFishCount = maxFishCount - fishCount`.
+- Shark kills reduce current fish count after the round.
+- Recruitment increases current fish count and can increase max fish count.
+- Recovery cannot exceed max fish count.
+
+Kelp recovery rule:
+
+- `Feed Kelp` costs Shells.
+- First simple version: spend 100 Shells to restore up to 5 missing fish.
+- Kelp should restore toward max fish count only.
+- Kelp should use minimal text and should not become a complex healing system
+  yet.
+
+Investment rule:
+
+- `Invest Shells` spends 100 Shells now.
+- After 3 completed rounds, the investment returns 200 Shells.
+- If the run ends before return, the investment is lost.
+- If the player has less than 100 Shells or already has a pending investment,
+  the investment choice should be disabled or unavailable.
+- The return should appear as a short `Investment Returned` popup.
 
 ## Round One Balance
 
 Round one should be dangerous and predictable before upgrades matter.
 
-- Default campaign start should be around 30-40 normal fish plus one support
-  fish. Current target is 36 Tilapia plus one Support Fish.
+- Default campaign start should be around 30-40 normal fish. Current active
+  target is 36 Tilapia and no active Support Fish.
 - Sharks are visibly faster than individual basic/common fish.
 - Round-one shark attacks target roughly 18% of available fish.
 - With 36 starting normal fish, the first round should reliably remove around
@@ -202,15 +247,17 @@ radius, and reward values when practical.
 
 Fish types are active gameplay data while still using placeholder circles.
 
-Current fish types:
+Current active fish types:
 
 - Tilapia: common/normal, low health, stable schooling, number fish.
 - Salmon: normal, medium health, medium speed, reliable generalist.
 - Parrotfish: fast, higher speed, better evasion, lower durability.
 - Mahi-mahi: fast, very high speed, low-medium health, high evasion.
 - Grouper: tank, high health, slow speed, survives pressure.
-- Support Fish: support/healing identity, medium durability, supports school
-  energy and needs visible health.
+
+Support Fish is removed from active gameplay for now. New campaigns should not
+start with Support Fish, recruitment should not offer Support Fish, and legacy
+saves with Support Fish should be converted or ignored safely.
 
 The side UI should stay compact:
 
@@ -262,22 +309,22 @@ Shark status bars should guard against broken values:
 
 ## Reward Popup Timing
 
-Between-level reward popups should be interval-based, not every round.
+Between-level special reward popups should be interval-based, but every
+completed round should still show a break popup.
 
 Current simple rule:
 
 - every 3rd completed round: artifact choice popup
 - every 5th completed round: fish recruitment/adoption popup
 - if both happen on the same completed round, prefer fish recruitment
-- normal rounds should go straight to the next fight or use only a minimal
-  continue step if needed
+- normal rounds should show the compact break popup with kelp, investment, and
+  Continue
 
 Fish adoption popup rules:
 
 - Fish are not bought with currency.
 - Adoption options must use `Adopt` buttons.
-- Options should cover Tilapia, Salmon, Parrotfish, Mahi-mahi, Grouper, and
-  Support Fish.
+- Options should cover Tilapia, Salmon, Parrotfish, Mahi-mahi, and Grouper.
 - Each option should show a placeholder fish marker, fish name, class, short
   identity, amount added, and `Adopt`.
 - Adopted fish join future rounds and dead fish remain dead.
@@ -294,8 +341,13 @@ Artifact reward popup rules:
 Fish should feel more alive than the first prototype pass. Base fish speeds and
 flee response can be increased, but basic/common fish must not outrun a
 round-one shark one-on-one. Fish survive through flocking, flee behavior,
-support, future artifacts, and player choices. The round-one 18% lethality
-target remains active.
+future artifacts, and player choices. Fish should steer away from edges before
+hard clamping and should get stronger corner avoidance so corners do not become
+safe traps. The round-one 18% lethality target remains active.
+
+Sharks should remain fast and aggressive, but they should not wedge into canvas
+edges or corners. When a shark hits a boundary, dampen or redirect wall-pushing
+velocity and steer it back into the arena without teleporting.
 
 ## Home / Exit / Leave Run Flow
 
@@ -340,15 +392,20 @@ End Run, or Save and Return Home instead.
 - Combat background uses subtle animated dark water shading and current lines
   instead of obvious entity-centered ripple circles.
 - Artifact edge icon opens a minimal placeholder overlay.
+- Every completed round shows a break popup.
+- Normal breaks offer kelp recovery, investment, and Continue.
+- Current fish/max fish should be visible enough to understand recovery.
 
 ## Planned Fish Type Order
 
 1. Salmon or Basic Fish
 2. Tilapia
-3. Support Fish
-4. Parrotfish
-5. Grouper
-6. Mahi-mahi
+3. Parrotfish
+4. Grouper
+5. Mahi-mahi
+
+Support/healing fish can return later as a future class, but it should not be an
+active current unit.
 
 Fish types may share placeholder circle visuals first. They should eventually
 have different stats, readable shop/side UI identity, and survival impact. No

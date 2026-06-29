@@ -78,7 +78,8 @@ const escape = (fish: Fish, sharks: Shark[], threatRadius: number): Vector => {
 };
 
 const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
-  const margin = 46;
+  const margin = 72;
+  const cornerMargin = 96;
   const push = zero();
 
   if (fish.pos.x < margin) {
@@ -95,6 +96,14 @@ const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
 
   if (fish.pos.y > bounds.height - margin) {
     push.y -= (fish.pos.y - (bounds.height - margin)) / margin;
+  }
+
+  const nearHorizontalEdge = fish.pos.x < cornerMargin || fish.pos.x > bounds.width - cornerMargin;
+  const nearVerticalEdge = fish.pos.y < cornerMargin || fish.pos.y > bounds.height - cornerMargin;
+
+  if (nearHorizontalEdge && nearVerticalEdge) {
+    const arenaCenter = { x: bounds.width / 2, y: bounds.height / 2 };
+    return add(push, scale(normalize(subtract(arenaCenter, fish.pos)), 1.4));
   }
 
   return push;
@@ -114,7 +123,7 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const edge = boundaryPush(fish, options);
 
     fish.vel = limit(
-      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 3.6)), scale(edge, 0.75)),
+      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 3.6)), scale(edge, 1.35)),
       fish.maxSpeed,
     );
     fish.pos = {

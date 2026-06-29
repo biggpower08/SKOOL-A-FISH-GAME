@@ -54,4 +54,30 @@ describe("save system", () => {
 
     expect(hasSavedRun()).toBe(false);
   });
+
+  it("converts legacy support fish saves into active fish safely", () => {
+    const values = installStorage();
+    values.set(
+      "skool-a-fish-game-save",
+      JSON.stringify({
+        version: 1,
+        run: {
+          ...createNewRun(),
+          fishCount: 37,
+          supportCount: 1,
+          fishCounts: {
+            tilapia: 36,
+            support: 1,
+          },
+        },
+      }),
+    );
+
+    const run = loadRun();
+
+    expect(run?.supportCount).toBe(0);
+    expect(run?.fishCounts.support).toBeUndefined();
+    expect(run?.fishCounts.salmon).toBe(1);
+    expect(run?.maxFishCount).toBe(37);
+  });
 });

@@ -190,6 +190,7 @@ export class Game {
     clearOverlay(this.overlay);
     this.showArtifactAccess();
     this.config = createLevelConfig(this.run.level);
+    this.run.lastInvestmentReturn = 0;
     this.fish = createSchool(this.run.fishCount, this.run.supportCount, this.combatBounds(), this.run.fishCounts);
     this.sharks = createSharks(this.config, this.combatBounds());
     this.elapsed = 0;
@@ -276,8 +277,7 @@ export class Game {
       return;
     }
 
-    const livingBasic = this.fish.filter((candidate) => candidate.kind === "basic" && !candidate.caught).length;
-    const livingSupport = this.fish.filter((candidate) => candidate.kind === "support" && !candidate.caught).length;
+    const livingBasic = this.fish.filter((candidate) => !candidate.caught && candidate.kind !== "support").length;
     const fishCounts = this.fish
       .filter((candidate) => !candidate.caught && candidate.kind !== "support")
       .reduce<RunState["fishCounts"]>((counts, candidate) => {
@@ -290,7 +290,7 @@ export class Game {
         ...this.run,
         level: this.run.level + 1,
         fishCount: livingBasic,
-        supportCount: livingSupport,
+        supportCount: 0,
         fishCounts,
         schoolEnergy: clamp(this.run.schoolEnergy + 7, 0, 110),
       },
@@ -300,8 +300,24 @@ export class Game {
     this.hideArtifactPanel();
     const rewardMode = rewardFlowForCompletedLevel(completedLevel);
 
-    if (rewardMode === "none") {
-      this.startLevel();
+    if (this.run.lastInvestmentReturn > 0) {
+      this.screen = "choice";
+      renderChoice(this.overlay, {
+        run: this.run,
+        mode: "investment-return",
+        onChoose: (choice) => this.choose(choice),
+        onContinue: () => this.showIntermission(rewardMode),
+        onHome: () => this.returnHome(),
+        onEndRun: () => this.endRun(),
+      });
+      return;
+    }
+
+    this.showIntermission(rewardMode);
+  }
+
+  private showIntermission(rewardMode = rewardFlowForCompletedLevel(Math.max(0, (this.run?.level ?? 1) - 1))): void {
+    if (!this.run) {
       return;
     }
 

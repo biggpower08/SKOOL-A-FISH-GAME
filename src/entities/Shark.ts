@@ -1,6 +1,6 @@
 import type { Bounds, Fish, LevelConfig, Shark } from "../game/types";
 import { aliveFish, schoolCenter } from "../systems/combat";
-import { centerOf, clamp, distance, limit, normalize, scale, subtract } from "../systems/vector";
+import { add, centerOf, clamp, distance, limit, normalize, scale, subtract } from "../systems/vector";
 
 const sharkStats = {
   basic: {
@@ -163,7 +163,29 @@ export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: 
     }
 
     const target = targetForShark(shark, fish);
-    const desired = scale(normalize(subtract(target, shark.pos)), shark.speed);
+    const margin = shark.radius + 18;
+    const arenaCenter = { x: bounds.width / 2, y: bounds.height / 2 };
+    const edgeSteer = { x: 0, y: 0 };
+
+    if (shark.pos.x <= margin) {
+      edgeSteer.x += 1;
+    }
+
+    if (shark.pos.x >= bounds.width - margin) {
+      edgeSteer.x -= 1;
+    }
+
+    if (shark.pos.y <= margin) {
+      edgeSteer.y += 1;
+    }
+
+    if (shark.pos.y >= bounds.height - margin) {
+      edgeSteer.y -= 1;
+    }
+
+    const desiredDirection =
+      edgeSteer.x !== 0 || edgeSteer.y !== 0 ? normalize(add(edgeSteer, scale(normalize(subtract(arenaCenter, shark.pos)), 0.65))) : normalize(subtract(target, shark.pos));
+    const desired = scale(desiredDirection, shark.speed);
     shark.vel = limit(
       {
         x: shark.vel.x * (1 - shark.acceleration) + desired.x * shark.acceleration,
@@ -171,6 +193,23 @@ export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: 
       },
       shark.speed,
     );
+
+    if (shark.pos.x <= shark.radius && shark.vel.x < 0) {
+      shark.vel.x = Math.abs(shark.vel.x) * 0.65 + shark.speed * 0.35;
+    }
+
+    if (shark.pos.x >= bounds.width - shark.radius && shark.vel.x > 0) {
+      shark.vel.x = -Math.abs(shark.vel.x) * 0.65 - shark.speed * 0.35;
+    }
+
+    if (shark.pos.y <= shark.radius && shark.vel.y < 0) {
+      shark.vel.y = Math.abs(shark.vel.y) * 0.65 + shark.speed * 0.35;
+    }
+
+    if (shark.pos.y >= bounds.height - shark.radius && shark.vel.y > 0) {
+      shark.vel.y = -Math.abs(shark.vel.y) * 0.65 - shark.speed * 0.35;
+    }
+
     shark.pos = {
       x: clamp(shark.pos.x + shark.vel.x * dt, shark.radius, bounds.width - shark.radius),
       y: clamp(shark.pos.y + shark.vel.y * dt, shark.radius, bounds.height - shark.radius),

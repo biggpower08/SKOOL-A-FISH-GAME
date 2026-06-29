@@ -3,11 +3,12 @@ import { createLevelConfig } from "./levels";
 import { applyArtifactReward, applyChoice, applyLevelReward, createNewRun, rewardFlowForCompletedLevel } from "./upgrades";
 
 describe("upgrades", () => {
-  it("starts with managed fish and one support fish", () => {
+  it("starts with managed fish and no active support fish", () => {
     expect(createNewRun()).toMatchObject({
       level: 1,
       fishCount: 36,
-      supportCount: 1,
+      maxFishCount: 36,
+      supportCount: 0,
       fishCounts: {
         tilapia: 36,
       },
@@ -20,15 +21,9 @@ describe("upgrades", () => {
     const run = applyChoice({ ...createNewRun(), level: 8 }, "tilapia");
 
     expect(run.fishCount).toBeGreaterThan(36);
+    expect(run.maxFishCount).toBeGreaterThan(36);
     expect(run.fishCounts.tilapia).toBe(41);
-    expect(run.supportCount).toBe(1);
-  });
-
-  it("recruits support fish through recruitment choices", () => {
-    const run = applyChoice({ ...createNewRun(), level: 8 }, "support");
-
-    expect(run.fishCount).toBe(36);
-    expect(run.supportCount).toBe(2);
+    expect(run.supportCount).toBe(0);
   });
 
   it("recruits fast fish through adoption choices", () => {
@@ -36,25 +31,34 @@ describe("upgrades", () => {
     const mahi = applyChoice(createNewRun(), "mahi-mahi");
 
     expect(parrotfish.fishCounts.parrotfish).toBe(2);
+    expect(parrotfish.maxFishCount).toBe(38);
     expect(mahi.fishCounts["mahi-mahi"]).toBe(2);
   });
 
-  it("supports investment and later returns", () => {
-    const invested = applyChoice({ ...createNewRun(), currency: 20 }, "invest");
-    const rewarded = applyLevelReward(invested, createLevelConfig(5));
+  it("invests 100 Shells and returns double after three completed rounds", () => {
+    const invested = applyChoice({ ...createNewRun(), level: 2, currency: 150 }, "invest");
+    const early = applyLevelReward(invested, createLevelConfig(3));
+    const matured = applyLevelReward(early, createLevelConfig(4));
 
-    expect(invested.currency).toBeLessThan(20);
-    expect(invested.invested).toBeGreaterThan(0);
-    expect(rewarded.currency).toBeGreaterThan(invested.currency);
-    expect(rewarded.invested).toBeLessThan(invested.invested);
+    expect(invested.currency).toBe(50);
+    expect(invested.invested).toBe(100);
+    expect(invested.investmentReturnLevel).toBe(4);
+    expect(early.lastInvestmentReturn).toBe(0);
+    expect(matured.currency).toBeGreaterThanOrEqual(200);
+    expect(matured.invested).toBe(0);
+    expect(matured.lastInvestmentReturn).toBe(200);
   });
 
-  it("lets the shop replenish school energy", () => {
-    const run = applyChoice({ ...createNewRun(), currency: 6, fishCount: 12, schoolEnergy: 50 }, "heal");
+  it("spends kelp to recover missing fish up to max fish count", () => {
+    const run = applyChoice(
+      { ...createNewRun(), currency: 140, fishCount: 29, maxFishCount: 36, fishCounts: { tilapia: 29 }, schoolEnergy: 50 },
+      "heal",
+    );
 
-    expect(run.currency).toBe(1);
-    expect(run.fishCount).toBe(12);
-    expect(run.schoolEnergy).toBe(84);
+    expect(run.currency).toBe(40);
+    expect(run.fishCount).toBe(34);
+    expect(run.fishCounts.tilapia).toBe(34);
+    expect(run.schoolEnergy).toBe(62);
   });
 
   it("spends currency on a placeholder artifact without adding fish", () => {

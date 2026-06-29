@@ -1,5 +1,6 @@
 import type { RunState } from "../game/types";
 import { defaultFishCounts } from "./fishTypes";
+import { normalizeRun } from "./upgrades";
 
 const SAVE_KEY = "skool-a-fish-game-save";
 
@@ -39,14 +40,14 @@ export const loadRun = (): RunState | null => {
       return null;
     }
 
-    return {
+    return normalizeRun({
       ...parsed.run,
       fishCounts: parsed.run.fishCounts ?? {
         ...defaultFishCounts(),
         tilapia: parsed.run.fishCount,
       },
       ownedArtifacts: parsed.run.ownedArtifacts ?? [],
-    };
+    });
   } catch {
     return null;
   }

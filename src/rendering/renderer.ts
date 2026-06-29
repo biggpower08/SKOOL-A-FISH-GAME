@@ -1,5 +1,5 @@
 import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
-import { fishTypes } from "../systems/fishTypes";
+import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
 
 const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, fill: string): void => {
@@ -120,7 +120,8 @@ export const drawCombat = (
       continue;
     }
 
-    const fill = candidate.threatened ? "#ff4058" : fishTypes[candidate.typeId].color;
+    const definition = candidate.typeId === "support" ? null : fishTypes[candidate.typeId as ActiveFishTypeId];
+    const fill = candidate.threatened ? "#ff4058" : (definition?.color ?? "#ffffff");
     drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
 
     if (candidate.kind === "support") {

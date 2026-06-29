@@ -126,4 +126,19 @@ describe("shark hunger and predator types", () => {
     expect(school[0].maxSpeed).toBeGreaterThan(1.6);
     expect(shark.speed).toBeGreaterThan(school[0].maxSpeed);
   });
+
+  it("steers sharks back into the arena when they hit an edge", () => {
+    const school = createSchool(1, 0, { width: 600, height: 400 });
+    school[0].pos = { x: 4, y: 4 };
+    const [shark] = createSharks(createLevelConfig(1), { width: 600, height: 400 });
+    shark.pos = { x: shark.radius, y: shark.radius };
+    shark.vel = { x: -shark.speed, y: -shark.speed };
+
+    updateSharks([shark], school, { width: 600, height: 400 }, 1);
+
+    expect(shark.pos.x).toBeGreaterThanOrEqual(shark.radius);
+    expect(shark.pos.y).toBeGreaterThanOrEqual(shark.radius);
+    expect(shark.vel.x).toBeGreaterThan(0);
+    expect(shark.vel.y).toBeGreaterThan(0);
+  });
 });

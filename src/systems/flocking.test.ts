@@ -64,4 +64,35 @@ describe("updateFlocking", () => {
     expect(fish[0].vel.x).toBeGreaterThan(0);
     expect(fish[0].pos.x).toBeGreaterThan(100);
   });
+
+  it("pushes fish out of corners instead of letting corners become safe traps", () => {
+    const fish: Fish[] = [
+      {
+        id: "corner-fish",
+        kind: "basic",
+        typeId: "tilapia",
+        className: "common",
+        pos: { x: 5, y: 5 },
+        vel: { x: -1, y: -1 },
+        radius: 4,
+        maxSpeed: 2,
+        health: 1,
+        maxHealth: 1,
+        threatened: false,
+        caught: false,
+      },
+    ];
+
+    updateFlocking(fish, [], {
+      width: 400,
+      height: 300,
+      threatRadius: 120,
+      dt: 1,
+    });
+
+    expect(fish[0].vel.x).toBeGreaterThan(0);
+    expect(fish[0].vel.y).toBeGreaterThan(0);
+    expect(fish[0].pos.x).toBeGreaterThan(5);
+    expect(fish[0].pos.y).toBeGreaterThan(5);
+  });
 });

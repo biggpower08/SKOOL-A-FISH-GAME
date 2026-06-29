@@ -1,6 +1,6 @@
-import type { Fish, FishTypeId, LevelConfig, RunState, Shark } from "../game/types";
+import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
 import { summarizeSharks } from "../entities/Shark";
-import { fishTypes } from "../systems/fishTypes";
+import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 
 const PANEL_WIDTH = 164;
 
@@ -56,15 +56,16 @@ const sharkMark = (ctx: CanvasRenderingContext2D, kind: Shark["kind"], x: number
 };
 
 type FishTypeSummary = {
-  typeId: FishTypeId;
+  typeId: ActiveFishTypeId;
   alive: Fish[];
 };
 
 const summarizeFish = (fish: Fish[]): FishTypeSummary[] => {
-  const summaries = new Map<FishTypeId, Fish[]>();
+  const summaries = new Map<ActiveFishTypeId, Fish[]>();
 
-  for (const candidate of fish.filter((item) => !item.caught)) {
-    summaries.set(candidate.typeId, [...(summaries.get(candidate.typeId) ?? []), candidate]);
+  for (const candidate of fish.filter((item) => !item.caught && item.typeId !== "support")) {
+    const typeId = candidate.typeId as ActiveFishTypeId;
+    summaries.set(typeId, [...(summaries.get(typeId) ?? []), candidate]);
   }
 
   return Array.from(summaries.entries()).map(([typeId, alive]) => ({ typeId, alive }));

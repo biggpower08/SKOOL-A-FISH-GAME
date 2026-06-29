@@ -1,7 +1,9 @@
 import type { FishClass, FishKind, FishTypeId } from "../game/types";
 
+export type ActiveFishTypeId = Exclude<FishTypeId, "support">;
+
 export type FishTypeDefinition = {
-  id: FishTypeId;
+  id: ActiveFishTypeId;
   label: string;
   placeholderKind: FishKind;
   className: FishClass;
@@ -86,25 +88,11 @@ export const fishTypeDefinitions: FishTypeDefinition[] = [
     support: "none",
     cost: "high",
   },
-  {
-    id: "support",
-    label: "Support",
-    placeholderKind: "support",
-    className: "support",
-    role: "school energy support",
-    maxHealth: 100,
-    maxSpeed: 1.75,
-    radius: 7,
-    color: "#bdefff",
-    schooling: "medium",
-    support: "energy",
-    cost: "high",
-  },
 ];
 
 export const fishTypes = Object.fromEntries(
   fishTypeDefinitions.map((definition) => [definition.id, definition]),
-) as Record<FishTypeId, FishTypeDefinition>;
+) as Record<ActiveFishTypeId, FishTypeDefinition>;
 
 export const defaultFishCounts = (): Partial<Record<FishTypeId, number>> => ({
   tilapia: 36,

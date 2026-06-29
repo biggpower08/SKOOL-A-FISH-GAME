@@ -18,7 +18,7 @@ export type LevelType = "fight" | "shop" | "investment" | "special" | "reward" |
 export type GameScreen = "home" | "saves" | "combat" | "choice" | "pause" | "gameover";
 export type ChoiceId = FishTypeId | "artifact" | "invest" | "heal";
 export type RewardChoiceId = ChoiceId | ArtifactId;
-export type RewardFlow = "none" | "artifact" | "recruit" | "shop";
+export type RewardFlow = "none" | "artifact" | "recruit" | "investment-return";
 
 export type LevelConfig = {
   level: number;
@@ -69,11 +69,14 @@ export type Shark = {
 export type RunState = {
   level: number;
   fishCount: number;
+  maxFishCount: number;
   supportCount: number;
   fishCounts: Partial<Record<FishTypeId, number>>;
   ownedArtifacts: ArtifactId[];
   currency: number;
   invested: number;
+  investmentReturnLevel: number | null;
+  lastInvestmentReturn: number;
   schoolEnergy: number;
   bestLevel: number;
 };

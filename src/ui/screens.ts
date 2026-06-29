@@ -1,6 +1,6 @@
-import type { ArtifactId, FishTypeId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
+import type { ArtifactId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
 import { artifactDefinitions } from "../systems/artifacts";
-import { fishTypes } from "../systems/fishTypes";
+import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 
 type HomeHandlers = {
   hasSave: boolean;
@@ -95,13 +95,12 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
   overlay.className = "overlay menu compact";
 
   if (handlers.mode === "recruit") {
-    const options: Array<{ id: FishTypeId; amount: number; subtitle: string }> = [
+    const options: Array<{ id: ActiveFishTypeId; amount: number; subtitle: string }> = [
       { id: "tilapia", amount: 5, subtitle: "Stable schooling, low health." },
       { id: "salmon", amount: 3, subtitle: "Balanced generalist." },
       { id: "parrotfish", amount: 2, subtitle: "Fast evasion fish." },
       { id: "mahi-mahi", amount: 2, subtitle: "Very fast, fragile." },
       { id: "grouper", amount: 1, subtitle: "Slow durable tank." },
-      { id: "support", amount: 1, subtitle: "Restores school energy." },
     ];
 
     overlay.replaceChildren(
@@ -149,7 +148,44 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
     return;
   }
 
-  overlay.replaceChildren(title(`Level ${handlers.run.level}`), button("Continue", handlers.onContinue), button("Home", handlers.onHome), button("End Run", handlers.onEndRun));
+  if (handlers.mode === "investment-return") {
+    overlay.replaceChildren(
+      title("Investment Returned"),
+      note(`+${handlers.run.lastInvestmentReturn} Shells`),
+      button("Continue", handlers.onContinue),
+      button("Home", handlers.onHome),
+      button("End Run", handlers.onEndRun),
+    );
+    return;
+  }
+
+  const missingFish = Math.max(0, handlers.run.maxFishCount - handlers.run.fishCount);
+  const canKelp = handlers.run.currency >= 100 && missingFish > 0;
+  const canInvest = handlers.run.currency >= 100 && handlers.run.invested === 0;
+
+  overlay.replaceChildren(
+    title("Break"),
+    note(`Fish ${handlers.run.fishCount}/${handlers.run.maxFishCount}`),
+    card("choice-grid small-choice-grid", [
+      card("choice-card", [
+        marker("fish-card-marker", "o"),
+        note("Feed Kelp"),
+        small("100 Shells"),
+        small(`Recover up to ${Math.min(5, missingFish)} fish`),
+        button("Feed Kelp", () => handlers.onChoose("heal"), !canKelp),
+      ]),
+      card("choice-card", [
+        marker("artifact-card-marker", "$"),
+        note("Invest Shells"),
+        small("100 now"),
+        small("+200 after 3 rounds"),
+        button("Invest Shells", () => handlers.onChoose("invest"), !canInvest),
+      ]),
+    ]),
+    button("Continue", handlers.onContinue),
+    button("Home", handlers.onHome),
+    button("End Run", handlers.onEndRun),
+  );
 };
 
 export const renderSaves = (overlay: HTMLElement, handlers: SavesHandlers): void => {
