@@ -91,7 +91,7 @@ button:disabled {
 .artifact-edge-button {
   position: fixed;
   top: 78px;
-  right: 198px;
+  right: 174px;
   z-index: 4;
   width: 36px;
   min-height: 36px;
@@ -109,7 +109,7 @@ button:disabled {
 .artifact-panel {
   position: fixed;
   top: 122px;
-  right: 198px;
+  right: 174px;
   z-index: 5;
   width: 178px;
   padding: 14px;
@@ -146,6 +146,6 @@ button:disabled {
 
   .artifact-edge-button,
   .artifact-panel {
-    right: 198px;
+    right: 174px;
   }
 }

@@ -10,7 +10,7 @@ import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
 import type { Bounds, ChoiceId, Fish, GameScreen, LevelConfig, RunState, Shark } from "./types";
 
-const HUD_WIDTH = 188;
+const HUD_WIDTH = 164;
 
 export class Game {
   private readonly canvas: HTMLCanvasElement;

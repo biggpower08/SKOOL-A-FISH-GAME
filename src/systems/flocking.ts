@@ -114,7 +114,7 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const edge = boundaryPush(fish, options);
 
     fish.vel = limit(
-      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 3)), scale(edge, 0.75)),
+      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 3.6)), scale(edge, 0.75)),
       fish.maxSpeed,
     );
     fish.pos = {

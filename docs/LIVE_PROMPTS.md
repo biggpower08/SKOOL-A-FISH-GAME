@@ -221,6 +221,39 @@ Canvas-only animated dark blue, purple, black, and gray shading. Avoid obvious
 entity-centered pulsating circles during combat. If ripples remain, keep them
 very subtle and non-distracting.
 
+Current visual rule: do not use the old pulse/circle wave effect around units or
+health displays. Prefer animated gradients and faint flowing current lines behind
+entities. Fish and sharks must remain readable against the background.
+
+## HUD and Health Bar Cleanup
+
+Active combat HUD should stay compact. Keep level, fish alive, Shells, a clean
+school energy/health bar, compact fish type health summaries, compact shark
+health/hunger summaries, and the artifact edge button.
+
+Avoid:
+
+- repeated path/reward detail during combat
+- tiny decorative circles around the total school health bar
+- oversized fish type rows
+- full ability descriptions
+- debug text unless explicitly dev-mode
+
+Shark status bars should guard against broken values:
+
+- clamp health and hunger ratios between 0 and 1
+- guard against zero max health/hunger
+- show damaged, hungry, starved, and multi-shark summaries without overflow
+- keep bars compact enough that multiple shark types remain readable
+
+## Fish Movement Speed
+
+Fish should feel more alive than the first prototype pass. Base fish speeds and
+flee response can be increased, but basic/common fish must not outrun a
+round-one shark one-on-one. Fish survive through flocking, flee behavior,
+support, future artifacts, and player choices. The round-one 18% lethality
+target remains active.
+
 ## Home / Exit / Leave Run Flow
 
 The game needs a clear way to leave the current screen or return home.
@@ -259,10 +292,10 @@ End Run, or Save and Return Home instead.
 - Starting shark attacks target roughly 18% of fish in the attack window.
 - A level path preview shows current and upcoming level icons.
 - Fish type HUD shows compact counts and health pips by fish type.
-- Enemy HUD summarizes active shark types and hunger.
+- Enemy HUD summarizes active shark health and hunger by type.
 - Shells are visible in the HUD.
-- Combat background uses subtle animated dark water shading instead of obvious
-  entity-centered ripple circles.
+- Combat background uses subtle animated dark water shading and current lines
+  instead of obvious entity-centered ripple circles.
 - Artifact edge icon opens a minimal placeholder overlay.
 
 ## Planned Fish Type Order

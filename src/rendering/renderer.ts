@@ -9,21 +9,6 @@ const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius:
   ctx.fill();
 };
 
-const drawAmbientRipple = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  radius: number,
-  time: number,
-  opacity: number,
-): void => {
-  const pulse = (Math.sin(time * 0.004 + radius) + 1) * 0.5;
-  ctx.strokeStyle = `rgba(155, 206, 235, ${opacity * (0.45 + pulse * 0.55)})`;
-  ctx.beginPath();
-  ctx.arc(x, y, radius + pulse * radius * 0.45, 0, Math.PI * 2);
-  ctx.stroke();
-};
-
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   if (shark.kind === "barracuda") {
     ctx.fillStyle = "#151a20";
@@ -92,6 +77,30 @@ const drawWaterShade = (ctx: CanvasRenderingContext2D, width: number, height: nu
   ctx.fillRect(0, 0, width, height);
 };
 
+const drawWaterCurrents = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
+  ctx.lineWidth = 1;
+
+  for (let band = 0; band < 7; band += 1) {
+    const yBase = ((band + 1) / 8) * height;
+    const drift = (time * 0.012 + band * 57) % (width + 180);
+    ctx.strokeStyle = band % 2 === 0 ? "rgba(112, 144, 174, 0.08)" : "rgba(93, 84, 125, 0.07)";
+    ctx.beginPath();
+
+    for (let step = -180; step <= width + 20; step += 28) {
+      const x = step + drift - 120;
+      const y = yBase + Math.sin(time * 0.0009 + step * 0.025 + band) * 8;
+
+      if (step === -180) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+
+    ctx.stroke();
+  }
+};
+
 export const drawCombat = (
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -104,6 +113,7 @@ export const drawCombat = (
 ): void => {
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
+  drawWaterCurrents(ctx, width - hudWidth(), height, time);
 
   for (const candidate of fish) {
     if (candidate.caught) {
@@ -135,6 +145,7 @@ export const drawCombat = (
 export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
+  drawWaterCurrents(ctx, width - hudWidth(), height, time);
 
   const usableWidth = width - hudWidth();
 
@@ -142,12 +153,8 @@ export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, heig
     const angle = time * 0.0004 + index * 0.72;
     const x = usableWidth * 0.48 + Math.cos(angle) * (42 + (index % 6) * 12);
     const y = height * 0.5 + Math.sin(angle * 1.2) * (28 + (index % 5) * 10);
-    if (index % 3 === 0) {
-      drawAmbientRipple(ctx, x, y, 10, time + index * 11, 0.012);
-    }
     drawCircle(ctx, x, y, 3.5, "#ffffff");
   }
 
-  drawAmbientRipple(ctx, usableWidth * 0.76, height * 0.48, 44, time, 0.1);
   drawCircle(ctx, usableWidth * 0.76, height * 0.48, 27, "#151a20");
 };

@@ -127,6 +127,8 @@ export const targetForShark = (shark: Shark, fish: Fish[]) => {
 export type SharkSummary = {
   kind: Shark["kind"];
   count: number;
+  totalHealth: number;
+  maxHealth: number;
   totalHunger: number;
   maxHunger: number;
 };
@@ -138,12 +140,16 @@ export const summarizeSharks = (sharks: Shark[]): SharkSummary[] => {
     const current = summaries.get(shark.kind) ?? {
       kind: shark.kind,
       count: 0,
+      totalHealth: 0,
+      maxHealth: 0,
       totalHunger: 0,
       maxHunger: 0,
     };
     current.count += 1;
-    current.totalHunger += shark.hunger;
-    current.maxHunger += shark.maxHunger;
+    current.totalHealth += Math.max(0, shark.health);
+    current.maxHealth += Math.max(1, shark.maxHealth);
+    current.totalHunger += Math.max(0, shark.hunger);
+    current.maxHunger += Math.max(1, shark.maxHunger);
     summaries.set(shark.kind, current);
   }
 

@@ -97,12 +97,33 @@ describe("shark hunger and predator types", () => {
     expect(summary.every((entry) => entry.totalHunger > 0)).toBe(true);
   });
 
+  it("summarizes shark health and hunger with safe positive max values", () => {
+    const sharks = createSharks(createLevelConfig(24), { width: 600, height: 400 });
+    sharks[0].health = sharks[0].maxHealth / 2;
+    sharks[0].hunger = sharks[0].maxHunger / 2;
+
+    const summary = summarizeSharks(sharks);
+
+    expect(summary.every((entry) => entry.totalHealth >= 0)).toBe(true);
+    expect(summary.every((entry) => entry.maxHealth > 0)).toBe(true);
+    expect(summary.every((entry) => entry.totalHunger >= 0)).toBe(true);
+    expect(summary.every((entry) => entry.maxHunger > 0)).toBe(true);
+  });
+
   it("keeps sharks faster than basic fish by default", () => {
     const school = createSchool(1, 0, { width: 600, height: 400 });
     const [shark] = createSharks(createLevelConfig(1), { width: 600, height: 400 });
 
     updateSharks([shark], school, { width: 600, height: 400 }, 1);
 
+    expect(shark.speed).toBeGreaterThan(school[0].maxSpeed);
+  });
+
+  it("keeps faster fish lively without outrunning round-one sharks", () => {
+    const school = createSchool(1, 0, { width: 600, height: 400 });
+    const [shark] = createSharks(createLevelConfig(1), { width: 600, height: 400 });
+
+    expect(school[0].maxSpeed).toBeGreaterThan(1.6);
     expect(shark.speed).toBeGreaterThan(school[0].maxSpeed);
   });
 });

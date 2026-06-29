@@ -1,9 +1,8 @@
 import type { Fish, FishTypeId, LevelConfig, RunState, Shark } from "../game/types";
 import { summarizeSharks } from "../entities/Shark";
 import { fishTypes } from "../systems/fishTypes";
-import { createLevelPathPreview } from "../systems/levels";
 
-const PANEL_WIDTH = 188;
+const PANEL_WIDTH = 164;
 
 const drawBar = (
   ctx: CanvasRenderingContext2D,
@@ -71,20 +70,11 @@ const summarizeFish = (fish: Fish[]): FishTypeSummary[] => {
   return Array.from(summaries.entries()).map(([typeId, alive]) => ({ typeId, alive }));
 };
 
-const drawFishPips = (ctx: CanvasRenderingContext2D, fish: Fish[], x: number, y: number, color: string): void => {
-  fish.slice(0, 12).forEach((candidate, index) => {
-    const pipX = x + (index % 6) * 13;
-    const pipY = y + Math.floor(index / 6) * 9;
-    drawBar(ctx, pipX, pipY, 10, 5, candidate.health / candidate.maxHealth, color);
-  });
-
-  if (fish.length > 12) {
-    ctx.fillStyle = "#8f9aa7";
-    ctx.fillText("+", x + 80, y + 6);
-  }
+const groupHealthRatio = (fish: Fish[]): number => {
+  const maxHealth = fish.reduce((sum, candidate) => sum + Math.max(1, candidate.maxHealth), 0);
+  const health = fish.reduce((sum, candidate) => sum + Math.max(0, candidate.health), 0);
+  return maxHealth === 0 ? 0 : health / maxHealth;
 };
-
-const pathY = 64;
 
 export const drawHud = (
   ctx: CanvasRenderingContext2D,
@@ -107,46 +97,35 @@ export const drawHud = (
 
   ctx.fillStyle = "#f8fbff";
   ctx.font = "12px system-ui, sans-serif";
-  ctx.fillText(`L ${config.level}`, x + 18, 28);
-  ctx.fillText(`Fish ${fish.filter((candidate) => !candidate.caught).length}`, x + 72, 28);
-  ctx.fillText(`Shells ${run.currency}`, x + 18, 43);
+  ctx.fillText(`L${config.level}`, x + 14, 26);
+  ctx.fillText(`Fish ${fish.filter((candidate) => !candidate.caught).length}`, x + 56, 26);
+  ctx.fillText(`$ ${run.currency}`, x + 14, 43);
 
-  drawBar(ctx, x + 18, 58, 132, 9, run.schoolEnergy / 110, "#e8f4ff");
-
-  createLevelPathPreview(config.level, 5).forEach((step, index) => {
-    const stepX = x + 20 + index * 27;
-    ctx.fillStyle = step.current ? "#f8fbff" : "#65717f";
-    ctx.beginPath();
-    ctx.arc(stepX, pathY + 19, step.current ? 9 : 7, 0, Math.PI * 2);
-    ctx.strokeStyle = step.current ? "#f8fbff" : "#38414b";
-    ctx.stroke();
-    ctx.fillText(step.icon, stepX - 3, pathY + 23);
-  });
+  drawBar(ctx, x + 14, 56, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
 
   ctx.fillStyle = "#8f9aa7";
-  ctx.fillText("Fish", x + 18, 116);
+  ctx.fillText("School", x + 14, 82);
 
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
-    const rowY = 134 + index * 27;
+    const rowY = 100 + index * 22;
     ctx.fillStyle = definition.color;
-    ctx.beginPath();
-    ctx.arc(x + 25, rowY + 2, 5, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.fillRect(x + 14, rowY, 8, 8);
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 39, rowY + 6);
-    drawFishPips(ctx, summary.alive, x + 18, rowY + 12, definition.color);
+    ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 29, rowY + 8);
+    drawBar(ctx, x + 92, rowY + 1, 40, 6, groupHealthRatio(summary.alive), definition.color);
   });
 
-  const enemyY = 146 + summarizeFish(fish).length * 27;
+  const enemyY = 112 + summarizeFish(fish).length * 22;
   ctx.fillStyle = "#8f9aa7";
-  ctx.fillText("Sharks", x + 18, enemyY);
+  ctx.fillText("Sharks", x + 14, enemyY);
 
   summarizeSharks(sharks).forEach((summary, index) => {
-    const rowY = enemyY + 19 + index * 28;
-    sharkMark(ctx, summary.kind, x + 28, rowY + 3);
+    const rowY = enemyY + 17 + index * 24;
+    sharkMark(ctx, summary.kind, x + 23, rowY + 4);
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`x${summary.count}`, x + 47, rowY + 7);
-    drawBar(ctx, x + 78, rowY, 72, 8, summary.totalHunger / Math.max(1, summary.maxHunger), "#6f7c8b");
+    ctx.fillText(`x${summary.count}`, x + 39, rowY + 8);
+    drawBar(ctx, x + 62, rowY, 70, 5, summary.totalHealth / summary.maxHealth, "#9aa7b5");
+    drawBar(ctx, x + 62, rowY + 8, 70, 5, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
 };
