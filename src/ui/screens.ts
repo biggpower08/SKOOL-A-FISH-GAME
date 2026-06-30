@@ -195,9 +195,9 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
         button("Feed Kelp", () => handlers.onChoose("heal"), !canKelp),
       ]),
       card("choice-card", [
-        marker("artifact-card-marker", "$"),
+        marker("artifact-card-marker", "S"),
         note("Questionable Investment"),
-        small("100 now"),
+        small("100 Shells now"),
         small("+200 after 3 rounds"),
         button("Invest Shells", () => handlers.onChoose("invest"), !canInvest),
       ]),

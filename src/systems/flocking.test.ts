@@ -126,4 +126,47 @@ describe("updateFlocking", () => {
     expect(Number.isFinite(fish[0].vel.x)).toBe(true);
     expect(Number.isFinite(fish[0].vel.y)).toBe(true);
   });
+
+  it("softly pushes overlapping fish apart without breaking the school", () => {
+    const fish: Fish[] = [
+      {
+        id: "fish-a",
+        kind: "basic",
+        typeId: "tilapia",
+        className: "common",
+        pos: { x: 140, y: 140 },
+        vel: { x: 0, y: 0 },
+        radius: 4,
+        maxSpeed: 2,
+        health: 1,
+        maxHealth: 1,
+        threatened: false,
+        caught: false,
+      },
+      {
+        id: "fish-b",
+        kind: "basic",
+        typeId: "tilapia",
+        className: "common",
+        pos: { x: 142, y: 140 },
+        vel: { x: 0, y: 0 },
+        radius: 4,
+        maxSpeed: 2,
+        health: 1,
+        maxHealth: 1,
+        threatened: false,
+        caught: false,
+      },
+    ];
+
+    updateFlocking(fish, [], {
+      width: 400,
+      height: 300,
+      threatRadius: 120,
+      dt: 1,
+    });
+
+    expect(Math.abs(fish[1].pos.x - fish[0].pos.x)).toBeGreaterThan(6);
+    expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+  });
 });

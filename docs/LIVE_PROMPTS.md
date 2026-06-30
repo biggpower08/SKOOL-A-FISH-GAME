@@ -161,9 +161,8 @@ Artifact acquisition can come from:
 - investment returns
 - limited random choices
 
-First implementation should start with an artifact section placeholder icon,
-a simple data shape if needed, and 3 to 6 example artifacts only when gameplay
-requires them.
+First implementation can now show about 50 simple artifact slots so the
+collection page feels real. Do not build the full 120-artifact system yet.
 
 The active combat screen should include a small artifact icon/button on the
 screen edge. It can open a placeholder overlay with minimal text such as
@@ -174,6 +173,9 @@ Current artifact panel rules:
 
 - Title must be `Artifacts`.
 - Use a 5-column grid when space allows.
+- Open centered at roughly 70-80% of the viewport and scroll vertically inside
+  the panel.
+- Show about 50 compact artifact slots now.
 - Show the six basic starter artifacts: Shark Tooth Charm, Bubble Net, School
   Bell, Pearl Cache, Kelp Bandage, and Drift Scale.
 - Future/unknown slots should say `Hidden`.
@@ -185,6 +187,11 @@ Current artifact panel rules:
 - Visible artifact cards can be clickable for dev/testing. Clicking should add,
   select, or toggle the artifact in a simple way. Hidden cards should remain
   hidden and non-selectable.
+- Artifact data should include `id`, `name`, `rarity`, `category`, `iconKey`,
+  and short `effect` text.
+- Future artifact icons should be small static transparent images with colorful
+  thick-outline style. Use simple placeholder icon keys now; do not add a heavy
+  artifact icon pipeline yet.
 
 ## Round Intermissions, Kelp, and Investment
 
@@ -331,6 +338,16 @@ Active combat HUD should stay compact. Keep level, fish alive, Shells, a clean
 school energy/health bar, compact fish type health summaries, compact shark
 hunger/starvation summaries, and the artifact edge button.
 
+HUD sprite and Shell rules:
+
+- Fish type rows should use small sprite thumbnails when true transparent
+  sprites are available.
+- Shark/enemy rows should use a shark sprite thumbnail when available.
+- Missing sprites fall back to simple compact markers.
+- UI should say `Shells`, not `$`, as the primary currency label.
+- Simple shell-like placeholder letters/icons are acceptable until real shell
+  icons exist.
+
 Avoid:
 
 - repeated path/reward detail during combat
@@ -408,6 +425,11 @@ Shark eating should feel intentional and readable without stopping the shark.
 - Fish with invalid or non-finite position/velocity should be clamped or reset
   instead of producing NaN movement.
 - Fish deaths should be clearly tied to shark catches or round transitions.
+- Fish should not fade or disappear during ordinary movement. Fade/remove only
+  belongs to caught fish with a visible shark-bite connection.
+- Fish counters, visible fish, group health bars, save/load, recruitment,
+  recovery, and dev level jumps should all use the alive/caught lifecycle
+  consistently.
 
 ## Sprite Integration Prep
 
@@ -435,6 +457,7 @@ Sprite rules:
   or rectangle around threatened sprite fish.
 - Starved sharks should show X eyes on the actual eye/head area. For fallback
   circles, place X marks near the facing/head side, not the body center.
+- Do not draw a gray box around a starved/dead shark.
 
 Tiny future manifest shape:
 
@@ -473,6 +496,20 @@ Sprite-fit ripple rules:
 - Offset ripples slightly behind the movement direction so they sit naturally
   under/around the body.
 - Keep ripples translucent blue/gray and water-like, not tail slashes.
+- Lightweight water disturbances can drift subtly with the background current.
+- The background should feel reactive to fish/shark movement without WebGL,
+  shaders, dependencies, or huge pulse rings.
+
+## Fish Overlap and Bumping
+
+Fish should school together without merging into one unreadable blob.
+
+- Strengthen close-range separation before changing the whole flocking model.
+- Add a soft body push-apart when fish overlap.
+- Keep velocities clamped so bumping does not become jitter or explosion.
+- Fish should still move as a school.
+- Bumping/collision feel is visual/game-feel polish only, not a new physics
+  engine.
 
 ## Tone
 
@@ -523,9 +560,11 @@ End Run, or Save and Return Home instead.
 - Fish type HUD shows compact counts and health pips by fish type.
 - Enemy HUD summarizes active shark hunger/starvation by type.
 - Shells are visible in the HUD.
+- Sidebar fish and shark rows use sprite thumbnails when available.
 - Combat background uses subtle animated dark water shading and current lines
   instead of obvious entity-centered ripple circles.
-- Artifact edge icon opens a minimal placeholder overlay.
+- Artifact edge icon opens a centered, scrollable 5-column collection page with
+  50 compact slots.
 - Every completed round shows a break popup.
 - Normal breaks offer kelp recovery, investment, and Continue.
 - Current fish/max fish should be visible enough to understand recovery.
@@ -533,9 +572,12 @@ End Run, or Save and Return Home instead.
 - Visible artifacts are clickable for dev/testing.
 - Shark/fish ripple marks are subtle water effects, not tail slashes or
   full-screen pulse rings.
+- Water ripples are drawn as reactive background disturbance, with shark
+  ripples stronger than fish ripples.
 - Shark eating feedback is visual-only and should not pause shark movement.
 - Fish counters should match alive visible fish; caught/fading fish are not
   counted as alive.
+- Fish use soft overlap push-apart so the school reads less like one blob.
 - Cleaned transparent sprites render for Tilapia, Salmon, Mahi-mahi, Grouper,
   Parrotfish, and the basic Shark when present.
 - Failed sprite loads remain circle fallback.

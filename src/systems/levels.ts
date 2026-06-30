@@ -61,7 +61,7 @@ const sharkTypesFor = (level: number, type: LevelType, sharkCount: number): Shar
 
 const pathIconFor = (type: LevelType): string => {
   if (type === "shop") {
-    return "$";
+    return "S";
   }
 
   if (type === "investment") {

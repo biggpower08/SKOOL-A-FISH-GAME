@@ -39,6 +39,13 @@ describe("createLevelConfig", () => {
     expect(preview.every((step) => step.label.length > 0)).toBe(true);
   });
 
+  it("uses Shell-style path icons instead of a dollar sign", () => {
+    const preview = createLevelPathPreview(11, 1);
+
+    expect(preview[0].label).toBe("Shop");
+    expect(preview[0].icon).not.toBe("$");
+  });
+
   it("uses planned recruitment nodes instead of direct fish purchases", () => {
     expect(createLevelConfig(7).type).toBe("recruit");
     expect(createLevelConfig(21).type).toBe("recruit");

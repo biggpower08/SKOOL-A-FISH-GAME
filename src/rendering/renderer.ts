@@ -115,7 +115,7 @@ const drawSprite = (
 
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   const sharkSprite = getSharkSprite(shark.kind);
-  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, 1, shark.starved ? "rgba(190, 205, 220, 0.28)" : null);
+  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, 1);
 
   if (drewSprite) {
     if (shark.starved) {
@@ -201,6 +201,15 @@ const drawWaterRipples = (ctx: CanvasRenderingContext2D, ripples: Ripple[], time
     ctx.lineWidth = 1.2;
     ctx.beginPath();
     ctx.ellipse(0, 0, ripple.radius, ripple.radius, 0, Math.PI * 0.05, Math.PI * 1.95);
+    ctx.stroke();
+
+    ctx.globalAlpha = Math.max(0, ripple.opacity * 0.48);
+    ctx.strokeStyle = "rgba(210, 230, 244, 0.24)";
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(-ripple.radius * 0.85, Math.sin(time * 0.004) * 2);
+    ctx.quadraticCurveTo(-ripple.radius * 0.18, -ripple.radius * 0.18, ripple.radius * 0.22, 0);
+    ctx.quadraticCurveTo(ripple.radius * 0.58, ripple.radius * 0.14, ripple.radius * 0.92, -ripple.radius * 0.03);
     ctx.stroke();
 
     if (ripple.radius > 12) {

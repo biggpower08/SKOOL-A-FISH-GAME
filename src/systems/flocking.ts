@@ -8,6 +8,7 @@ export type FlockingOptions = Bounds & {
 
 const NEIGHBOR_RADIUS = 74;
 const DESIRED_SEPARATION = 17;
+const SOFT_BODY_PADDING = 8;
 
 const zero = (): Vector => ({ x: 0, y: 0 });
 
@@ -122,6 +123,41 @@ const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
   return push;
 };
 
+const applySoftBodySeparation = (school: Fish[], bounds: Bounds): void => {
+  const alive = school.filter((fish) => !fish.caught);
+
+  for (let leftIndex = 0; leftIndex < alive.length; leftIndex += 1) {
+    for (let rightIndex = leftIndex + 1; rightIndex < alive.length; rightIndex += 1) {
+      const left = alive[leftIndex];
+      const right = alive[rightIndex];
+      const gap = distance(left.pos, right.pos);
+      const minGap = left.radius + right.radius + SOFT_BODY_PADDING;
+
+      if (gap >= minGap) {
+        continue;
+      }
+
+      const direction =
+        gap > 0.001
+          ? normalize(subtract(right.pos, left.pos))
+          : normalize({
+              x: rightIndex % 2 === 0 ? 1 : -1,
+              y: leftIndex % 2 === 0 ? 0.35 : -0.35,
+            });
+      const push = (minGap - gap) * 0.5;
+
+      left.pos = {
+        x: clamp(left.pos.x - direction.x * push, left.radius, bounds.width - left.radius),
+        y: clamp(left.pos.y - direction.y * push, left.radius, bounds.height - left.radius),
+      };
+      right.pos = {
+        x: clamp(right.pos.x + direction.x * push, right.radius, bounds.width - right.radius),
+        y: clamp(right.pos.y + direction.y * push, right.radius, bounds.height - right.radius),
+      };
+    }
+  }
+};
+
 export const updateFlocking = (school: Fish[], sharks: Shark[], options: FlockingOptions): void => {
   for (const fish of school) {
     if (fish.caught) {
@@ -145,4 +181,6 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
       y: clamp(fish.pos.y + fish.vel.y * options.dt, fish.radius, options.height - fish.radius),
     };
   }
+
+  applySoftBodySeparation(school, options);
 };

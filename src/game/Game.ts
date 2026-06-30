@@ -14,6 +14,59 @@ import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, re
 import type { Bounds, Fish, GameScreen, LevelConfig, RewardChoiceId, Ripple, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
+const STARTER_VISIBLE_ARTIFACTS = 6;
+const artifactIconGlyphs: Record<string, string> = {
+  anklet: "A",
+  bank: "B",
+  beads: "O",
+  bell: "!",
+  bond: "S",
+  bracelet: "O",
+  brief: "L",
+  bumper: "U",
+  button: "!",
+  cape: "^",
+  card: "S",
+  charter: "#",
+  coach: "?",
+  coupon: "%",
+  detour: ">",
+  disco: "*",
+  fan: "~",
+  foil: "^",
+  folder: "F",
+  glow: ".",
+  gym: "+",
+  hat: "H",
+  hype: "+",
+  invite: "+",
+  jar: "J",
+  kelp: "K",
+  lane: "=",
+  limit: "-",
+  manual: "M",
+  map: "X",
+  mask: "?",
+  nap: "Z",
+  net: "#",
+  nose: "N",
+  oracle: "O",
+  party: "*",
+  pearl: "o",
+  permit: "P",
+  rent: "R",
+  ring: "O",
+  sardine: ">",
+  sash: "/",
+  scale: "S",
+  sticker: ">",
+  thermos: "T",
+  tooth: "V",
+  union: "U",
+  whistle: "!",
+  wheel: "O",
+  wrap: "[]",
+};
 
 export class Game {
   private readonly canvas: HTMLCanvasElement;
@@ -497,48 +550,49 @@ export class Game {
 
     const title = document.createElement("h2");
     title.textContent = "Artifacts";
-    const grid = document.createElement("div");
-    grid.className = "artifact-grid";
-
-    for (const artifact of artifactDefinitions) {
-      const artifactCard = document.createElement("div");
-      const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
-      artifactCard.className = owned ? "artifact-card owned" : "artifact-card";
-      artifactCard.tabIndex = 0;
-      artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
-      artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
-      artifactCard.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          this.toggleOwnedArtifact(artifact.id);
-        }
-      });
-      const icon = document.createElement("div");
-      icon.className = "artifact-icon";
-      icon.textContent = "*";
-      const name = document.createElement("strong");
-      name.textContent = artifact.name;
-      const effect = document.createElement("p");
-      effect.textContent = artifact.effect;
-      const rarity = document.createElement("span");
-      rarity.textContent = owned ? artifact.rarity : "Known";
-      artifactCard.replaceChildren(icon, name, effect, rarity);
-      grid.append(artifactCard);
-    }
-
-    for (let index = 0; index < 4; index += 1) {
-      const hidden = document.createElement("div");
-      hidden.className = "artifact-card hidden-artifact";
-      hidden.textContent = "Hidden";
-      grid.append(hidden);
-    }
-
+    const header = document.createElement("div");
+    header.className = "artifact-panel-header";
     const close = document.createElement("button");
     close.type = "button";
     close.textContent = "Close";
     close.addEventListener("click", () => this.closeArtifactPanel());
+    header.replaceChildren(title, close);
+    const grid = document.createElement("div");
+    grid.className = "artifact-grid";
+
+    artifactDefinitions.forEach((artifact, index) => {
+      const artifactCard = document.createElement("div");
+      const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
+      const visible = owned || index < STARTER_VISIBLE_ARTIFACTS;
+      artifactCard.className = owned ? "artifact-card owned" : visible ? "artifact-card" : "artifact-card hidden-artifact";
+
+      if (visible) {
+        artifactCard.tabIndex = 0;
+        artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
+        artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
+        artifactCard.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            this.toggleOwnedArtifact(artifact.id);
+          }
+        });
+      }
+
+      const icon = document.createElement("div");
+      icon.className = "artifact-icon";
+      icon.textContent = visible ? (artifactIconGlyphs[artifact.iconKey] ?? "*") : "?";
+      const name = document.createElement("strong");
+      name.textContent = visible ? artifact.name : "Hidden";
+      const effect = document.createElement("p");
+      effect.textContent = visible ? artifact.effect : "Unknown";
+      const rarity = document.createElement("span");
+      rarity.textContent = visible ? `${artifact.rarity} / ${artifact.category}` : "Locked";
+      artifactCard.replaceChildren(icon, name, effect, rarity);
+      grid.append(artifactCard);
+    });
+
     this.artifactPanel.className = "artifact-panel";
-    this.artifactPanel.replaceChildren(title, grid, close);
+    this.artifactPanel.replaceChildren(header, grid);
   }
 
   private toggleOwnedArtifact(artifactId: (typeof artifactDefinitions)[number]["id"]): void {

@@ -1,8 +1,18 @@
 import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
 import { summarizeSharks } from "../entities/Shark";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
+import { getFishSprite, getSharkSprite } from "../rendering/sprites";
+import type { SpriteManifestEntry } from "../game/types";
 
 const PANEL_WIDTH = 164;
+
+type HudSpriteCacheEntry = {
+  image: HTMLImageElement;
+  loaded: boolean;
+  failed: boolean;
+};
+
+const hudSpriteCache = new Map<string, HudSpriteCacheEntry>();
 
 const drawBar = (
   ctx: CanvasRenderingContext2D,
@@ -23,7 +33,73 @@ const drawBar = (
 
 export const hudWidth = (): number => PANEL_WIDTH;
 
+const getHudSprite = (sprite: SpriteManifestEntry): HudSpriteCacheEntry | undefined => {
+  if (typeof Image === "undefined") {
+    return undefined;
+  }
+
+  const existing = hudSpriteCache.get(sprite.src);
+
+  if (existing) {
+    return existing;
+  }
+
+  const image = new Image();
+  const entry: HudSpriteCacheEntry = {
+    image,
+    loaded: false,
+    failed: false,
+  };
+  image.onload = () => {
+    entry.loaded = true;
+  };
+  image.onerror = () => {
+    entry.failed = true;
+  };
+  image.src = sprite.src;
+  hudSpriteCache.set(sprite.src, entry);
+
+  return entry;
+};
+
+const drawHudThumbnail = (
+  ctx: CanvasRenderingContext2D,
+  sprite: SpriteManifestEntry | undefined,
+  x: number,
+  y: number,
+  maxWidth: number,
+  maxHeight: number,
+): boolean => {
+  if (!sprite) {
+    return false;
+  }
+
+  const cached = getHudSprite(sprite);
+
+  if (!cached?.loaded || cached.failed) {
+    return false;
+  }
+
+  const ratio = sprite.width / sprite.height;
+  const width = ratio >= 1 ? maxWidth : maxHeight * ratio;
+  const height = ratio >= 1 ? maxWidth / ratio : maxHeight;
+
+  ctx.drawImage(cached.image, x - width / 2, y - height / 2, width, height);
+  return true;
+};
+
+const fallbackFishMark = (ctx: CanvasRenderingContext2D, x: number, y: number, color: string): void => {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(x, y, 7, 4.5, 0, 0, Math.PI * 2);
+  ctx.fill();
+};
+
 const sharkMark = (ctx: CanvasRenderingContext2D, kind: Shark["kind"], x: number, y: number): void => {
+  if (drawHudThumbnail(ctx, getSharkSprite(kind), x + 1, y, 28, 16)) {
+    return;
+  }
+
   ctx.fillStyle = "#151a20";
   ctx.strokeStyle = "#66717f";
   ctx.beginPath();
@@ -100,7 +176,7 @@ export const drawHud = (
   ctx.font = "12px system-ui, sans-serif";
   ctx.fillText(`L${config.level}`, x + 14, 26);
   ctx.fillText(`Fish ${fish.filter((candidate) => !candidate.caught).length}`, x + 56, 26);
-  ctx.fillText(`$ ${run.currency}`, x + 14, 43);
+  ctx.fillText(`Shells ${run.currency}`, x + 14, 43);
 
   drawBar(ctx, x + 14, 56, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
 
@@ -110,11 +186,12 @@ export const drawHud = (
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
     const rowY = 100 + index * 22;
-    ctx.fillStyle = definition.color;
-    ctx.fillRect(x + 14, rowY, 8, 8);
+    if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), x + 22, rowY + 4, 24, 15)) {
+      fallbackFishMark(ctx, x + 22, rowY + 4, definition.color);
+    }
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 29, rowY + 8);
-    drawBar(ctx, x + 92, rowY + 1, 40, 6, groupHealthRatio(summary.alive), definition.color);
+    ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 41, rowY + 8);
+    drawBar(ctx, x + 96, rowY + 1, 36, 6, groupHealthRatio(summary.alive), definition.color);
   });
 
   const enemyY = 112 + summarizeFish(fish).length * 22;

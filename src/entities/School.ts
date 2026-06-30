@@ -11,7 +11,7 @@ const nextFishId = (): string => {
 const addFish = (school: Fish[], typeId: ActiveFishTypeId, index: number, centerX: number, centerY: number): void => {
   const definition = fishTypes[typeId];
   const angle = index * 2.399;
-  const ring = 12 + (index % 9) * 4.5;
+  const ring = 18 + (index % 11) * 5.8 + Math.floor(index / 11) * 3;
 
   school.push({
     id: nextFishId(),

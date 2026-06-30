@@ -6,13 +6,7 @@ export type Vector = {
 export type FishKind = "basic" | "support" | "future";
 export type FishTypeId = "tilapia" | "salmon" | "parrotfish" | "mahi-mahi" | "grouper" | "support";
 export type FishClass = "normal" | "common" | "fast" | "tank" | "support";
-export type ArtifactId =
-  | "shark-tooth-charm"
-  | "bubble-net"
-  | "school-bell"
-  | "pearl-cache"
-  | "kelp-bandage"
-  | "drift-scale";
+export type ArtifactId = string;
 export type SharkKind = "basic" | "fast" | "center" | "barracuda" | "eel";
 export type LevelType = "fight" | "shop" | "investment" | "special" | "reward" | "recruit";
 export type GameScreen = "home" | "saves" | "combat" | "choice" | "pause" | "gameover";
@@ -79,6 +73,8 @@ export type Ripple = {
   lifetime: number;
   scaleX: number;
   scaleY: number;
+  driftX: number;
+  driftY: number;
 };
 
 export type SpriteManifestEntry = {
