@@ -51,6 +51,18 @@ export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>
     visualScale: 5.0,
     rippleScale: 0.76,
   },
+  parrotfish: {
+    spriteKey: "parrotfish",
+    src: `${SPRITE_BASE}/parrotfish.png`,
+    frameCount: 1,
+    width: 962,
+    height: 588,
+    anchorX: 0.5,
+    anchorY: 0.52,
+    fallbackColor: "#8ff4d2",
+    visualScale: 5.8,
+    rippleScale: 0.72,
+  },
 };
 
 export const sharkSpriteManifest: Partial<Record<SharkKind, SpriteManifestEntry>> = {

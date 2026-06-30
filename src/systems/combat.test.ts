@@ -59,7 +59,7 @@ describe("applySharkAttack", () => {
 
     expect(result.caught).toBeGreaterThan(0);
     expect(caught.every((candidate) => candidate.caughtTimer && candidate.caughtTimer > 0)).toBe(true);
-    expect(shark.feedingRecovery).toBeLessThanOrEqual(0.08);
+    expect(shark.feedingRecovery).toBe(0);
   });
 
   it("summarizes only alive visible fish for run counters", () => {
@@ -77,14 +77,32 @@ describe("applySharkAttack", () => {
     expect(summary.fishCounts.salmon).toBe(1);
   });
 
-  it("catches six to seven fish from a 36 fish round-one school", () => {
-    const fish = makeFish(36);
+  it("catches seven to eight fish from a 40 fish round-one school", () => {
+    const fish = makeFish(40);
     const shark = makeShark();
 
     const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
 
-    expect(result.caught).toBeGreaterThanOrEqual(6);
-    expect(result.caught).toBeLessThanOrEqual(7);
+    expect(result.caught).toBeGreaterThanOrEqual(7);
+    expect(result.caught).toBeLessThanOrEqual(8);
+  });
+
+  it("uses fish body size to make near-edge bites reliable", () => {
+    const fish = makeFish(20);
+    fish.forEach((candidate, index) => {
+      candidate.pos = { x: 400 + index * 3, y: 100 };
+    });
+    fish[10].pos = { x: 116, y: 100 };
+    fish[10].radius = 6;
+    const shark = makeShark({
+      pos: { x: 100, y: 100 },
+      attackRadius: 8,
+    });
+
+    const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
+
+    expect(result.caught).toBe(1);
+    expect(fish[10].caught).toBe(true);
   });
 
   it("catches roughly 18 percent of starting available fish", () => {

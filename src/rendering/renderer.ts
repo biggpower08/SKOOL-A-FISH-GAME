@@ -10,6 +10,7 @@ type SpriteCacheEntry = {
 };
 
 const spriteCache = new Map<string, SpriteCacheEntry>();
+const tintCanvasCache = new Map<string, HTMLCanvasElement>();
 
 const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, fill: string): void => {
   ctx.fillStyle = fill;
@@ -47,6 +48,36 @@ const getCachedSprite = (sprite: SpriteManifestEntry): SpriteCacheEntry | undefi
   return entry;
 };
 
+const tintedImageFor = (image: HTMLImageElement, sprite: SpriteManifestEntry, tint: string): HTMLCanvasElement | undefined => {
+  if (typeof document === "undefined") {
+    return undefined;
+  }
+
+  const cacheKey = `${sprite.spriteKey}:${tint}`;
+  const existing = tintCanvasCache.get(cacheKey);
+
+  if (existing) {
+    return existing;
+  }
+
+  const canvas = document.createElement("canvas");
+  canvas.width = sprite.width;
+  canvas.height = sprite.height;
+  const tintContext = canvas.getContext("2d");
+
+  if (!tintContext) {
+    return undefined;
+  }
+
+  tintContext.drawImage(image, 0, 0, sprite.width, sprite.height);
+  tintContext.globalCompositeOperation = "source-atop";
+  tintContext.fillStyle = tint;
+  tintContext.fillRect(0, 0, sprite.width, sprite.height);
+  tintCanvasCache.set(cacheKey, canvas);
+
+  return canvas;
+};
+
 const drawSprite = (
   ctx: CanvasRenderingContext2D,
   sprite: SpriteManifestEntry | undefined,
@@ -75,13 +106,7 @@ const drawSprite = (
   ctx.globalAlpha *= alpha;
   ctx.translate(pos.x, pos.y);
   ctx.scale(flip, 1);
-  ctx.drawImage(cached.image, x, y, size.width, size.height);
-
-  if (tint) {
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillStyle = tint;
-    ctx.fillRect(x, y, size.width, size.height);
-  }
+  ctx.drawImage(tint ? (tintedImageFor(cached.image, sprite, tint) ?? cached.image) : cached.image, x, y, size.width, size.height);
 
   ctx.restore();
 
@@ -89,19 +114,28 @@ const drawSprite = (
 };
 
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
-  const drewSprite = drawSprite(ctx, getSharkSprite(shark.kind), shark.pos, shark.vel, shark.radius, 1, shark.starved ? "rgba(190, 205, 220, 0.28)" : null);
+  const sharkSprite = getSharkSprite(shark.kind);
+  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, 1, shark.starved ? "rgba(190, 205, 220, 0.28)" : null);
 
   if (drewSprite) {
     if (shark.starved) {
       ctx.strokeStyle = "#e8f4ff";
       ctx.lineWidth = 2;
-      const eyeY = shark.pos.y - shark.radius * 0.22;
-      for (const eyeX of [shark.pos.x - shark.radius * 0.28, shark.pos.x + shark.radius * 0.24]) {
+      const size = sharkSprite ? spriteDrawSize(sharkSprite, shark.radius) : { width: shark.radius * 2, height: shark.radius * 2 };
+      const flip = shark.vel.x < -0.05 ? -1 : 1;
+      const headX = shark.pos.x + flip * size.width * 0.23;
+      const eyeY = shark.pos.y - size.height * 0.1;
+      const eyes = [
+        { x: headX - flip * size.width * 0.035, y: eyeY },
+        { x: headX + flip * size.width * 0.055, y: eyeY + size.height * 0.095 },
+      ];
+
+      for (const eye of eyes) {
         ctx.beginPath();
-        ctx.moveTo(eyeX - 4, eyeY - 4);
-        ctx.lineTo(eyeX + 4, eyeY + 4);
-        ctx.moveTo(eyeX + 4, eyeY - 4);
-        ctx.lineTo(eyeX - 4, eyeY + 4);
+        ctx.moveTo(eye.x - 4, eye.y - 4);
+        ctx.lineTo(eye.x + 4, eye.y + 4);
+        ctx.moveTo(eye.x + 4, eye.y - 4);
+        ctx.lineTo(eye.x - 4, eye.y + 4);
         ctx.stroke();
       }
       ctx.lineWidth = 1;
@@ -142,8 +176,9 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   if (shark.starved) {
     ctx.strokeStyle = "#e8f4ff";
     ctx.lineWidth = 2;
+    const flip = shark.vel.x < -0.05 ? -1 : 1;
     const eyeY = shark.pos.y - shark.radius * 0.25;
-    for (const eyeX of [shark.pos.x - shark.radius * 0.3, shark.pos.x + shark.radius * 0.3]) {
+    for (const eyeX of [shark.pos.x + flip * shark.radius * 0.22, shark.pos.x + flip * shark.radius * 0.5]) {
       ctx.beginPath();
       ctx.moveTo(eyeX - 4, eyeY - 4);
       ctx.lineTo(eyeX + 4, eyeY + 4);

@@ -7,6 +7,9 @@ export type SharkAttackResult = {
   damagedSupport: number;
 };
 
+const CATCH_FISH_BODY_SCALE = 2.4;
+const CATCH_SHARK_BODY_SCALE = 0.25;
+
 export const aliveFish = (fish: Fish[]): Fish[] => fish.filter((candidate) => !candidate.caught);
 
 export const summarizeAliveFishCounts = (
@@ -72,7 +75,10 @@ export const applySharkAttack = (
   random: () => number = Math.random,
 ): SharkAttackResult => {
   const available = aliveFish(fish);
-  const inRange = available.filter((candidate) => distance(candidate.pos, shark.pos) <= shark.attackRadius);
+  const inRange = available.filter(
+    (candidate) =>
+      distance(candidate.pos, shark.pos) <= shark.attackRadius + candidate.radius * CATCH_FISH_BODY_SCALE + shark.radius * CATCH_SHARK_BODY_SCALE,
+  );
   const candidates = inRange.length > 0 ? inRange : available.slice(0, Math.max(1, Math.round(available.length * 0.1)));
 
   if (candidates.length === 0) {
@@ -108,7 +114,7 @@ export const applySharkAttack = (
 
   if (caught > 0) {
     shark.hunger = Math.min(shark.maxHunger, shark.hunger + caught * (5.5 + config.level * 0.08));
-    shark.feedingRecovery = 0.06;
+    shark.feedingRecovery = 0;
   }
 
   return { caught, damagedSupport };

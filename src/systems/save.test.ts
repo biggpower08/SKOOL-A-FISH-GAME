@@ -78,6 +78,6 @@ describe("save system", () => {
     expect(run?.supportCount).toBe(0);
     expect(run?.fishCounts.support).toBeUndefined();
     expect(run?.fishCounts.salmon).toBe(1);
-    expect(run?.maxFishCount).toBe(37);
+    expect(run?.maxFishCount).toBe(40);
   });
 });

@@ -2,7 +2,7 @@ import type { ArtifactId, ChoiceId, FishTypeId, LevelConfig, RewardFlow, RunStat
 import { defaultFishCounts } from "./fishTypes";
 import { clamp } from "./vector";
 
-export const STARTING_FISH_COUNT = 36;
+export const STARTING_FISH_COUNT = 40;
 const KELP_COST = 100;
 const KELP_RESTORE_COUNT = 5;
 const INVESTMENT_AMOUNT = 100;

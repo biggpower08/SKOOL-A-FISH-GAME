@@ -14,8 +14,8 @@ describe("sprite manifest", () => {
     expect(getFishSprite("salmon")?.src).toContain("salmon.png");
     expect(getFishSprite("mahi-mahi")?.src).toContain("mahi-mahi.png");
     expect(getFishSprite("grouper")?.src).toContain("grouper.png");
-    expect(getFishSprite("parrotfish")).toBeUndefined();
-    expect(Object.keys(fishSpriteManifest).sort()).toEqual(["grouper", "mahi-mahi", "salmon", "tilapia"]);
+    expect(getFishSprite("parrotfish")?.src).toContain("parrotfish.png");
+    expect(Object.keys(fishSpriteManifest).sort()).toEqual(["grouper", "mahi-mahi", "parrotfish", "salmon", "tilapia"]);
   });
 
   it("maps the provided shark sprite", () => {

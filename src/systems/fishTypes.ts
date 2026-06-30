@@ -95,5 +95,5 @@ export const fishTypes = Object.fromEntries(
 ) as Record<ActiveFishTypeId, FishTypeDefinition>;
 
 export const defaultFishCounts = (): Partial<Record<FishTypeId, number>> => ({
-  tilapia: 36,
+  tilapia: 40,
 });

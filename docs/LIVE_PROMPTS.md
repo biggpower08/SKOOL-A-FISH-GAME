@@ -252,11 +252,14 @@ Rules:
 Round one should be dangerous and predictable before upgrades matter.
 
 - Default campaign start should be around 30-40 normal fish. Current active
-  target is 36 Tilapia and no active Support Fish.
+  target is 40 Tilapia and no active Support Fish.
 - Sharks are visibly faster than individual basic/common fish.
 - Round-one shark attacks target roughly 18% of available fish.
-- With 36 starting normal fish, the first round should reliably remove around
-  six to seven fish when the shark gets an attack.
+- With 40 starting normal fish, the first round should reliably remove around
+  seven to eight fish when the shark gets an attack.
+- Fish catch checks should include fish body size and a small shark bite/body
+  allowance so visibly close bites feel reliable without becoming instant
+  deletion.
 - Preserve the shark starvation win condition.
 - Later outcomes can swing based on fish types, upgrades, artifacts, shark
   types, and level scaling.
@@ -392,8 +395,8 @@ velocity and steer it back into the arena without teleporting.
 Shark eating should feel intentional and readable without stopping the shark.
 
 - On a successful catch, the shark should continue chasing smoothly.
-- `feedingRecovery` can remain only as a tiny visual-feedback timer under
-  about 0.1 seconds.
+- Do not set a movement recovery pause after eating. Bite feedback should be
+  visual only.
 - Do not use bite recovery to slow, pause, or circle the shark for balance.
 - Catch feedback should come from the caught-fish fade and a stronger water
   ripple, not from movement interruption.
@@ -418,8 +421,7 @@ Sprite rules:
   eyes, sunglasses, beads, or flower crowns to base sprites.
 - Use accessories only later, after a customization/accessory panel exists.
 - Use all provided core fish sprites when available: Tilapia, Salmon,
-  Mahi-mahi, and Grouper.
-- Parrotfish stays circle fallback until a clean Parrotfish sprite is provided.
+  Parrotfish, Mahi-mahi, and Grouper.
 - The provided Shark sprite is the first enemy sprite.
 - Transparent background is required.
 - Bold/simple cartoon outline is preferred so fish remain readable on dark
@@ -429,6 +431,10 @@ Sprite rules:
 - If a sprite is missing or fails to load, render the placeholder circle.
 - Sprite rendering must not affect collision, fish counts, shark attacks, or
   level balance.
+- Threat feedback should tint the fish body/sprite red. Do not draw a red box
+  or rectangle around threatened sprite fish.
+- Starved sharks should show X eyes on the actual eye/head area. For fallback
+  circles, place X marks near the facing/head side, not the body center.
 
 Tiny future manifest shape:
 
@@ -511,6 +517,8 @@ End Run, or Save and Return Home instead.
 - Starved sharks stop and show X eyes before the between-level screen.
 - Shark speed is higher than basic fish speed by default.
 - Starting shark attacks target roughly 18% of fish in the attack window.
+- New campaigns start with 40 tilapia so the first round feels like a real
+  school against one dangerous closest-target shark.
 - A level path preview shows current and upcoming level icons.
 - Fish type HUD shows compact counts and health pips by fish type.
 - Enemy HUD summarizes active shark hunger/starvation by type.
@@ -525,12 +533,12 @@ End Run, or Save and Return Home instead.
 - Visible artifacts are clickable for dev/testing.
 - Shark/fish ripple marks are subtle water effects, not tail slashes or
   full-screen pulse rings.
-- Shark feeding recovery is visual-only and should not pause shark movement.
+- Shark eating feedback is visual-only and should not pause shark movement.
 - Fish counters should match alive visible fish; caught/fading fish are not
   counted as alive.
 - Cleaned transparent sprites render for Tilapia, Salmon, Mahi-mahi, Grouper,
-  and the basic Shark when present.
-- Parrotfish and failed sprite loads remain circle fallback.
+  Parrotfish, and the basic Shark when present.
+- Failed sprite loads remain circle fallback.
 
 ## Planned Fish Type Order
 
