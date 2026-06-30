@@ -85,9 +85,13 @@ export type SpriteManifestEntry = {
   spriteKey: string;
   src: string;
   frameCount: number;
-  frameWidth: number;
-  frameHeight: number;
+  width: number;
+  height: number;
+  anchorX: number;
+  anchorY: number;
   fallbackColor: string;
+  visualScale: number;
+  rippleScale: number;
 };
 
 export type RunState = {

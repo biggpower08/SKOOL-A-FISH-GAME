@@ -1,0 +1,48 @@
+import { describe, expect, it } from "vitest";
+import {
+  fishSpriteManifest,
+  getFishSprite,
+  getSharkSprite,
+  rippleOriginForMotion,
+  spriteDrawSize,
+  spriteRippleSize,
+} from "./sprites";
+
+describe("sprite manifest", () => {
+  it("maps every provided cleaned fish sprite and leaves missing fish as fallback", () => {
+    expect(getFishSprite("tilapia")?.src).toContain("tilapia.png");
+    expect(getFishSprite("salmon")?.src).toContain("salmon.png");
+    expect(getFishSprite("mahi-mahi")?.src).toContain("mahi-mahi.png");
+    expect(getFishSprite("grouper")?.src).toContain("grouper.png");
+    expect(getFishSprite("parrotfish")).toBeUndefined();
+    expect(Object.keys(fishSpriteManifest).sort()).toEqual(["grouper", "mahi-mahi", "salmon", "tilapia"]);
+  });
+
+  it("maps the provided shark sprite", () => {
+    expect(getSharkSprite("basic")?.src).toContain("shark.png");
+  });
+
+  it("scales sprite draw boxes without changing gameplay radius", () => {
+    const tilapia = getFishSprite("tilapia");
+
+    expect(tilapia).toBeDefined();
+
+    const size = spriteDrawSize(tilapia!, 4);
+
+    expect(size.width).toBeGreaterThan(4 * 2);
+    expect(size.height / size.width).toBeCloseTo(tilapia!.height / tilapia!.width);
+  });
+
+  it("uses sprite footprint and motion for ripple placement", () => {
+    const salmon = getFishSprite("salmon");
+
+    expect(salmon).toBeDefined();
+
+    const size = spriteRippleSize(salmon!, 4.5);
+    const origin = rippleOriginForMotion({ x: 100, y: 80 }, { x: 2, y: 0 }, size);
+
+    expect(size).toBeGreaterThan(4.5);
+    expect(origin.x).toBeLessThan(100);
+    expect(origin.y).toBe(80);
+  });
+});

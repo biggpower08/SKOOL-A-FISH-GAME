@@ -408,19 +408,27 @@ Shark eating should feel intentional and readable without stopping the shark.
 
 ## Sprite Integration Prep
 
-Sprites are future polish. Placeholder circles remain the working fallback.
+Cleaned transparent sprites are now allowed as prototype visuals. Placeholder
+circles remain the required fallback.
 
 Sprite rules:
 
-- Do not generate or commit final sprites until explicitly requested or
-  provided.
-- Use one fish type at a time when sprites begin.
+- Use provided cleaned transparent PNGs before generating new art.
+- Base fish sprites should stay clean. Do not add hats, accessories, googly
+  eyes, sunglasses, beads, or flower crowns to base sprites.
+- Use accessories only later, after a customization/accessory panel exists.
+- Use all provided core fish sprites when available: Tilapia, Salmon,
+  Mahi-mahi, and Grouper.
+- Parrotfish stays circle fallback until a clean Parrotfish sprite is provided.
+- The provided Shark sprite is the first enemy sprite.
 - Transparent background is required.
 - Bold/simple cartoon outline is preferred so fish remain readable on dark
   water.
 - Single-frame sprites are acceptable first.
 - Two-frame flip-flop animation can come later.
 - If a sprite is missing or fails to load, render the placeholder circle.
+- Sprite rendering must not affect collision, fish counts, shark attacks, or
+  level balance.
 
 Tiny future manifest shape:
 
@@ -429,9 +437,13 @@ type SpriteManifestEntry = {
   spriteKey: string;
   src: string;
   frameCount: number;
-  frameWidth: number;
-  frameHeight: number;
+  width: number;
+  height: number;
+  anchorX: number;
+  anchorY: number;
   fallbackColor: string;
+  visualScale: number;
+  rippleScale: number;
 };
 ```
 
@@ -444,7 +456,17 @@ Tone direction for future fish art:
 - customization page later, with hats, little accessories, googly eyes, color
   variants, and silly details
 
-Do not build customization now.
+Do not build customization now, and do not bake customization into base sprites.
+
+Sprite-fit ripple rules:
+
+- Draw ripples behind sprites.
+- Fish ripples should be small and fitted to the rendered sprite footprint, not
+  only the original circle radius.
+- Shark ripples should be larger and stronger than fish ripples.
+- Offset ripples slightly behind the movement direction so they sit naturally
+  under/around the body.
+- Keep ripples translucent blue/gray and water-like, not tail slashes.
 
 ## Tone
 
@@ -506,8 +528,9 @@ End Run, or Save and Return Home instead.
 - Shark feeding recovery is visual-only and should not pause shark movement.
 - Fish counters should match alive visible fish; caught/fading fish are not
   counted as alive.
-- A tiny sprite manifest shape exists for future transparent-background fish
-  sprites, but circles remain the fallback.
+- Cleaned transparent sprites render for Tilapia, Salmon, Mahi-mahi, Grouper,
+  and the basic Shark when present.
+- Parrotfish and failed sprite loads remain circle fallback.
 
 ## Planned Fish Type Order
 

@@ -2,6 +2,7 @@ import { createSchool } from "../entities/School";
 import { createSharks, updateSharks } from "../entities/Shark";
 import { drawCombat, drawIdleScene } from "../rendering/renderer";
 import { spawnRipple, updateRipples } from "../rendering/ripples";
+import { getFishSprite, getSharkSprite, rippleOriginForMotion, spriteRippleSize } from "../rendering/sprites";
 import { aliveFish, applySchoolPressure, applySharkAttack, drainSharkHunger, summarizeAliveFishCounts } from "../systems/combat";
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
@@ -297,7 +298,9 @@ export class Game {
         this.run.schoolEnergy -= result.caught * (2.4 + this.config.level * 0.035) + result.damagedSupport * 0.8;
 
         if (result.caught > 0) {
-          this.ripples.push(spawnRipple(shark.pos, shark.radius * 1.35, 0.26));
+          const sprite = getSharkSprite(shark.kind);
+          const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.35;
+          this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.26));
         }
 
         shark.attackCooldown = shark.attackRate;
@@ -359,7 +362,9 @@ export class Game {
           continue;
         }
 
-        this.ripples.push(spawnRipple(shark.pos, shark.radius, 0.13));
+        const sprite = getSharkSprite(shark.kind);
+        const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius;
+        this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.13));
       }
 
       this.sharkRippleClock = 0.42;
@@ -370,7 +375,9 @@ export class Game {
 
       for (let index = 0; index < threatened.length; index += 8) {
         const fish = threatened[index];
-        this.ripples.push(spawnRipple(fish.pos, fish.radius, 0.045));
+        const sprite = getFishSprite(fish.typeId);
+        const size = sprite ? spriteRippleSize(sprite, fish.radius) : fish.radius;
+        this.ripples.push(spawnRipple(rippleOriginForMotion(fish.pos, fish.vel, size), size, 0.045));
       }
 
       this.fishRippleClock = 0.55;

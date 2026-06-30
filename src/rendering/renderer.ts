@@ -1,6 +1,15 @@
-import type { Fish, LevelConfig, Ripple, RunState, Shark } from "../game/types";
+import type { Fish, LevelConfig, Ripple, RunState, Shark, SpriteManifestEntry, Vector } from "../game/types";
+import { getFishSprite, getSharkSprite, spriteDrawSize } from "./sprites";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
+
+type SpriteCacheEntry = {
+  image: HTMLImageElement;
+  loaded: boolean;
+  failed: boolean;
+};
+
+const spriteCache = new Map<string, SpriteCacheEntry>();
 
 const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, fill: string): void => {
   ctx.fillStyle = fill;
@@ -9,7 +18,98 @@ const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius:
   ctx.fill();
 };
 
+const getCachedSprite = (sprite: SpriteManifestEntry): SpriteCacheEntry | undefined => {
+  if (typeof Image === "undefined") {
+    return undefined;
+  }
+
+  const existing = spriteCache.get(sprite.src);
+
+  if (existing) {
+    return existing;
+  }
+
+  const image = new Image();
+  const entry: SpriteCacheEntry = {
+    image,
+    loaded: false,
+    failed: false,
+  };
+  image.onload = () => {
+    entry.loaded = true;
+  };
+  image.onerror = () => {
+    entry.failed = true;
+  };
+  image.src = sprite.src;
+  spriteCache.set(sprite.src, entry);
+
+  return entry;
+};
+
+const drawSprite = (
+  ctx: CanvasRenderingContext2D,
+  sprite: SpriteManifestEntry | undefined,
+  pos: Vector,
+  vel: Vector,
+  radius: number,
+  alpha: number,
+  tint: string | null = null,
+): boolean => {
+  if (!sprite) {
+    return false;
+  }
+
+  const cached = getCachedSprite(sprite);
+
+  if (!cached?.loaded || cached.failed) {
+    return false;
+  }
+
+  const size = spriteDrawSize(sprite, radius);
+  const flip = vel.x < -0.05 ? -1 : 1;
+  const x = -size.width * sprite.anchorX;
+  const y = -size.height * sprite.anchorY;
+
+  ctx.save();
+  ctx.globalAlpha *= alpha;
+  ctx.translate(pos.x, pos.y);
+  ctx.scale(flip, 1);
+  ctx.drawImage(cached.image, x, y, size.width, size.height);
+
+  if (tint) {
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = tint;
+    ctx.fillRect(x, y, size.width, size.height);
+  }
+
+  ctx.restore();
+
+  return true;
+};
+
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
+  const drewSprite = drawSprite(ctx, getSharkSprite(shark.kind), shark.pos, shark.vel, shark.radius, 1, shark.starved ? "rgba(190, 205, 220, 0.28)" : null);
+
+  if (drewSprite) {
+    if (shark.starved) {
+      ctx.strokeStyle = "#e8f4ff";
+      ctx.lineWidth = 2;
+      const eyeY = shark.pos.y - shark.radius * 0.22;
+      for (const eyeX of [shark.pos.x - shark.radius * 0.28, shark.pos.x + shark.radius * 0.24]) {
+        ctx.beginPath();
+        ctx.moveTo(eyeX - 4, eyeY - 4);
+        ctx.lineTo(eyeX + 4, eyeY + 4);
+        ctx.moveTo(eyeX + 4, eyeY - 4);
+        ctx.lineTo(eyeX - 4, eyeY + 4);
+        ctx.stroke();
+      }
+      ctx.lineWidth = 1;
+    }
+
+    return;
+  }
+
   if (shark.kind === "barracuda") {
     ctx.fillStyle = "#151a20";
     ctx.beginPath();
@@ -151,7 +251,12 @@ export const drawCombat = (
     const fade = candidate.caught ? Math.max(0.16, Math.min(1, (candidate.caughtTimer ?? 0) / 0.32)) : 1;
     ctx.save();
     ctx.globalAlpha = fade;
-    drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
+    const sprite = getFishSprite(candidate.typeId);
+    const tint = candidate.threatened ? "rgba(255, 42, 68, 0.32)" : null;
+
+    if (!drawSprite(ctx, sprite, candidate.pos, candidate.vel, candidate.radius, 1, tint)) {
+      drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
+    }
 
     if (candidate.kind === "support") {
       ctx.strokeStyle = "#4daac2";
