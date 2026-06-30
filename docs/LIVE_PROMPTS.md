@@ -182,6 +182,9 @@ Current artifact panel rules:
 - Do not build the full 120-artifact collection yet.
 - The current artifact panel and Hidden cards are a good direction. Do not
   redesign them unless they conflict with a necessary gameplay fix.
+- Visible artifact cards can be clickable for dev/testing. Clicking should add,
+  select, or toggle the artifact in a simple way. Hidden cards should remain
+  hidden and non-selectable.
 
 ## Round Intermissions, Kelp, and Investment
 
@@ -192,12 +195,17 @@ between-round decision.
 Intermission rules:
 
 - Normal rounds show `Feed Kelp`, `Invest Shells`, and `Continue`.
+- Normal intermission option cards should look balanced and easy to scan; a
+  two-option popup should not look lopsided.
 - Artifact reward rounds still show artifact choices on the 3rd completed
   round interval.
 - Recruitment rounds still show adoption choices on the 5th completed round
   interval, and recruitment wins when both intervals line up.
 - Popup style should stay close to the existing compact overlay style.
 - The player can go Home or End Run from between-round screens.
+- Kelp, investment, artifact rewards, and adoption should only appear after
+  won/survived rounds. Losing should go to game over/end-run flow and should
+  not allow recovery.
 
 Max fish rules:
 
@@ -224,6 +232,20 @@ Investment rule:
 - If the player has less than 100 Shells or already has a pending investment,
   the investment choice should be disabled or unavailable.
 - The return should appear as a short `Investment Returned` popup.
+
+## Dev Level Scroller
+
+Add a small dev/testing level scroller at the top center of the screen.
+
+Rules:
+
+- It should be labeled minimally, such as `DEV`.
+- It should show about five level boxes at once.
+- Horizontal scroll over the control should move through levels.
+- Clicking a level should deliberately jump to/start that level for testing.
+- It should work during active gameplay and from home if practical.
+- It should not crowd the sidebar or become a player-facing progression UI yet.
+- It should support testing level 70+ without fancy animation or menus.
 
 ## Round One Balance
 
@@ -283,6 +305,16 @@ very subtle and non-distracting.
 Current visual rule: do not use the old pulse/circle wave effect around units or
 health displays. Prefer animated gradients and faint flowing current lines behind
 entities. Fish and sharks must remain readable against the background.
+
+Entity wake direction:
+
+- Preserve the current gradient and flowing current-line background.
+- Add subtle shark and fish wake/ripple marks using Canvas only.
+- Shark wakes should be larger and more visible than fish wakes.
+- Fish wakes should be smaller/fainter, and can be throttled for performance.
+- Prefer stretched ellipses, arcs, or wake strokes over perfect expanding
+  circles.
+- Do not add WebGL, shader, jQuery, or external ripple dependencies for this.
 
 ## HUD and Health Bar Cleanup
 
@@ -349,6 +381,28 @@ Sharks should remain fast and aggressive, but they should not wedge into canvas
 edges or corners. When a shark hits a boundary, dampen or redirect wall-pushing
 velocity and steer it back into the arena without teleporting.
 
+## Shark Bite Recovery and Fish Lifecycle
+
+Shark eating should feel intentional, short, and readable.
+
+- On a successful catch, the shark can enter a short `feedingRecovery` style
+  state of about 0.25-0.45 seconds.
+- During recovery, the shark may slow or briefly pause, but should not look
+  frozen or artificially stopped for balance.
+- The shark should resume chasing reliably.
+- Caught fish can linger for a tiny visual fade so fish do not appear to
+  randomly pop out of existence.
+- Fish with invalid or non-finite position/velocity should be clamped or reset
+  instead of producing NaN movement.
+- Fish deaths should be clearly tied to shark catches or round transitions.
+
+## Tone
+
+The game can eventually have a light satirical edge, but do not add lots of
+copy. Tiny labels are enough when already touching UI. Examples: `Feed Kelp`,
+`Questionable Investment`, `Totally Safe Artifact`, `Hidden`, or `The School
+Endures`.
+
 ## Home / Exit / Leave Run Flow
 
 The game needs a clear way to leave the current screen or return home.
@@ -395,6 +449,10 @@ End Run, or Save and Return Home instead.
 - Every completed round shows a break popup.
 - Normal breaks offer kelp recovery, investment, and Continue.
 - Current fish/max fish should be visible enough to understand recovery.
+- A top-center dev level scroller exists for quick level testing.
+- Visible artifacts are clickable for dev/testing.
+- Shark/fish wake marks are subtle entity effects, not full-screen pulse rings.
+- Shark feeding recovery is short and intentional after catches.
 
 ## Planned Fish Type Order
 

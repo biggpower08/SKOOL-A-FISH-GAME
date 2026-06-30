@@ -9,6 +9,48 @@ const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius:
   ctx.fill();
 };
 
+const drawEntityWake = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  velX: number,
+  velY: number,
+  radius: number,
+  opacity: number,
+  time: number,
+): void => {
+  const speed = Math.hypot(velX, velY);
+
+  if (speed < 0.12) {
+    return;
+  }
+
+  const angle = Math.atan2(velY, velX);
+  const drift = Math.sin(time * 0.006 + x * 0.03 + y * 0.02) * 1.6;
+  ctx.save();
+  ctx.translate(x - Math.cos(angle) * radius * 0.75, y - Math.sin(angle) * radius * 0.75);
+  ctx.rotate(angle);
+  ctx.strokeStyle = `rgba(154, 190, 220, ${opacity})`;
+  ctx.lineWidth = Math.max(1, radius * 0.07);
+
+  for (let index = 0; index < 3; index += 1) {
+    const wakeScale = 1 + index * 0.42;
+    ctx.beginPath();
+    ctx.ellipse(
+      -radius * (0.55 + index * 0.42),
+      drift * (index + 1),
+      radius * (0.7 + wakeScale * 0.18),
+      radius * (0.12 + index * 0.05),
+      0,
+      Math.PI * 0.12,
+      Math.PI * 0.88,
+    );
+    ctx.stroke();
+  }
+
+  ctx.restore();
+};
+
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   if (shark.kind === "barracuda") {
     ctx.fillStyle = "#151a20";
@@ -115,13 +157,38 @@ export const drawCombat = (
   drawWaterShade(ctx, width - hudWidth(), height, time);
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
 
+  for (let index = 0; index < fish.length; index += 1) {
+    const candidate = fish[index];
+
+    if (candidate.caught && (candidate.caughtTimer ?? 0) <= 0) {
+      continue;
+    }
+
+    if (index % 4 !== 0 && !candidate.threatened && !candidate.caught) {
+      continue;
+    }
+
+    drawEntityWake(ctx, candidate.pos.x, candidate.pos.y, candidate.vel.x, candidate.vel.y, candidate.radius, candidate.threatened ? 0.13 : 0.06, time);
+  }
+
+  for (const shark of sharks) {
+    if (shark.health <= 0 && !shark.starved) {
+      continue;
+    }
+
+    drawEntityWake(ctx, shark.pos.x, shark.pos.y, shark.vel.x, shark.vel.y, shark.radius, shark.starved ? 0.04 : 0.16, time);
+  }
+
   for (const candidate of fish) {
-    if (candidate.caught) {
+    if (candidate.caught && (candidate.caughtTimer ?? 0) <= 0) {
       continue;
     }
 
     const definition = candidate.typeId === "support" ? null : fishTypes[candidate.typeId as ActiveFishTypeId];
     const fill = candidate.threatened ? "#ff4058" : (definition?.color ?? "#ffffff");
+    const fade = candidate.caught ? Math.max(0.16, Math.min(1, (candidate.caughtTimer ?? 0) / 0.32)) : 1;
+    ctx.save();
+    ctx.globalAlpha = fade;
     drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
 
     if (candidate.kind === "support") {
@@ -130,6 +197,7 @@ export const drawCombat = (
       ctx.arc(candidate.pos.x, candidate.pos.y, candidate.radius + 3, 0, Math.PI * 2);
       ctx.stroke();
     }
+    ctx.restore();
   }
 
   for (const shark of sharks) {

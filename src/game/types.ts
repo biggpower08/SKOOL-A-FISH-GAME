@@ -45,6 +45,7 @@ export type Fish = {
   maxHealth: number;
   threatened: boolean;
   caught: boolean;
+  caughtTimer?: number;
 };
 
 export type Shark = {
@@ -63,6 +64,7 @@ export type Shark = {
   attackCooldown: number;
   attackRate: number;
   attackRadius: number;
+  feedingRecovery?: number;
   starved: boolean;
 };
 

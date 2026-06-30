@@ -141,4 +141,18 @@ describe("shark hunger and predator types", () => {
     expect(shark.vel.x).toBeGreaterThan(0);
     expect(shark.vel.y).toBeGreaterThan(0);
   });
+
+  it("slows sharks briefly during feeding recovery without freezing them", () => {
+    const school = createSchool(1, 0, { width: 600, height: 400 });
+    const [shark] = createSharks(createLevelConfig(1), { width: 600, height: 400 });
+    shark.feedingRecovery = 0.35;
+    shark.vel = { x: -shark.speed, y: 0 };
+    const startX = shark.pos.x;
+
+    updateSharks([shark], school, { width: 600, height: 400 }, 1, 0.1);
+
+    expect(shark.feedingRecovery).toBeLessThan(0.35);
+    expect(shark.pos.x).toBeLessThan(startX);
+    expect(Math.abs(shark.vel.x)).toBeLessThanOrEqual(shark.speed);
+  });
 });

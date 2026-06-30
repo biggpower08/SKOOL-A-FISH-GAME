@@ -79,12 +79,14 @@ export const applySharkAttack = (
 
     if (!item.candidate.caught) {
       item.candidate.caught = true;
+      item.candidate.caughtTimer = 0.32;
       caught += 1;
     }
   }
 
   if (caught > 0) {
     shark.hunger = Math.min(shark.maxHunger, shark.hunger + caught * (5.5 + config.level * 0.08));
+    shark.feedingRecovery = 0.34;
   }
 
   return { caught, damagedSupport };

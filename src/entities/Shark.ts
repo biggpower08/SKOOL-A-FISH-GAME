@@ -80,6 +80,7 @@ export const createSharks = (config: LevelConfig, bounds: Bounds): Shark[] => {
       attackCooldown: 1.35 + index * 0.55,
       attackRate: config.sharkAttackRate,
       attackRadius: (112 + Math.min(38, config.level * 0.42)) * stats.attackRadius,
+      feedingRecovery: 0,
       starved: false,
     });
   }
@@ -156,11 +157,14 @@ export const summarizeSharks = (sharks: Shark[]): SharkSummary[] => {
   return Array.from(summaries.values());
 };
 
-export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: number): void => {
+export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: number, dtSeconds = dt / 60): void => {
   for (const shark of sharks) {
     if (shark.health <= 0 || shark.starved) {
       continue;
     }
+
+    const recovery = Math.max(0, shark.feedingRecovery ?? 0);
+    shark.feedingRecovery = Math.max(0, recovery - dtSeconds);
 
     const target = targetForShark(shark, fish);
     const margin = shark.radius + 18;
@@ -185,13 +189,14 @@ export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: 
 
     const desiredDirection =
       edgeSteer.x !== 0 || edgeSteer.y !== 0 ? normalize(add(edgeSteer, scale(normalize(subtract(arenaCenter, shark.pos)), 0.65))) : normalize(subtract(target, shark.pos));
-    const desired = scale(desiredDirection, shark.speed);
+    const recoverySlow = recovery > 0 ? 0.48 : 1;
+    const desired = scale(desiredDirection, shark.speed * recoverySlow);
     shark.vel = limit(
       {
         x: shark.vel.x * (1 - shark.acceleration) + desired.x * shark.acceleration,
         y: shark.vel.y * (1 - shark.acceleration) + desired.y * shark.acceleration,
       },
-      shark.speed,
+      shark.speed * recoverySlow,
     );
 
     if (shark.pos.x <= shark.radius && shark.vel.x < 0) {

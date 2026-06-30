@@ -19,6 +19,7 @@ export class Game {
   private readonly overlay: HTMLDivElement;
   private readonly artifactButton: HTMLButtonElement;
   private readonly artifactPanel: HTMLDivElement;
+  private readonly devLevelScroller: HTMLDivElement;
   private screen: GameScreen = "home";
   private run: RunState | null = null;
   private config: LevelConfig = createLevelConfig(1);
@@ -30,6 +31,7 @@ export class Game {
   private elapsed = 0;
   private victoryFeedback = 0;
   private animationId = 0;
+  private devLevelOffset = 1;
 
   constructor(container: HTMLElement) {
     this.canvas = document.createElement("canvas");
@@ -52,7 +54,10 @@ export class Game {
     this.artifactButton.addEventListener("click", () => this.toggleArtifactPanel());
     this.artifactPanel = document.createElement("div");
     this.artifactPanel.className = "artifact-panel hidden";
-    container.replaceChildren(this.canvas, this.artifactButton, this.artifactPanel, this.overlay);
+    this.devLevelScroller = document.createElement("div");
+    this.devLevelScroller.className = "dev-level-scroller";
+    this.devLevelScroller.addEventListener("wheel", this.handleLevelScrollerWheel, { passive: false });
+    container.replaceChildren(this.canvas, this.devLevelScroller, this.artifactButton, this.artifactPanel, this.overlay);
 
     window.addEventListener("resize", this.resize);
     window.addEventListener("keydown", this.handleKeyDown);
@@ -102,6 +107,18 @@ export class Game {
     }
   };
 
+  private readonly handleLevelScrollerWheel = (event: WheelEvent): void => {
+    event.preventDefault();
+    const delta = Math.abs(event.deltaX) >= Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+
+    if (delta === 0) {
+      return;
+    }
+
+    this.devLevelOffset = clamp(this.devLevelOffset + Math.sign(delta), 1, 66);
+    this.renderDevLevelScroller();
+  };
+
   private readonly loop = (time: number): void => {
     const dt = this.lastTime === 0 ? 0 : Math.min(0.05, (time - this.lastTime) / 1000);
     this.lastTime = time;
@@ -130,6 +147,7 @@ export class Game {
       onNewCampaign: () => this.newCampaign(),
       onSaves: () => this.showSaves(),
     });
+    this.renderDevLevelScroller();
   }
 
   private returnHome(): void {
@@ -196,6 +214,40 @@ export class Game {
     this.elapsed = 0;
     this.victoryFeedback = 0;
     saveRun(this.run);
+    this.devLevelOffset = clamp(Math.min(this.run.level, this.devLevelOffset), 1, 66);
+    this.renderDevLevelScroller();
+  }
+
+  private jumpToLevel(level: number): void {
+    this.run = {
+      ...(this.run ?? createNewRun()),
+      level,
+      bestLevel: Math.max(this.run?.bestLevel ?? 1, level),
+      schoolEnergy: Math.max(this.run?.schoolEnergy ?? 100, 35),
+    };
+    saveRun(this.run);
+    this.hideArtifactPanel();
+    this.startLevel();
+  }
+
+  private renderDevLevelScroller(): void {
+    const label = document.createElement("span");
+    label.textContent = "DEV";
+    const buttons: HTMLButtonElement[] = [];
+    const currentLevel = this.run?.level ?? 1;
+    const start = clamp(this.devLevelOffset, 1, 66);
+
+    for (let level = start; level < start + 5; level += 1) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = `${level}`;
+      button.title = `Jump to level ${level}`;
+      button.className = level === currentLevel ? "active" : "";
+      button.addEventListener("click", () => this.jumpToLevel(level));
+      buttons.push(button);
+    }
+
+    this.devLevelScroller.replaceChildren(label, ...buttons);
   }
 
   private updateCombat(dt: number): void {
@@ -222,7 +274,8 @@ export class Game {
       threatRadius: this.config.fishThreatRadius,
       dt: step,
     });
-    updateSharks(this.sharks, this.fish, bounds, step);
+    updateSharks(this.sharks, this.fish, bounds, step, dt);
+    this.updateCaughtFish(dt);
 
     for (const shark of this.sharks) {
       if (shark.health <= 0 || shark.starved) {
@@ -266,6 +319,18 @@ export class Game {
 
       this.victoryFeedback = 1.2;
     }
+  }
+
+  private updateCaughtFish(dt: number): void {
+    for (const fish of this.fish) {
+      if (!fish.caught || fish.caughtTimer === undefined) {
+        continue;
+      }
+
+      fish.caughtTimer -= dt;
+    }
+
+    this.fish = this.fish.filter((fish) => !fish.caught || (fish.caughtTimer ?? 0) > 0);
   }
 
   private levelDuration(): number {
@@ -380,6 +445,15 @@ export class Game {
       const artifactCard = document.createElement("div");
       const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
       artifactCard.className = owned ? "artifact-card owned" : "artifact-card";
+      artifactCard.tabIndex = 0;
+      artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
+      artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
+      artifactCard.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          this.toggleOwnedArtifact(artifact.id);
+        }
+      });
       const icon = document.createElement("div");
       icon.className = "artifact-icon";
       icon.textContent = "*";
@@ -406,6 +480,21 @@ export class Game {
     close.addEventListener("click", () => this.closeArtifactPanel());
     this.artifactPanel.className = "artifact-panel";
     this.artifactPanel.replaceChildren(title, grid, close);
+  }
+
+  private toggleOwnedArtifact(artifactId: (typeof artifactDefinitions)[number]["id"]): void {
+    if (!this.run) {
+      return;
+    }
+
+    const owned = this.run.ownedArtifacts.includes(artifactId);
+    this.run = {
+      ...this.run,
+      ownedArtifacts: owned ? this.run.ownedArtifacts.filter((candidate) => candidate !== artifactId) : [...this.run.ownedArtifacts, artifactId],
+    };
+    saveRun(this.run);
+    this.closeArtifactPanel();
+    this.toggleArtifactPanel();
   }
 
   private closeArtifactPanel(): void {

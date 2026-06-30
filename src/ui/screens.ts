@@ -63,6 +63,25 @@ const card = (className: string, children: HTMLElement[]): HTMLDivElement => {
   return element;
 };
 
+const clickableCard = (className: string, children: HTMLElement[], onClick: () => void): HTMLDivElement => {
+  const element = card(className, children);
+  element.tabIndex = 0;
+  element.addEventListener("click", (event) => {
+    if (event.target instanceof HTMLButtonElement) {
+      return;
+    }
+
+    onClick();
+  });
+  element.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onClick();
+    }
+  });
+  return element;
+};
+
 const marker = (className: string, text: string): HTMLDivElement => {
   const element = document.createElement("div");
   element.className = className;
@@ -132,15 +151,16 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
       title("Choose Artifact"),
       card(
         "choice-grid artifact-choice-grid",
-        choices.map((artifact) =>
-          card("choice-card", [
+        choices.map((artifact) => {
+          const chooseArtifact = () => handlers.onChoose(artifact.id as ArtifactId);
+          return clickableCard("choice-card clickable-choice-card", [
             marker("artifact-card-marker", "*"),
             note(artifact.name),
             small(artifact.rarity),
             small(artifact.effect),
-            button("Take", () => handlers.onChoose(artifact.id as ArtifactId)),
-          ]),
-        ),
+            button("Take", chooseArtifact),
+          ], chooseArtifact);
+        }),
       ),
       button("Home", handlers.onHome),
       button("End Run", handlers.onEndRun),
@@ -176,13 +196,19 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
       ]),
       card("choice-card", [
         marker("artifact-card-marker", "$"),
-        note("Invest Shells"),
+        note("Questionable Investment"),
         small("100 now"),
         small("+200 after 3 rounds"),
         button("Invest Shells", () => handlers.onChoose("invest"), !canInvest),
       ]),
+      card("choice-card", [
+        marker("artifact-card-marker", ">"),
+        note("Continue"),
+        small("Skip spending"),
+        small("The school endures."),
+        button("Continue", handlers.onContinue),
+      ]),
     ]),
-    button("Continue", handlers.onContinue),
     button("Home", handlers.onHome),
     button("End Run", handlers.onEndRun),
   );

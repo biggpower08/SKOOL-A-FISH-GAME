@@ -11,6 +11,19 @@ const DESIRED_SEPARATION = 17;
 
 const zero = (): Vector => ({ x: 0, y: 0 });
 
+const finiteOr = (value: number, fallback: number): number => (Number.isFinite(value) ? value : fallback);
+
+const sanitizeFishMotion = (fish: Fish, bounds: Bounds): void => {
+  fish.pos = {
+    x: clamp(finiteOr(fish.pos.x, bounds.width / 2), fish.radius, bounds.width - fish.radius),
+    y: clamp(finiteOr(fish.pos.y, bounds.height / 2), fish.radius, bounds.height - fish.radius),
+  };
+  fish.vel = {
+    x: finiteOr(fish.vel.x, 0),
+    y: finiteOr(fish.vel.y, 0),
+  };
+};
+
 const around = (fish: Fish, school: Fish[]): Fish[] =>
   school.filter((candidate) => candidate !== fish && !candidate.caught && distance(candidate.pos, fish.pos) <= NEIGHBOR_RADIUS);
 
@@ -115,6 +128,7 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
       continue;
     }
 
+    sanitizeFishMotion(fish, options);
     const near = around(fish, school);
     const sep = avoid(fish, near);
     const ali = align(fish, near);

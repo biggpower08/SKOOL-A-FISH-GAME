@@ -50,6 +50,19 @@ describe("applySharkAttack", () => {
     expect(fish.filter((candidate) => candidate.caught)).toHaveLength(4);
   });
 
+  it("marks caught fish for a short visual fade and shark feeding recovery", () => {
+    const fish = makeFish(10);
+    const shark = makeShark();
+
+    const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
+    const caught = fish.filter((candidate) => candidate.caught);
+
+    expect(result.caught).toBeGreaterThan(0);
+    expect(caught.every((candidate) => candidate.caughtTimer && candidate.caughtTimer > 0)).toBe(true);
+    expect(shark.feedingRecovery).toBeGreaterThanOrEqual(0.25);
+    expect(shark.feedingRecovery).toBeLessThanOrEqual(0.45);
+  });
+
   it("catches six to seven fish from a 36 fish round-one school", () => {
     const fish = makeFish(36);
     const shark = makeShark();
