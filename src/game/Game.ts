@@ -3,7 +3,7 @@ import { createSharks, updateSharks } from "../entities/Shark";
 import { drawCombat, drawIdleScene } from "../rendering/renderer";
 import { spawnRipple, updateRipples } from "../rendering/ripples";
 import { getFishSprite, getSharkSprite, rippleOriginForMotion, spriteRippleSize } from "../rendering/sprites";
-import { aliveFish, applySchoolPressure, applySharkAttack, drainSharkHunger, summarizeAliveFishCounts } from "../systems/combat";
+import { aliveFish, applyContactSharkBite, applySchoolPressure, applySharkAttack, drainSharkHunger, summarizeAliveFishCounts } from "../systems/combat";
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
@@ -14,7 +14,6 @@ import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, re
 import type { Bounds, Fish, GameScreen, LevelConfig, RewardChoiceId, Ripple, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
-const STARTER_VISIBLE_ARTIFACTS = 6;
 const artifactIconGlyphs: Record<string, string> = {
   anklet: "A",
   bank: "B",
@@ -344,6 +343,15 @@ export class Game {
         continue;
       }
 
+      const contactResult = applyContactSharkBite(this.fish, shark, this.config);
+      this.run.schoolEnergy -= contactResult.caught * (2.4 + this.config.level * 0.035) + contactResult.damagedSupport * 0.8;
+
+      if (contactResult.caught > 0) {
+        const sprite = getSharkSprite(shark.kind);
+        const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.35;
+        this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.24));
+      }
+
       shark.attackCooldown -= dt;
 
       if (shark.attackCooldown <= 0) {
@@ -560,34 +568,39 @@ export class Game {
     const grid = document.createElement("div");
     grid.className = "artifact-grid";
 
-    artifactDefinitions.forEach((artifact, index) => {
+    artifactDefinitions.forEach((artifact) => {
       const artifactCard = document.createElement("div");
       const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
-      const visible = owned || index < STARTER_VISIBLE_ARTIFACTS;
-      artifactCard.className = owned ? "artifact-card owned" : visible ? "artifact-card" : "artifact-card hidden-artifact";
-
-      if (visible) {
-        artifactCard.tabIndex = 0;
-        artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
-        artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
-        artifactCard.addEventListener("keydown", (event) => {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            this.toggleOwnedArtifact(artifact.id);
-          }
-        });
-      }
+      artifactCard.className = owned ? "artifact-card owned" : "artifact-card";
+      artifactCard.tabIndex = 0;
+      artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
+      artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
+      artifactCard.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          this.toggleOwnedArtifact(artifact.id);
+        }
+      });
 
       const icon = document.createElement("div");
       icon.className = "artifact-icon";
-      icon.textContent = visible ? (artifactIconGlyphs[artifact.iconKey] ?? "*") : "?";
+      icon.textContent = artifactIconGlyphs[artifact.iconKey] ?? "*";
       const name = document.createElement("strong");
-      name.textContent = visible ? artifact.name : "Hidden";
+      name.textContent = artifact.name;
       const effect = document.createElement("p");
-      effect.textContent = visible ? artifact.effect : "Unknown";
+      effect.textContent = artifact.effect;
       const rarity = document.createElement("span");
-      rarity.textContent = visible ? `${artifact.rarity} / ${artifact.category}` : "Locked";
-      artifactCard.replaceChildren(icon, name, effect, rarity);
+      rarity.textContent = `${artifact.rarity} / ${artifact.category}`;
+      const children: HTMLElement[] = [icon, name, effect, rarity];
+
+      if (artifact.maxLevel && artifact.maxLevel > 1) {
+        const upgrade = document.createElement("span");
+        upgrade.className = "artifact-upgrade";
+        upgrade.textContent = `Lv ${artifact.level ?? 1}/${artifact.maxLevel} - Upgrade ${artifact.upgradeShellCost ?? 0} Shells`;
+        children.push(upgrade);
+      }
+
+      artifactCard.replaceChildren(...children);
       grid.append(artifactCard);
     });
 

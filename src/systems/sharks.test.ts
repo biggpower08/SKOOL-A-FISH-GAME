@@ -155,4 +155,17 @@ describe("shark hunger and predator types", () => {
     expect(shark.pos.x).toBeLessThan(startX);
     expect(Math.hypot(shark.vel.x, shark.vel.y)).toBeGreaterThan(shark.speed * 0.8);
   });
+
+  it("keeps shark sprite facing stable on tiny horizontal jitter", () => {
+    const school = createSchool(1, 0, { width: 600, height: 400 });
+    const [shark] = createSharks(createLevelConfig(1), { width: 600, height: 400 });
+    shark.facingX = -1;
+    shark.vel = { x: 0.03, y: shark.speed };
+    shark.pos = { x: 300, y: 160 };
+    school[0].pos = { x: 300, y: 220 };
+
+    updateSharks([shark], school, { width: 600, height: 400 }, 0.1, 0.016);
+
+    expect(shark.facingX).toBe(-1);
+  });
 });

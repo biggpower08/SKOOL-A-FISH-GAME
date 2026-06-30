@@ -9,6 +9,9 @@ export type SharkAttackResult = {
 
 const CATCH_FISH_BODY_SCALE = 2.4;
 const CATCH_SHARK_BODY_SCALE = 0.25;
+const CONTACT_FISH_BODY_SCALE = 3.4;
+const CONTACT_SHARK_BODY_SCALE = 0.7;
+const CONTACT_BITE_COOLDOWN_SECONDS = 0.28;
 
 export const aliveFish = (fish: Fish[]): Fish[] => fish.filter((candidate) => !candidate.caught);
 
@@ -116,6 +119,51 @@ export const applySharkAttack = (
     shark.hunger = Math.min(shark.maxHunger, shark.hunger + caught * (5.5 + config.level * 0.08));
     shark.feedingRecovery = 0;
   }
+
+  return { caught, damagedSupport };
+};
+
+export const applyContactSharkBite = (fish: Fish[], shark: Shark, config: LevelConfig): SharkAttackResult => {
+  if ((shark.contactCooldown ?? 0) > 0 || shark.health <= 0 || shark.starved) {
+    return { caught: 0, damagedSupport: 0 };
+  }
+
+  const available = aliveFish(fish);
+  const closest = available.reduce<Fish | undefined>((current, candidate) => {
+    if (!current) {
+      return candidate;
+    }
+
+    return distance(candidate.pos, shark.pos) < distance(current.pos, shark.pos) ? candidate : current;
+  }, undefined);
+
+  if (!closest) {
+    return { caught: 0, damagedSupport: 0 };
+  }
+
+  const contactRange = shark.radius * CONTACT_SHARK_BODY_SCALE + closest.radius * CONTACT_FISH_BODY_SCALE;
+
+  if (distance(closest.pos, shark.pos) > contactRange) {
+    return { caught: 0, damagedSupport: 0 };
+  }
+
+  let caught = 0;
+  let damagedSupport = 0;
+  closest.health -= damageForFish(closest, config);
+
+  if (closest.kind === "support") {
+    damagedSupport = 1;
+  }
+
+  if (closest.health <= 0 && !closest.caught) {
+    closest.caught = true;
+    closest.caughtTimer = 0.32;
+    caught = 1;
+    shark.hunger = Math.min(shark.maxHunger, shark.hunger + 5.5 + config.level * 0.08);
+  }
+
+  shark.feedingRecovery = 0;
+  shark.contactCooldown = CONTACT_BITE_COOLDOWN_SECONDS;
 
   return { caught, damagedSupport };
 };

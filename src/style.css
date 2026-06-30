@@ -217,9 +217,9 @@ button:disabled {
   position: sticky;
   top: -14px;
   z-index: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr) 92px;
   align-items: center;
-  justify-content: space-between;
   gap: 10px;
   margin: -14px -14px 10px;
   padding: 12px 14px 10px;
@@ -228,7 +228,14 @@ button:disabled {
 }
 
 .artifact-panel h2 {
+  grid-column: 2;
+  justify-self: center;
   margin: 0;
+  min-width: 150px;
+  padding: 5px 12px;
+  border: 1px solid #34414c;
+  border-radius: 5px;
+  text-align: center;
   font-size: 16px;
 }
 
@@ -239,6 +246,8 @@ button:disabled {
 }
 
 .artifact-panel button {
+  grid-column: 3;
+  justify-self: end;
   width: 92px;
   min-height: 32px;
   margin: 0;
@@ -273,6 +282,14 @@ button:disabled {
 .artifact-card p {
   font-size: 10px;
   line-height: 1.15;
+}
+
+.artifact-upgrade {
+  display: block;
+  margin-top: 5px;
+  padding-top: 4px;
+  border-top: 1px solid rgba(101, 113, 127, 0.45);
+  color: #d8e1ea;
 }
 
 .artifact-icon {

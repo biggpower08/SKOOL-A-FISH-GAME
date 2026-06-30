@@ -86,6 +86,7 @@ const drawSprite = (
   radius: number,
   alpha: number,
   tint: string | null = null,
+  facingX?: 1 | -1,
 ): boolean => {
   if (!sprite) {
     return false;
@@ -98,7 +99,7 @@ const drawSprite = (
   }
 
   const size = spriteDrawSize(sprite, radius);
-  const flip = vel.x < -0.05 ? -1 : 1;
+  const flip = facingX ?? (vel.x < -0.18 ? -1 : 1);
   const x = -size.width * sprite.anchorX;
   const y = -size.height * sprite.anchorY;
 
@@ -115,14 +116,14 @@ const drawSprite = (
 
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   const sharkSprite = getSharkSprite(shark.kind);
-  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, 1);
+  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, 1, null, shark.facingX);
 
   if (drewSprite) {
     if (shark.starved) {
-      ctx.strokeStyle = "#e8f4ff";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "#020305";
+      ctx.lineWidth = 3;
       const size = sharkSprite ? spriteDrawSize(sharkSprite, shark.radius) : { width: shark.radius * 2, height: shark.radius * 2 };
-      const flip = shark.vel.x < -0.05 ? -1 : 1;
+      const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
       const headX = shark.pos.x + flip * size.width * 0.23;
       const eyeY = shark.pos.y - size.height * 0.1;
       const eyes = [
@@ -132,10 +133,10 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
 
       for (const eye of eyes) {
         ctx.beginPath();
-        ctx.moveTo(eye.x - 4, eye.y - 4);
-        ctx.lineTo(eye.x + 4, eye.y + 4);
-        ctx.moveTo(eye.x + 4, eye.y - 4);
-        ctx.lineTo(eye.x - 4, eye.y + 4);
+        ctx.moveTo(eye.x - 3, eye.y - 3);
+        ctx.lineTo(eye.x + 3, eye.y + 3);
+        ctx.moveTo(eye.x + 3, eye.y - 3);
+        ctx.lineTo(eye.x - 3, eye.y + 3);
         ctx.stroke();
       }
       ctx.lineWidth = 1;
@@ -174,16 +175,16 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   }
 
   if (shark.starved) {
-    ctx.strokeStyle = "#e8f4ff";
-    ctx.lineWidth = 2;
-    const flip = shark.vel.x < -0.05 ? -1 : 1;
+    ctx.strokeStyle = "#020305";
+    ctx.lineWidth = 3;
+    const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
     const eyeY = shark.pos.y - shark.radius * 0.25;
     for (const eyeX of [shark.pos.x + flip * shark.radius * 0.22, shark.pos.x + flip * shark.radius * 0.5]) {
       ctx.beginPath();
-      ctx.moveTo(eyeX - 4, eyeY - 4);
-      ctx.lineTo(eyeX + 4, eyeY + 4);
-      ctx.moveTo(eyeX + 4, eyeY - 4);
-      ctx.lineTo(eyeX - 4, eyeY + 4);
+      ctx.moveTo(eyeX - 3, eyeY - 3);
+      ctx.lineTo(eyeX + 3, eyeY + 3);
+      ctx.moveTo(eyeX + 3, eyeY - 3);
+      ctx.lineTo(eyeX - 3, eyeY + 3);
       ctx.stroke();
     }
     ctx.lineWidth = 1;
@@ -298,7 +299,7 @@ export const drawCombat = (
     const sprite = getFishSprite(candidate.typeId);
     const tint = candidate.threatened ? "rgba(255, 42, 68, 0.32)" : null;
 
-    if (!drawSprite(ctx, sprite, candidate.pos, candidate.vel, candidate.radius, 1, tint)) {
+    if (!drawSprite(ctx, sprite, candidate.pos, candidate.vel, candidate.radius, 1, tint, candidate.facingX)) {
       drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
     }
 
@@ -328,13 +329,26 @@ export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, heig
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
 
   const usableWidth = width - hudWidth();
+  const previewFish = ["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"] as ActiveFishTypeId[];
 
-  for (let index = 0; index < 34; index += 1) {
-    const angle = time * 0.0004 + index * 0.72;
-    const x = usableWidth * 0.48 + Math.cos(angle) * (42 + (index % 6) * 12);
-    const y = height * 0.5 + Math.sin(angle * 1.2) * (28 + (index % 5) * 10);
-    drawCircle(ctx, x, y, 3.5, "#ffffff");
+  for (let index = 0; index < previewFish.length; index += 1) {
+    const typeId = previewFish[index];
+    const angle = time * 0.00035 + index * 1.1;
+    const x = usableWidth * 0.42 + Math.cos(angle) * (74 + (index % 2) * 24);
+    const y = height * 0.5 + Math.sin(angle * 1.18) * (46 + (index % 3) * 10);
+    const definition = fishTypes[typeId];
+    const pos = { x, y };
+    const vel = { x: 1, y: Math.sin(angle) * 0.2 };
+
+    if (!drawSprite(ctx, getFishSprite(typeId), pos, vel, definition.radius + 4, 1, null, 1)) {
+      drawCircle(ctx, x, y, definition.radius + 2, definition.color);
+    }
   }
 
-  drawCircle(ctx, usableWidth * 0.76, height * 0.48, 27, "#151a20");
+  const sharkPos = { x: usableWidth * 0.72, y: height * 0.48 };
+  const sharkVel = { x: -1, y: 0 };
+
+  if (!drawSprite(ctx, getSharkSprite("basic"), sharkPos, sharkVel, 30, 1, null, -1)) {
+    drawCircle(ctx, sharkPos.x, sharkPos.y, 30, "#151a20");
+  }
 };

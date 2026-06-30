@@ -8,7 +8,8 @@ export type FlockingOptions = Bounds & {
 
 const NEIGHBOR_RADIUS = 74;
 const DESIRED_SEPARATION = 17;
-const SOFT_BODY_PADDING = 8;
+const SOFT_BODY_PADDING = 10;
+const FACING_VELOCITY_THRESHOLD = 0.18;
 
 const zero = (): Vector => ({ x: 0, y: 0 });
 
@@ -144,7 +145,7 @@ const applySoftBodySeparation = (school: Fish[], bounds: Bounds): void => {
               x: rightIndex % 2 === 0 ? 1 : -1,
               y: leftIndex % 2 === 0 ? 0.35 : -0.35,
             });
-      const push = (minGap - gap) * 0.5;
+      const push = (minGap - gap) * 0.3;
 
       left.pos = {
         x: clamp(left.pos.x - direction.x * push, left.radius, bounds.width - left.radius),
@@ -156,6 +157,14 @@ const applySoftBodySeparation = (school: Fish[], bounds: Bounds): void => {
       };
     }
   }
+};
+
+const updateFacing = (fish: Fish): void => {
+  if (Math.abs(fish.vel.x) <= FACING_VELOCITY_THRESHOLD) {
+    return;
+  }
+
+  fish.facingX = fish.vel.x < 0 ? -1 : 1;
 };
 
 export const updateFlocking = (school: Fish[], sharks: Shark[], options: FlockingOptions): void => {
@@ -173,13 +182,14 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const edge = boundaryPush(fish, options);
 
     fish.vel = limit(
-      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 3.6)), scale(edge, 1.35)),
+      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 4.8)), scale(edge, 1.35)),
       fish.maxSpeed,
     );
     fish.pos = {
       x: clamp(fish.pos.x + fish.vel.x * options.dt, fish.radius, options.width - fish.radius),
       y: clamp(fish.pos.y + fish.vel.y * options.dt, fish.radius, options.height - fish.radius),
     };
+    updateFacing(fish);
   }
 
   applySoftBodySeparation(school, options);

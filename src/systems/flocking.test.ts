@@ -166,7 +166,36 @@ describe("updateFlocking", () => {
       dt: 1,
     });
 
-    expect(Math.abs(fish[1].pos.x - fish[0].pos.x)).toBeGreaterThan(6);
+    expect(Math.abs(fish[1].pos.x - fish[0].pos.x)).toBeGreaterThan(9);
     expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+  });
+
+  it("keeps sprite facing stable on tiny horizontal velocity jitter", () => {
+    const fish: Fish[] = [
+      {
+        id: "jitter-fish",
+        kind: "basic",
+        typeId: "tilapia",
+        className: "common",
+        pos: { x: 180, y: 160 },
+        vel: { x: -0.03, y: 0.6 },
+        radius: 4,
+        maxSpeed: 2,
+        health: 1,
+        maxHealth: 1,
+        threatened: false,
+        caught: false,
+        facingX: 1,
+      },
+    ];
+
+    updateFlocking(fish, [], {
+      width: 400,
+      height: 300,
+      threatRadius: 120,
+      dt: 1,
+    });
+
+    expect(fish[0].facingX).toBe(1);
   });
 });

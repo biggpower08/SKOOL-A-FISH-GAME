@@ -7,15 +7,74 @@ export type ArtifactDefinition = {
   rarity: "common" | "rare" | "legendary";
   category: string;
   effect: string;
+  level?: number;
+  maxLevel?: number;
+  upgradeShellCost?: number;
+  upgradeText?: string;
 };
 
 export const artifactDefinitions: ArtifactDefinition[] = [
   { id: "shark-tooth-charm", name: "Shark Tooth Charm", iconKey: "tooth", rarity: "common", category: "shark hunger drain", effect: "Sharks tire a little faster." },
-  { id: "bubble-net", name: "Bubble Net", iconKey: "net", rarity: "common", category: "fish evasion", effect: "Threatened fish flee harder." },
-  { id: "school-bell", name: "School Bell", iconKey: "bell", rarity: "common", category: "fish schooling", effect: "School cohesion improves." },
-  { id: "pearl-cache", name: "Pearl Cache", iconKey: "pearl", rarity: "rare", category: "Shell rewards", effect: "Round Shell rewards improve." },
-  { id: "kelp-bandage", name: "Kelp Bandage", iconKey: "kelp", rarity: "common", category: "kelp recovery", effect: "Kelp recovery improves." },
-  { id: "drift-scale", name: "Drift Scale", iconKey: "scale", rarity: "rare", category: "fast fish support", effect: "Fast fish endure pressure." },
+  {
+    id: "bubble-net",
+    name: "Bubble Net",
+    iconKey: "net",
+    rarity: "common",
+    category: "fish evasion",
+    effect: "Threatened fish flee harder.",
+    level: 1,
+    maxLevel: 3,
+    upgradeShellCost: 90,
+    upgradeText: "Improves flee strength.",
+  },
+  {
+    id: "school-bell",
+    name: "School Bell",
+    iconKey: "bell",
+    rarity: "common",
+    category: "fish schooling",
+    effect: "School cohesion improves.",
+    level: 1,
+    maxLevel: 3,
+    upgradeShellCost: 85,
+    upgradeText: "Improves school pull.",
+  },
+  {
+    id: "pearl-cache",
+    name: "Pearl Cache",
+    iconKey: "pearl",
+    rarity: "rare",
+    category: "Shell rewards",
+    effect: "Round Shell rewards improve.",
+    level: 1,
+    maxLevel: 4,
+    upgradeShellCost: 130,
+    upgradeText: "Raises Shell payouts.",
+  },
+  {
+    id: "kelp-bandage",
+    name: "Kelp Bandage",
+    iconKey: "kelp",
+    rarity: "common",
+    category: "kelp recovery",
+    effect: "Kelp recovery improves.",
+    level: 1,
+    maxLevel: 3,
+    upgradeShellCost: 75,
+    upgradeText: "Improves healing value.",
+  },
+  {
+    id: "drift-scale",
+    name: "Drift Scale",
+    iconKey: "scale",
+    rarity: "rare",
+    category: "fast fish support",
+    effect: "Fast fish endure pressure.",
+    level: 1,
+    maxLevel: 3,
+    upgradeShellCost: 120,
+    upgradeText: "Improves fast fish survival.",
+  },
   { id: "suspicious-sea-coupon", name: "Suspicious Sea Coupon", iconKey: "coupon", rarity: "common", category: "artifact/shop economy", effect: "Shop prices feel friendlier." },
   { id: "peaceful-panic-whistle", name: "Peaceful Panic Whistle", iconKey: "whistle", rarity: "rare", category: "fish evasion", effect: "Panic turns into cleaner dodges." },
   { id: "tiny-reef-lawyer", name: "Tiny Reef Lawyer", iconKey: "brief", rarity: "rare", category: "risky satirical", effect: "First bad bite is disputed." },

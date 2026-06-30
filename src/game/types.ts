@@ -40,6 +40,7 @@ export type Fish = {
   threatened: boolean;
   caught: boolean;
   caughtTimer?: number;
+  facingX?: 1 | -1;
 };
 
 export type Shark = {
@@ -59,6 +60,8 @@ export type Shark = {
   attackRate: number;
   attackRadius: number;
   feedingRecovery?: number;
+  contactCooldown?: number;
+  facingX?: 1 | -1;
   starved: boolean;
 };
 

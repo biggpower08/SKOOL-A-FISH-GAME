@@ -565,6 +565,10 @@ End Run, or Save and Return Home instead.
   instead of obvious entity-centered ripple circles.
 - Artifact edge icon opens a centered, scrollable 5-column collection page with
   50 compact slots.
+- Homepage preview should use actual available fish sprites, not only fallback
+  circles. It should include Tilapia, Salmon, Grouper, Mahi-mahi, and
+  Parrotfish when sprites are available, with placeholder circles only as
+  fallback.
 - Every completed round shows a break popup.
 - Normal breaks offer kelp recovery, investment, and Continue.
 - Current fish/max fish should be visible enough to understand recovery.
@@ -577,10 +581,164 @@ End Run, or Save and Return Home instead.
 - Shark eating feedback is visual-only and should not pause shark movement.
 - Fish counters should match alive visible fish; caught/fading fish are not
   counted as alive.
+- Shark closest-target catches should be reliable when the shark visually
+  reaches or overlaps a fish. A shark should not jitter on top of a fish without
+  catching it.
+- Shark eating should not create a visible pause; the shark keeps pursuing.
 - Fish use soft overlap push-apart so the school reads less like one blob.
+- Fish bump/separation should be strong enough that fish do not merge into a
+  blob, but still velocity-clamped so the school does not explode.
+- Edge behavior should avoid rapid sprite mirror jitter. Facing should follow
+  meaningful movement direction and ignore tiny horizontal velocity noise.
+- Threatened fish must preserve the red fish/sprite threat tint.
+- Starved shark X-eyes should be black, thicker, compact, and placed on or near
+  the actual eye/head area. Do not use gray boxes.
 - Cleaned transparent sprites render for Tilapia, Salmon, Mahi-mahi, Grouper,
   Parrotfish, and the basic Shark when present.
 - Failed sprite loads remain circle fallback.
+- Artifact panel title/header should look squared and centered, with the panel
+  staying centered, compact, scrollable, and five columns on desktop.
+- The current artifact collection should show around 50 simple visible cards
+  for now instead of mostly hidden slots.
+- Selected artifacts can expose upgrade metadata such as level, max level, and
+  Shell upgrade cost. Do not build the full artifact upgrade economy yet.
+
+## Artifact Icon Image Prompt Prep
+
+Do not implement actual artifact image assets in this pass. These prompts are
+preparation for future transparent PNG generation only.
+
+Reusable prompt template:
+
+```text
+Create one original transparent-background artifact icon for SKOOL-A-FISH-GAME.
+
+Artifact: [ARTIFACT NAME].
+Function/theme: [WHAT IT DOES].
+Personality: [SHORT VIBE].
+Style: thick cartoon outline, simple readable shape, colorful satirical fish-game charm, compact icon readability, easy-to-cut outer edge.
+Background: transparent background required with true alpha transparency.
+Important transparency rule: no checkerboard pattern, no fake transparency preview, no gray/white grid background.
+Avoid: text, labels, UI, water background, contact sheet, multiple objects unless required, realistic detail, fuzzy edge, cropped object, stray pixels.
+Output format: one transparent PNG-style artifact icon, centered with full object visible.
+```
+
+Starter artifact icon prompts:
+
+```text
+Create one original transparent-background artifact icon for SKOOL-A-FISH-GAME.
+
+Artifact: Shark Tooth Charm.
+Function/theme: makes sharks tire faster.
+Personality: suspicious lucky trinket.
+Style: thick cartoon outline, simple readable shape, colorful satirical fish-game charm, compact icon readability, easy-to-cut outer edge.
+Background: transparent background required with true alpha transparency.
+Important transparency rule: no checkerboard pattern, no fake transparency preview, no gray/white grid background.
+Avoid: text, labels, UI, water background, contact sheet, multiple objects unless required, realistic detail, fuzzy edge, cropped object, stray pixels.
+Output format: one transparent PNG-style artifact icon, centered with full object visible.
+```
+
+```text
+Artifact: Bubble Net.
+Function/theme: helps threatened fish flee harder.
+Personality: cheerful overprotective bubble trap.
+```
+
+```text
+Artifact: School Bell.
+Function/theme: improves school cohesion.
+Personality: tiny authority figure for chaotic fish.
+```
+
+```text
+Artifact: Pearl Cache.
+Function/theme: improves Shell rewards.
+Personality: smug little savings hoard.
+```
+
+```text
+Artifact: Kelp Bandage.
+Function/theme: improves healing and replenishment.
+Personality: improvised first-aid nonsense.
+```
+
+```text
+Artifact: Drift Scale.
+Function/theme: supports fast fish survival.
+Personality: sleek lucky racing scale.
+```
+
+```text
+Artifact: Suspicious Sea Coupon.
+Function/theme: makes shop prices friendlier.
+Personality: obviously questionable bargain.
+```
+
+```text
+Artifact: Peaceful Panic Whistle.
+Function/theme: turns panic into cleaner dodges.
+Personality: calm whistle, chaotic purpose.
+```
+
+```text
+Artifact: Tiny Reef Lawyer.
+Function/theme: disputes the first bad bite.
+Personality: tiny legal menace.
+```
+
+```text
+Artifact: Emergency Kelp Jar.
+Function/theme: restores extra recovery value.
+Personality: last-minute kelp medicine.
+```
+
+```text
+Artifact: Moon Tide Beads.
+Function/theme: pulls wide schools together.
+Personality: mystical beach-shop charm.
+```
+
+```text
+Artifact: Rubber Shark Nose.
+Function/theme: makes basic sharks turn slower.
+Personality: ridiculous fake predator disguise.
+```
+
+```text
+Artifact: Cosmic Sardine.
+Function/theme: gives fish a tiny burst.
+Personality: impossible space snack.
+```
+
+```text
+Artifact: Fin Friendship Bracelet.
+Function/theme: improves nearby fish separation.
+Personality: handmade school-spirit charm.
+```
+
+```text
+Artifact: Panic Disco Ball.
+Function/theme: scatters panic into space.
+Personality: emergency dance-floor chaos.
+```
+
+For every starter prompt above, apply the reusable template rules: thick
+cartoon outline, readable at small size, colorful but simple satirical charm,
+one object only unless the artifact absolutely requires a pair/group, no text,
+no UI, no background, no checkerboard, no fake transparency, true transparent
+alpha only, centered with breathing room, easy to cut.
+
+## Do Not Work on Ripple/Wave Effects This Pass
+
+Leave ripple, wave, background physics, water simulation, and wave equations for
+a future pass after the desired wave behavior is researched.
+
+- Do not modify ripple effects.
+- Do not add wave equations.
+- Do not add water simulation.
+- Do not add background physics.
+- Do not research or implement ripple/wave systems.
+- Existing background should remain intact.
 
 ## Planned Fish Type Order
 

@@ -24,4 +24,21 @@ describe("artifact definitions", () => {
     expect(isArtifactId("peaceful-panic-whistle")).toBe(true);
     expect(isArtifactId("not-an-artifact")).toBe(false);
   });
+
+  it("marks only selected artifacts as upgrade-ready with Shell costs", () => {
+    const upgradeable = artifactDefinitions.filter((artifact) => artifact.maxLevel && artifact.maxLevel > 1);
+    const kelpBandage = artifactDefinitions.find((artifact) => artifact.id === "kelp-bandage");
+    const sharkToothCharm = artifactDefinitions.find((artifact) => artifact.id === "shark-tooth-charm");
+
+    expect(upgradeable.length).toBeGreaterThanOrEqual(5);
+    expect(upgradeable.length).toBeLessThan(artifactDefinitions.length);
+    expect(kelpBandage).toMatchObject({
+      level: 1,
+      maxLevel: 3,
+      upgradeShellCost: expect.any(Number),
+      upgradeText: expect.any(String),
+    });
+    expect(kelpBandage?.upgradeShellCost).toBeGreaterThan(0);
+    expect(sharkToothCharm?.maxLevel).toBeUndefined();
+  });
 });

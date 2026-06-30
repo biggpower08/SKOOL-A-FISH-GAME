@@ -32,6 +32,7 @@ const addFish = (school: Fish[], typeId: ActiveFishTypeId, index: number, center
     maxHealth: definition.maxHealth,
     threatened: false,
     caught: false,
+    facingX: Math.cos(angle + 0.7) < -0.2 ? -1 : 1,
   });
 };
 

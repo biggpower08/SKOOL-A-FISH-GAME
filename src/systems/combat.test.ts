@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aliveFish, applySharkAttack, summarizeAliveFishCounts } from "./combat";
+import { aliveFish, applyContactSharkBite, applySharkAttack, summarizeAliveFishCounts } from "./combat";
 import { createLevelConfig } from "./levels";
 import type { Fish, Shark } from "../game/types";
 
@@ -142,5 +142,42 @@ describe("applySharkAttack", () => {
     expect(result.caught).toBe(0);
     expect(fish.at(-1)?.health).toBeLessThan(100);
     expect(fish.at(-1)?.caught).toBe(false);
+  });
+
+  it("uses contact bites when a shark visually overlaps the closest fish", () => {
+    const fish = makeFish(4);
+    fish[0].pos = { x: 122, y: 100 };
+    fish[1].pos = { x: 260, y: 100 };
+    fish[2].pos = { x: 280, y: 100 };
+    fish[3].pos = { x: 300, y: 100 };
+    const shark = makeShark({
+      pos: { x: 100, y: 100 },
+      hunger: 20,
+      contactCooldown: 0,
+    });
+
+    const result = applyContactSharkBite(fish, shark, createLevelConfig(1));
+
+    expect(result.caught).toBe(1);
+    expect(result.damagedSupport).toBe(0);
+    expect(fish[0].caught).toBe(true);
+    expect(fish[1].caught).toBe(false);
+    expect(shark.hunger).toBeGreaterThan(20);
+    expect(shark.feedingRecovery).toBe(0);
+    expect(shark.contactCooldown).toBeGreaterThan(0);
+  });
+
+  it("does not contact-bite again while the shark cooldown is active", () => {
+    const fish = makeFish(4);
+    fish[0].pos = { x: 105, y: 100 };
+    const shark = makeShark({
+      pos: { x: 100, y: 100 },
+      contactCooldown: 0.2,
+    });
+
+    const result = applyContactSharkBite(fish, shark, createLevelConfig(1));
+
+    expect(result.caught).toBe(0);
+    expect(fish.every((candidate) => !candidate.caught)).toBe(true);
   });
 });
