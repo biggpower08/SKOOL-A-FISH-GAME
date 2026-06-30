@@ -22,6 +22,13 @@ npm test
 
 The Vite base path is set for `biggpower08/SKOOL-A-FISH-GAME`.
 
+## Development Workflow
+
+Codex MCP usage for this repo is documented in
+[`docs/MCP_WORKFLOW.md`](docs/MCP_WORKFLOW.md). Use it for Playwright browser
+checks, Context7 documentation lookup, Sequential Thinking planning, and notes
+about unavailable MCP servers.
+
 ## Deployment
 
 The repo includes a GitHub Actions workflow at `.github/workflows/static.yml`.

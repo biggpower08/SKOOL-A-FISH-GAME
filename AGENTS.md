@@ -175,6 +175,21 @@ Before claiming the prototype is done, run:
 - `npm run build`.
 - `npm test`, if a test script exists.
 
+## Codex MCP Workflow
+
+Use `docs/MCP_WORKFLOW.md` for this repo's Codex MCP workflow.
+
+- Use Playwright for browser-visible game checks, UI bugs, console errors, and
+  focused end-to-end smoke tests.
+- Use Context7 when current Vite, Vitest, TypeScript, or dependency
+  documentation matters.
+- Use Sequential Thinking before multi-file gameplay changes, debugging passes,
+  save migrations, refactors, or test strategy changes.
+- Perplexity and Firecrawl were not detected when the workflow note was added;
+  do not rely on them unless `codex mcp list` shows they are connected.
+- Do not rewrite the project just because MCPs are available. MCPs support
+  Ponytail discipline; they do not replace it.
+
 Acceptance checks:
 
 - Game opens to a basic home screen.
