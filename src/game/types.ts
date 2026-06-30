@@ -68,6 +68,28 @@ export type Shark = {
   starved: boolean;
 };
 
+export type Ripple = {
+  x: number;
+  y: number;
+  radius: number;
+  maxRadius: number;
+  opacity: number;
+  strength: number;
+  age: number;
+  lifetime: number;
+  scaleX: number;
+  scaleY: number;
+};
+
+export type SpriteManifestEntry = {
+  spriteKey: string;
+  src: string;
+  frameCount: number;
+  frameWidth: number;
+  frameHeight: number;
+  fallbackColor: string;
+};
+
 export type RunState = {
   level: number;
   fishCount: number;

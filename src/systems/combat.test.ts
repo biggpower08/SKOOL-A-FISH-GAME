@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applySharkAttack } from "./combat";
+import { aliveFish, applySharkAttack, summarizeAliveFishCounts } from "./combat";
 import { createLevelConfig } from "./levels";
 import type { Fish, Shark } from "../game/types";
 
@@ -50,7 +50,7 @@ describe("applySharkAttack", () => {
     expect(fish.filter((candidate) => candidate.caught)).toHaveLength(4);
   });
 
-  it("marks caught fish for a short visual fade and shark feeding recovery", () => {
+  it("marks caught fish for a short visual fade without a movement pause", () => {
     const fish = makeFish(10);
     const shark = makeShark();
 
@@ -59,8 +59,22 @@ describe("applySharkAttack", () => {
 
     expect(result.caught).toBeGreaterThan(0);
     expect(caught.every((candidate) => candidate.caughtTimer && candidate.caughtTimer > 0)).toBe(true);
-    expect(shark.feedingRecovery).toBeGreaterThanOrEqual(0.25);
-    expect(shark.feedingRecovery).toBeLessThanOrEqual(0.45);
+    expect(shark.feedingRecovery).toBeLessThanOrEqual(0.08);
+  });
+
+  it("summarizes only alive visible fish for run counters", () => {
+    const fish = makeFish(6);
+    fish[1].typeId = "salmon";
+    fish[1].className = "normal";
+    fish[2].caught = true;
+    fish[2].caughtTimer = 0.18;
+
+    const summary = summarizeAliveFishCounts(fish);
+
+    expect(aliveFish(fish)).toHaveLength(5);
+    expect(summary.fishCount).toBe(5);
+    expect(summary.fishCounts.tilapia).toBe(4);
+    expect(summary.fishCounts.salmon).toBe(1);
   });
 
   it("catches six to seven fish from a 36 fish round-one school", () => {

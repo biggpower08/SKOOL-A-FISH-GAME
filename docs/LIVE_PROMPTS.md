@@ -299,22 +299,28 @@ and crowded side text.
 
 The background should remain dark but not flat black forever. Use subtle
 Canvas-only animated dark blue, purple, black, and gray shading. Avoid obvious
-entity-centered pulsating circles during combat. If ripples remain, keep them
-very subtle and non-distracting.
+entity-centered pulsating circles during combat. Ripples should read as water
+disturbance, not UI pulses or shark tails.
 
 Current visual rule: do not use the old pulse/circle wave effect around units or
 health displays. Prefer animated gradients and faint flowing current lines behind
 entities. Fish and sharks must remain readable against the background.
 
-Entity wake direction:
+Ripple direction:
 
 - Preserve the current gradient and flowing current-line background.
-- Add subtle shark and fish wake/ripple marks using Canvas only.
-- Shark wakes should be larger and more visible than fish wakes.
-- Fish wakes should be smaller/fainter, and can be throttled for performance.
-- Prefer stretched ellipses, arcs, or wake strokes over perfect expanding
-  circles.
+- Use lightweight Canvas ripple particles: expanding, fading, slightly
+  stretched ellipses.
+- Shark ripples should be larger and more visible than fish ripples.
+- Successful bites can emit a stronger shark ripple for feedback.
+- Fish ripples should be tiny/faint and only appear when fleeing or at a
+  throttled cadence.
+- Avoid tail-like slash marks behind sharks.
+- Avoid huge perfect rings around every unit.
 - Do not add WebGL, shader, jQuery, or external ripple dependencies for this.
+- The provided Python/NumPy ripple reference represents a height-field wave
+  buffer and refraction idea. Do not port it directly; a cheap visual
+  approximation is enough for this prototype.
 
 ## HUD and Health Bar Cleanup
 
@@ -383,18 +389,62 @@ velocity and steer it back into the arena without teleporting.
 
 ## Shark Bite Recovery and Fish Lifecycle
 
-Shark eating should feel intentional, short, and readable.
+Shark eating should feel intentional and readable without stopping the shark.
 
-- On a successful catch, the shark can enter a short `feedingRecovery` style
-  state of about 0.25-0.45 seconds.
-- During recovery, the shark may slow or briefly pause, but should not look
-  frozen or artificially stopped for balance.
-- The shark should resume chasing reliably.
+- On a successful catch, the shark should continue chasing smoothly.
+- `feedingRecovery` can remain only as a tiny visual-feedback timer under
+  about 0.1 seconds.
+- Do not use bite recovery to slow, pause, or circle the shark for balance.
+- Catch feedback should come from the caught-fish fade and a stronger water
+  ripple, not from movement interruption.
 - Caught fish can linger for a tiny visual fade so fish do not appear to
   randomly pop out of existence.
+- Caught/fading fish are not counted as alive in the active HUD.
+- Fish count, fish type summaries, and completed-round run state should all use
+  one alive-visible source of truth.
 - Fish with invalid or non-finite position/velocity should be clamped or reset
   instead of producing NaN movement.
 - Fish deaths should be clearly tied to shark catches or round transitions.
+
+## Sprite Integration Prep
+
+Sprites are future polish. Placeholder circles remain the working fallback.
+
+Sprite rules:
+
+- Do not generate or commit final sprites until explicitly requested or
+  provided.
+- Use one fish type at a time when sprites begin.
+- Transparent background is required.
+- Bold/simple cartoon outline is preferred so fish remain readable on dark
+  water.
+- Single-frame sprites are acceptable first.
+- Two-frame flip-flop animation can come later.
+- If a sprite is missing or fails to load, render the placeholder circle.
+
+Tiny future manifest shape:
+
+```ts
+type SpriteManifestEntry = {
+  spriteKey: string;
+  src: string;
+  frameCount: number;
+  frameWidth: number;
+  frameHeight: number;
+  fallbackColor: string;
+};
+```
+
+Tone direction for future fish art:
+
+- colorful
+- satirical
+- hippie/new-wave
+- simple cartoon personality
+- customization page later, with hats, little accessories, googly eyes, color
+  variants, and silly details
+
+Do not build customization now.
 
 ## Tone
 
@@ -451,8 +501,13 @@ End Run, or Save and Return Home instead.
 - Current fish/max fish should be visible enough to understand recovery.
 - A top-center dev level scroller exists for quick level testing.
 - Visible artifacts are clickable for dev/testing.
-- Shark/fish wake marks are subtle entity effects, not full-screen pulse rings.
-- Shark feeding recovery is short and intentional after catches.
+- Shark/fish ripple marks are subtle water effects, not tail slashes or
+  full-screen pulse rings.
+- Shark feeding recovery is visual-only and should not pause shark movement.
+- Fish counters should match alive visible fish; caught/fading fish are not
+  counted as alive.
+- A tiny sprite manifest shape exists for future transparent-background fish
+  sprites, but circles remain the fallback.
 
 ## Planned Fish Type Order
 

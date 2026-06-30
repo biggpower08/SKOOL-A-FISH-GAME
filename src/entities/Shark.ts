@@ -163,8 +163,7 @@ export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: 
       continue;
     }
 
-    const recovery = Math.max(0, shark.feedingRecovery ?? 0);
-    shark.feedingRecovery = Math.max(0, recovery - dtSeconds);
+    shark.feedingRecovery = Math.max(0, (shark.feedingRecovery ?? 0) - dtSeconds);
 
     const target = targetForShark(shark, fish);
     const margin = shark.radius + 18;
@@ -189,14 +188,13 @@ export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: 
 
     const desiredDirection =
       edgeSteer.x !== 0 || edgeSteer.y !== 0 ? normalize(add(edgeSteer, scale(normalize(subtract(arenaCenter, shark.pos)), 0.65))) : normalize(subtract(target, shark.pos));
-    const recoverySlow = recovery > 0 ? 0.48 : 1;
-    const desired = scale(desiredDirection, shark.speed * recoverySlow);
+    const desired = scale(desiredDirection, shark.speed);
     shark.vel = limit(
       {
         x: shark.vel.x * (1 - shark.acceleration) + desired.x * shark.acceleration,
         y: shark.vel.y * (1 - shark.acceleration) + desired.y * shark.acceleration,
       },
-      shark.speed * recoverySlow,
+      shark.speed,
     );
 
     if (shark.pos.x <= shark.radius && shark.vel.x < 0) {

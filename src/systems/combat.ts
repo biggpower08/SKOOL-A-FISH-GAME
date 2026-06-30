@@ -1,4 +1,4 @@
-import type { Fish, LevelConfig, Shark, Vector } from "../game/types";
+import type { Fish, FishTypeId, LevelConfig, RunState, Shark, Vector } from "../game/types";
 import { ROUND_ONE_TARGET_CATCH_RATE } from "./levels";
 import { distance } from "./vector";
 
@@ -8,6 +8,28 @@ export type SharkAttackResult = {
 };
 
 export const aliveFish = (fish: Fish[]): Fish[] => fish.filter((candidate) => !candidate.caught);
+
+export const summarizeAliveFishCounts = (
+  fish: Fish[],
+): Pick<RunState, "fishCount" | "fishCounts" | "supportCount"> => {
+  const counts: Partial<Record<FishTypeId, number>> = {};
+  let supportCount = 0;
+
+  for (const candidate of aliveFish(fish)) {
+    if (candidate.kind === "support") {
+      supportCount += 1;
+      continue;
+    }
+
+    counts[candidate.typeId] = (counts[candidate.typeId] ?? 0) + 1;
+  }
+
+  return {
+    fishCount: Object.values(counts).reduce((sum, count) => sum + (count ?? 0), 0),
+    fishCounts: counts,
+    supportCount,
+  };
+};
 
 export const schoolCenter = (fish: Fish[]): Vector => {
   const alive = aliveFish(fish);
@@ -86,7 +108,7 @@ export const applySharkAttack = (
 
   if (caught > 0) {
     shark.hunger = Math.min(shark.maxHunger, shark.hunger + caught * (5.5 + config.level * 0.08));
-    shark.feedingRecovery = 0.34;
+    shark.feedingRecovery = 0.06;
   }
 
   return { caught, damagedSupport };
