@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createLevelConfig } from "./levels";
-import { applyArtifactReward, applyChoice, applyLevelReward, createNewRun, rewardFlowForCompletedLevel } from "./upgrades";
+import { applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, rewardFlowForCompletedLevel } from "./upgrades";
 
 describe("upgrades", () => {
   it("starts with managed fish and no active support fish", () => {
@@ -27,12 +27,33 @@ describe("upgrades", () => {
   });
 
   it("recruits fast fish through adoption choices", () => {
-    const parrotfish = applyChoice(createNewRun(), "parrotfish");
-    const mahi = applyChoice(createNewRun(), "mahi-mahi");
+    const parrotfish = applyChoice({ ...createNewRun(), currency: 12 }, "parrotfish");
+    const mahi = applyChoice({ ...createNewRun(), currency: 12 }, "mahi-mahi");
 
     expect(parrotfish.fishCounts.parrotfish).toBe(4);
+    expect(parrotfish.currency).toBe(4);
     expect(parrotfish.maxFishCount).toBe(58);
     expect(mahi.fishCounts["mahi-mahi"]).toBe(4);
+  });
+
+  it("locks Shell-gated recruits without spending below zero", () => {
+    const run = applyChoice(createNewRun(), "parrotfish");
+
+    expect(run.currency).toBe(0);
+    expect(run.fishCount).toBe(54);
+    expect(run.fishCounts.parrotfish ?? 0).toBe(0);
+    expect(run.lastRecruitmentSummary).toBe("Not enough Shells");
+  });
+
+  it("buys mixed fish bundles with Shells and updates school capacity", () => {
+    const run = applyChoice({ ...createNewRun(), currency: 15 }, "grouper");
+
+    expect(run.currency).toBe(3);
+    expect(run.fishCount).toBe(59);
+    expect(run.maxFishCount).toBe(59);
+    expect(run.fishCounts.grouper).toBe(2);
+    expect(run.fishCounts.salmon).toBe(3);
+    expect(run.lastRecruitmentSummary).toBe("School grew! +2 Grouper, +3 Salmon");
   });
 
   it("invests 100 Shells and returns double after three completed rounds", () => {
@@ -77,6 +98,44 @@ describe("upgrades", () => {
 
     expect(run.fishCount).toBeGreaterThan(25);
     expect(run.currency).toBe(40);
+  });
+
+  it("automatically recovers dead fish from multiple recruited types after a round", () => {
+    const run = applyRoundRecovery(
+      {
+        ...createNewRun(),
+        fishCount: 10,
+        maxFishCount: 20,
+        fishCounts: {
+          tilapia: 4,
+          salmon: 2,
+          parrotfish: 2,
+          "mahi-mahi": 1,
+          grouper: 1,
+        },
+      },
+      {
+        tilapia: 6,
+        salmon: 3,
+        parrotfish: 2,
+        "mahi-mahi": 2,
+        grouper: 1,
+      },
+    );
+
+    expect(run.fishCount).toBe(13);
+    expect(run.maxFishCount).toBe(20);
+    expect(run.fishCounts.salmon).toBe(3);
+    expect(run.fishCounts["mahi-mahi"]).toBe(2);
+    expect(run.fishCounts.tilapia).toBe(5);
+    expect(run.lostFishCounts).toMatchObject({
+      tilapia: 5,
+      salmon: 2,
+      parrotfish: 2,
+      "mahi-mahi": 1,
+      grouper: 1,
+    });
+    expect(run.lastRecoverySummary).toBe("Recovered 3 fish after the wave");
   });
 
   it("lets Shell economy artifacts affect real reward payouts", () => {

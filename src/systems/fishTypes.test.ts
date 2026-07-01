@@ -54,4 +54,34 @@ describe("fish type definitions", () => {
     expect(fishTypes.grouper.maxSpeed).toBeLessThan(fishTypes.salmon.maxSpeed);
     expect(fishTypes.tilapia.recruitAmount).toBeGreaterThan(fishTypes.salmon.recruitAmount);
   });
+
+  it("describes generous recruit bundles and Shell-gated premium choices", () => {
+    const choicesById = Object.fromEntries(recruitmentChoices.map((choice) => [choice.id, choice]));
+
+    expect(choicesById.tilapia).toMatchObject({
+      amount: 8,
+      shellCost: 0,
+      fishCounts: { tilapia: 8 },
+    });
+    expect(choicesById.salmon).toMatchObject({
+      amount: 5,
+      shellCost: 0,
+      fishCounts: { salmon: 5 },
+    });
+    expect(choicesById.parrotfish).toMatchObject({
+      amount: 4,
+      shellCost: 8,
+      fishCounts: { parrotfish: 4 },
+    });
+    expect(choicesById["mahi-mahi"]).toMatchObject({
+      amount: 4,
+      shellCost: 8,
+      fishCounts: { "mahi-mahi": 4 },
+    });
+    expect(choicesById.grouper).toMatchObject({
+      amount: 5,
+      shellCost: 12,
+      fishCounts: { grouper: 2, salmon: 3 },
+    });
+  });
 });
