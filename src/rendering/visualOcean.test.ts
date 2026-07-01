@@ -1,11 +1,11 @@
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
+/// <reference types="vite/client" />
+
 import { describe, expect, it } from "vitest";
 import type { Fish } from "../game/types";
+import gameSource from "../game/Game.ts?raw";
+import rendererSource from "./renderer.ts?raw";
 import { drawBackground } from "./renderer";
 import { fishWakeFor, swimPoseForFish } from "./fishMotion";
-
-const source = (path: string): string => readFileSync(join(process.cwd(), path), "utf8");
 
 const makeFish = (overrides: Partial<Fish> = {}): Fish => ({
   id: "fish-1",
@@ -25,8 +25,8 @@ const makeFish = (overrides: Partial<Fish> = {}): Fish => ({
 
 describe("visual ocean readability", () => {
   it("keeps combat rendering off the old detached ripple path", () => {
-    expect(source("src/rendering/renderer.ts")).not.toContain("drawWaterRipples");
-    expect(source("src/game/Game.ts")).not.toContain("spawnRipple");
+    expect(rendererSource).not.toContain("drawWaterRipples");
+    expect(gameSource).not.toContain("spawnRipple");
   });
 
   it("uses a darker reef-ocean background palette", () => {
