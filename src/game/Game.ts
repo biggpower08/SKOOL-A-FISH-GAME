@@ -10,10 +10,10 @@ import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { artifactBuildTagLabels, artifactDefinitions, isArtifactId } from "../systems/artifacts";
-import { applyArtifactReward, applyChoice, applyLevelReward, createNewRun, rewardFlowForCompletedLevel } from "../systems/upgrades";
+import { applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, lostFishCountsAfterRound, rewardFlowForCompletedLevel } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
-import type { Bounds, Fish, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
+import type { Bounds, Fish, FishTypeId, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
 const artifactIconGlyphs: Record<string, string> = {
@@ -81,6 +81,7 @@ export class Game {
   private config: LevelConfig = createLevelConfig(1);
   private fish: Fish[] = [];
   private sharks: Shark[] = [];
+  private levelStartFishCounts: Partial<Record<FishTypeId, number>> = {};
   private waterDisturbance = new WaterDisturbanceField(960, 540);
   private width = 960;
   private height = 540;
@@ -268,6 +269,7 @@ export class Game {
     this.showArtifactAccess();
     this.config = createLevelConfig(this.run.level);
     this.run.lastInvestmentReturn = 0;
+    this.levelStartFishCounts = { ...this.run.fishCounts };
     const bounds = this.combatBounds();
     this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts, getSchoolModifiers(this.run));
     this.sharks = createSharks(this.config, bounds);
@@ -494,14 +496,18 @@ export class Game {
     }
 
     const fishSummary = summarizeAliveFishCounts(this.fish);
+    const lostThisRound = lostFishCountsAfterRound(this.levelStartFishCounts, fishSummary.fishCounts);
     const completedLevel = this.config.level;
     this.run = applyLevelReward(
-      {
-        ...this.run,
-        level: this.run.level + 1,
-        ...fishSummary,
-        schoolEnergy: clamp(this.run.schoolEnergy + 7, 0, 110),
-      },
+      applyRoundRecovery(
+        {
+          ...this.run,
+          level: this.run.level + 1,
+          ...fishSummary,
+          schoolEnergy: clamp(this.run.schoolEnergy + 7, 0, 110),
+        },
+        lostThisRound,
+      ),
       this.config,
     );
     saveRun(this.run);
@@ -677,8 +683,12 @@ export class Game {
     this.canvas.dataset.fishCount = String(this.run?.fishCount ?? 0);
     this.canvas.dataset.fishTotal = String(this.run?.maxFishCount ?? 0);
     this.canvas.dataset.tilapia = String(this.run?.fishCounts.tilapia ?? 0);
+    this.canvas.dataset.salmon = String(this.run?.fishCounts.salmon ?? 0);
     this.canvas.dataset.parrotfish = String(this.run?.fishCounts.parrotfish ?? 0);
+    this.canvas.dataset.mahi = String(this.run?.fishCounts["mahi-mahi"] ?? 0);
+    this.canvas.dataset.grouper = String(this.run?.fishCounts.grouper ?? 0);
     this.canvas.dataset.artifacts = String(this.run?.ownedArtifacts.length ?? 0);
+    this.canvas.dataset.feedback = this.run?.lastRecruitmentSummary || this.run?.lastRecoverySummary || "";
     this.canvas.dataset.waterEnergy = this.waterDisturbance.energy().toFixed(3);
   }
 

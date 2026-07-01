@@ -86,11 +86,14 @@ export type RunState = {
   maxFishCount: number;
   supportCount: number;
   fishCounts: Partial<Record<FishTypeId, number>>;
+  lostFishCounts: Partial<Record<FishTypeId, number>>;
   ownedArtifacts: ArtifactId[];
   currency: number;
   invested: number;
   investmentReturnLevel: number | null;
   lastInvestmentReturn: number;
+  lastRecruitmentSummary: string;
+  lastRecoverySummary: string;
   schoolEnergy: number;
   bestLevel: number;
 };

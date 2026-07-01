@@ -138,6 +138,24 @@ describe("upgrades", () => {
     expect(run.lastRecoverySummary).toBe("Recovered 3 fish after the wave");
   });
 
+  it.each(["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"] as const)("can recover dead %s from the saved dead pool", (typeId) => {
+    const liveCounts = typeId === "tilapia" ? { tilapia: 1 } : { tilapia: 1, [typeId]: 0 };
+    const run = applyRoundRecovery(
+      {
+        ...createNewRun(),
+        fishCount: 1,
+        maxFishCount: 4,
+        fishCounts: liveCounts,
+      },
+      {
+        [typeId]: 3,
+      },
+    );
+
+    expect(run.fishCounts[typeId]).toBe(typeId === "tilapia" ? 2 : 1);
+    expect(run.fishCount).toBe(2);
+  });
+
   it("lets Shell economy artifacts affect real reward payouts", () => {
     const base = applyLevelReward(createNewRun(), createLevelConfig(2));
     const boosted = applyLevelReward({ ...createNewRun(), ownedArtifacts: ["pearl-cache"] }, createLevelConfig(2));

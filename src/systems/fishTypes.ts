@@ -1,6 +1,7 @@
 import type { FishClass, FishKind, FishTypeId } from "../game/types";
 
 export type ActiveFishTypeId = Exclude<FishTypeId, "support">;
+export type FishRecruitCounts = Partial<Record<ActiveFishTypeId, number>>;
 export type FishBuildTag =
   | "balanced-school"
   | "tilapia-swarm"
@@ -34,6 +35,19 @@ export type FishTypeDefinition = {
   recoveryAffinity: number;
   buildTags: FishBuildTag[];
 };
+
+export type RecruitmentChoice = {
+  id: ActiveFishTypeId;
+  amount: number;
+  shellCost: number;
+  fishCounts: FishRecruitCounts;
+  role: string;
+  description: string;
+  mechanics: string;
+  buildTags: FishBuildTag[];
+};
+
+export const activeFishTypeIds: ActiveFishTypeId[] = ["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"];
 
 export const fishTypeDefinitions: FishTypeDefinition[] = [
   {
@@ -152,14 +166,48 @@ export const fishTypes = Object.fromEntries(
   fishTypeDefinitions.map((definition) => [definition.id, definition]),
 ) as Record<ActiveFishTypeId, FishTypeDefinition>;
 
-export const recruitmentChoices = fishTypeDefinitions.map((definition) => ({
-  id: definition.id,
-  amount: definition.recruitAmount,
-  role: definition.role,
-  description: definition.description,
-  mechanics: definition.mechanics,
-  buildTags: definition.buildTags,
-}));
+const recruitmentBundles: Record<ActiveFishTypeId, FishRecruitCounts> = {
+  tilapia: { tilapia: 8 },
+  salmon: { salmon: 5 },
+  parrotfish: { parrotfish: 4 },
+  "mahi-mahi": { "mahi-mahi": 4 },
+  grouper: { grouper: 2, salmon: 3 },
+};
+
+const recruitmentShellCosts: Record<ActiveFishTypeId, number> = {
+  tilapia: 0,
+  salmon: 0,
+  parrotfish: 8,
+  "mahi-mahi": 8,
+  grouper: 12,
+};
+
+const countFishBundle = (fishCounts: FishRecruitCounts): number =>
+  Object.values(fishCounts).reduce((sum, count) => sum + (count ?? 0), 0);
+
+export const recruitmentChoices: RecruitmentChoice[] = fishTypeDefinitions.map((definition) => {
+  const fishCounts = recruitmentBundles[definition.id];
+
+  return {
+    id: definition.id,
+    amount: countFishBundle(fishCounts),
+    shellCost: recruitmentShellCosts[definition.id],
+    fishCounts,
+    role: definition.role,
+    description: definition.description,
+    mechanics: definition.mechanics,
+    buildTags: definition.buildTags,
+  };
+});
+
+export const getRecruitmentChoice = (typeId: string): RecruitmentChoice | undefined =>
+  recruitmentChoices.find((choice) => choice.id === typeId);
+
+export const formatFishCountSummary = (fishCounts: Partial<Record<FishTypeId, number>>): string =>
+  Object.entries(fishCounts)
+    .filter((entry): entry is [ActiveFishTypeId, number] => activeFishTypeIds.includes(entry[0] as ActiveFishTypeId) && (entry[1] ?? 0) > 0)
+    .map(([typeId, count]) => `+${count} ${fishTypes[typeId].label}`)
+    .join(", ");
 
 export const defaultFishCounts = (): Partial<Record<FishTypeId, number>> => ({
   tilapia: 54,

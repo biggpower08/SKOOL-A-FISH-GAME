@@ -194,13 +194,21 @@ export const drawHud = (
 
   drawBar(ctx, x + 14, 68, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
 
+  const feedback = run.lastRecruitmentSummary || run.lastRecoverySummary;
+  const schoolY = feedback ? 110 : 94;
+
+  if (feedback) {
+    ctx.fillStyle = "#d8e1ea";
+    ctx.fillText(feedback.slice(0, 28), x + 14, 91);
+  }
+
   ctx.fillStyle = "#8f9aa7";
   ctx.font = "12px system-ui, sans-serif";
-  ctx.fillText("School", x + 14, 94);
+  ctx.fillText("School", x + 14, schoolY);
 
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
-    const rowY = 112 + index * 22;
+    const rowY = schoolY + 18 + index * 22;
     if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), x + 22, rowY + 4, 24, 15)) {
       fallbackFishMark(ctx, x + 22, rowY + 4, definition.color);
     }
@@ -209,7 +217,7 @@ export const drawHud = (
     drawBar(ctx, x + 96, rowY + 1, 36, 6, groupHealthRatio(summary.alive), definition.color);
   });
 
-  const enemyY = 124 + summarizeFish(fish).length * 22;
+  const enemyY = schoolY + 30 + summarizeFish(fish).length * 22;
   ctx.fillStyle = "#8f9aa7";
   ctx.fillText("Sharks", x + 14, enemyY);
 

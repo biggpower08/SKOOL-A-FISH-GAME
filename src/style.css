@@ -154,6 +154,16 @@ button:disabled {
   min-height: 246px;
 }
 
+.recruit-choice-card.locked {
+  border-color: #27313a;
+  background: rgba(7, 10, 14, 0.94);
+}
+
+.recruit-choice-card.locked .fish-card-sprite,
+.recruit-choice-card.locked p {
+  opacity: 0.68;
+}
+
 .clickable-choice-card,
 .artifact-card {
   cursor: pointer;

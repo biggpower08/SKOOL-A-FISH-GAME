@@ -1,6 +1,6 @@
 import type { ArtifactId, ChoiceId, FishTypeId, LevelConfig, RewardFlow, RunState } from "../game/types";
 import { getSchoolModifiers } from "./artifactEffects";
-import { defaultFishCounts, fishTypes } from "./fishTypes";
+import { activeFishTypeIds, defaultFishCounts, fishTypes, formatFishCountSummary, getRecruitmentChoice } from "./fishTypes";
 import { clamp } from "./vector";
 
 export const STARTING_FISH_COUNT = 54;
@@ -9,6 +9,7 @@ const KELP_RESTORE_COUNT = 5;
 const INVESTMENT_AMOUNT = 100;
 const INVESTMENT_RETURN_ROUNDS = 3;
 const ACTIVE_RECRUIT_TYPES = new Set<FishTypeId>(["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"]);
+type FishCountMap = Partial<Record<FishTypeId, number>>;
 
 export const createNewRun = (): RunState => ({
   level: 1,
@@ -16,11 +17,14 @@ export const createNewRun = (): RunState => ({
   maxFishCount: STARTING_FISH_COUNT,
   supportCount: 0,
   fishCounts: defaultFishCounts(),
+  lostFishCounts: {},
   ownedArtifacts: [],
   currency: 0,
   invested: 0,
   investmentReturnLevel: null,
   lastInvestmentReturn: 0,
+  lastRecruitmentSummary: "",
+  lastRecoverySummary: "",
   schoolEnergy: 100,
   bestLevel: 1,
 });
@@ -57,20 +61,187 @@ export const applyLevelReward = (run: RunState, config: LevelConfig): RunState =
   };
 };
 
-export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
-  const modifiers = getSchoolModifiers(run);
-  const fishChoice = choice as keyof typeof fishTypes;
-  const fishToAdd = choice in fishTypes ? fishTypes[fishChoice].recruitAmount + (modifiers.recruitBonusByType[fishChoice] ?? 0) : 0;
+const totalFishCounts = (fishCounts: FishCountMap): number =>
+  activeFishTypeIds.reduce((sum, typeId) => sum + Math.max(0, fishCounts[typeId] ?? 0), 0);
 
-  if (fishToAdd) {
+const cleanFishCounts = (fishCounts: FishCountMap): FishCountMap => {
+  const cleaned: FishCountMap = {};
+
+  for (const typeId of activeFishTypeIds) {
+    const count = Math.max(0, Math.round(fishCounts[typeId] ?? 0));
+
+    if (count > 0) {
+      cleaned[typeId] = count;
+    }
+  }
+
+  return cleaned;
+};
+
+const addFishCounts = (left: FishCountMap, right: FishCountMap): FishCountMap => {
+  const combined: FishCountMap = { ...left };
+
+  for (const typeId of activeFishTypeIds) {
+    const count = right[typeId] ?? 0;
+
+    if (count > 0) {
+      combined[typeId] = (combined[typeId] ?? 0) + count;
+    }
+  }
+
+  return cleanFishCounts(combined);
+};
+
+const subtractFishCounts = (left: FishCountMap, right: FishCountMap): FishCountMap => {
+  const remaining: FishCountMap = { ...left };
+
+  for (const typeId of activeFishTypeIds) {
+    const count = right[typeId] ?? 0;
+
+    if (count > 0) {
+      remaining[typeId] = Math.max(0, (remaining[typeId] ?? 0) - count);
+    }
+  }
+
+  return cleanFishCounts(remaining);
+};
+
+const applyFishRecoveryCounts = (run: RunState, recoveryPool: FishCountMap, restoredCounts: FishCountMap, summary: string): RunState => {
+  const restored = totalFishCounts(restoredCounts);
+
+  if (restored <= 0) {
     return {
       ...run,
+      lostFishCounts: cleanFishCounts(recoveryPool),
+      lastRecoverySummary: "",
+    };
+  }
+
+  return {
+    ...run,
+    fishCount: run.fishCount + restored,
+    fishCounts: addFishCounts(run.fishCounts, restoredCounts),
+    lostFishCounts: subtractFishCounts(recoveryPool, restoredCounts),
+    lastRecoverySummary: summary,
+  };
+};
+
+const chooseRecoveryCounts = (recoveryPool: FishCountMap, target: number): FishCountMap => {
+  const totalLost = totalFishCounts(recoveryPool);
+  const cappedTarget = Math.min(totalLost, Math.max(0, Math.round(target)));
+  const restoredCounts: FishCountMap = {};
+
+  if (cappedTarget <= 0 || totalLost <= 0) {
+    return restoredCounts;
+  }
+
+  const quotas = activeFishTypeIds
+    .map((typeId) => {
+      const lost = Math.max(0, recoveryPool[typeId] ?? 0);
+      const raw = (lost / totalLost) * cappedTarget;
+
+      return {
+        typeId,
+        lost,
+        raw,
+        restored: Math.min(lost, Math.floor(raw)),
+      };
+    })
+    .filter((quota) => quota.lost > 0);
+
+  let restored = 0;
+
+  for (const quota of quotas) {
+    if (quota.restored > 0) {
+      restoredCounts[quota.typeId] = quota.restored;
+      restored += quota.restored;
+    }
+  }
+
+  while (restored < cappedTarget) {
+    const next = quotas
+      .filter((quota) => quota.restored < quota.lost)
+      .sort((left, right) => {
+        const leftNeed = left.raw - left.restored;
+        const rightNeed = right.raw - right.restored;
+
+        if (rightNeed !== leftNeed) {
+          return rightNeed - leftNeed;
+        }
+
+        return fishTypes[right.typeId].maxSpeed - fishTypes[left.typeId].maxSpeed;
+      })[0];
+
+    if (!next) {
+      break;
+    }
+
+    next.restored += 1;
+    restoredCounts[next.typeId] = (restoredCounts[next.typeId] ?? 0) + 1;
+    restored += 1;
+  }
+
+  return cleanFishCounts(restoredCounts);
+};
+
+export const lostFishCountsAfterRound = (before: FishCountMap, after: FishCountMap): FishCountMap => {
+  const lost: FishCountMap = {};
+
+  for (const typeId of activeFishTypeIds) {
+    const count = Math.max(0, (before[typeId] ?? 0) - (after[typeId] ?? 0));
+
+    if (count > 0) {
+      lost[typeId] = count;
+    }
+  }
+
+  return lost;
+};
+
+export const applyRoundRecovery = (run: RunState, roundLostCounts: FishCountMap): RunState => {
+  const recoveryPool = addFishCounts(run.lostFishCounts, roundLostCounts);
+  const totalLost = totalFishCounts(recoveryPool);
+  const missing = Math.max(0, run.maxFishCount - run.fishCount);
+  const target = Math.min(missing, Math.ceil(totalLost * 0.2));
+  const restoredCounts = chooseRecoveryCounts(recoveryPool, target);
+  const restored = totalFishCounts(restoredCounts);
+
+  return applyFishRecoveryCounts(
+    run,
+    recoveryPool,
+    restoredCounts,
+    restored > 0 ? `Recovered ${restored} fish after the wave` : "",
+  );
+};
+
+export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
+  const modifiers = getSchoolModifiers(run);
+  const recruitmentChoice = getRecruitmentChoice(choice);
+
+  if (recruitmentChoice) {
+    if (run.currency < recruitmentChoice.shellCost) {
+      return {
+        ...run,
+        lastRecruitmentSummary: "Not enough Shells",
+      };
+    }
+
+    const fishCounts = { ...recruitmentChoice.fishCounts };
+    const recruitBonus = modifiers.recruitBonusByType[recruitmentChoice.id] ?? 0;
+
+    if (recruitBonus > 0) {
+      fishCounts[recruitmentChoice.id] = (fishCounts[recruitmentChoice.id] ?? 0) + recruitBonus;
+    }
+
+    const fishToAdd = totalFishCounts(fishCounts);
+
+    return {
+      ...run,
+      currency: run.currency - recruitmentChoice.shellCost,
       fishCount: run.fishCount + fishToAdd,
-      maxFishCount: Math.max(run.maxFishCount, run.fishCount + fishToAdd),
-      fishCounts: {
-        ...run.fishCounts,
-        [fishChoice]: (run.fishCounts[fishChoice] ?? 0) + fishToAdd,
-      },
+      maxFishCount: Math.max(run.maxFishCount, run.fishCount) + fishToAdd,
+      fishCounts: addFishCounts(run.fishCounts, fishCounts),
+      lastRecruitmentSummary: `School grew! ${formatFishCountSummary(fishCounts)}`,
     };
   }
 
@@ -100,20 +271,15 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
   }
 
   const missing = Math.max(0, run.maxFishCount - run.fishCount);
-  const restored = run.currency >= KELP_COST ? Math.min(KELP_RESTORE_COUNT + modifiers.kelpRestoreBonus, missing) : 0;
-  const fishCounts =
-    restored > 0
-      ? {
-          ...run.fishCounts,
-          tilapia: (run.fishCounts.tilapia ?? 0) + restored,
-        }
-      : run.fishCounts;
+  const savedRecoveryPool = cleanFishCounts(run.lostFishCounts);
+  const recoveryPool = totalFishCounts(savedRecoveryPool) > 0 ? savedRecoveryPool : { tilapia: missing };
+  const restoredCounts = run.currency >= KELP_COST ? chooseRecoveryCounts(recoveryPool, Math.min(KELP_RESTORE_COUNT + modifiers.kelpRestoreBonus, missing)) : {};
+  const restored = totalFishCounts(restoredCounts);
+  const recoveredRun = applyFishRecoveryCounts(run, recoveryPool, restoredCounts, restored > 0 ? `Recovered ${restored} fish with kelp` : "");
 
   return {
-    ...run,
+    ...recoveredRun,
     currency: restored > 0 ? run.currency - KELP_COST : run.currency,
-    fishCount: run.fishCount + restored,
-    fishCounts,
     schoolEnergy: clamp(run.schoolEnergy + (restored > 0 ? 12 : 0), 0, 110),
   };
 };
@@ -149,7 +315,10 @@ export const normalizeRun = (run: RunState): RunState => {
     maxFishCount: Math.max(run.maxFishCount ?? convertedFishCount, convertedFishCount),
     supportCount: 0,
     fishCounts: convertedFishCounts,
+    lostFishCounts: cleanFishCounts(run.lostFishCounts ?? {}),
     investmentReturnLevel: run.investmentReturnLevel ?? null,
     lastInvestmentReturn: run.lastInvestmentReturn ?? 0,
+    lastRecruitmentSummary: run.lastRecruitmentSummary ?? "",
+    lastRecoverySummary: run.lastRecoverySummary ?? "",
   };
 };

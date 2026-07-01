@@ -1,6 +1,6 @@
 import type { ArtifactId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
 import { artifactBuildTagLabels, artifactDefinitions } from "../systems/artifacts";
-import { type ActiveFishTypeId, fishTypes, recruitmentChoices } from "../systems/fishTypes";
+import { type ActiveFishTypeId, fishTypes, formatFishCountSummary, recruitmentChoices } from "../systems/fishTypes";
 import { getFishSprite } from "../rendering/sprites";
 
 type HomeHandlers = {
@@ -112,6 +112,14 @@ const small = (text: string): HTMLParagraphElement => {
   return element;
 };
 
+const feedbackNotes = (run: RunState): HTMLParagraphElement[] =>
+  [run.lastRecoverySummary, run.lastRecruitmentSummary]
+    .filter((message) => message.length > 0)
+    .map((message) => small(message));
+
+const totalFishCounts = (fishCounts: RunState["fishCounts"]): number =>
+  Object.values(fishCounts).reduce((sum, count) => sum + (count ?? 0), 0);
+
 export const clearOverlay = (overlay: HTMLElement): void => {
   overlay.replaceChildren();
   overlay.className = "overlay hidden";
@@ -134,18 +142,23 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
     overlay.replaceChildren(
       title("Recruit a Fish"),
       small("Pick a role. The new fish joins the school for the next fight."),
+      ...feedbackNotes(handlers.run),
       card(
         "choice-grid recruit-choice-grid",
         recruitmentChoices.map((option) => {
           const definition = fishTypes[option.id];
-          return card("choice-card recruit-choice-card", [
+          const affordable = handlers.run.currency >= option.shellCost;
+          const costText = option.shellCost === 0 ? "Free" : `${option.shellCost} Shells`;
+
+          return card(`choice-card recruit-choice-card${affordable ? "" : " locked"}`, [
             fishMarker(option.id),
             note(definition.label),
+            small(costText),
             small(definition.role),
             small(definition.description),
             small(definition.mechanics),
-            small(`Add ${option.amount} to school`),
-            button("Add to School", () => handlers.onChoose(option.id)),
+            small(`Add ${formatFishCountSummary(option.fishCounts)}`),
+            button(affordable ? "Add to School" : "Need Shells", () => handlers.onChoose(option.id), !affordable),
           ]);
         }),
       ),
@@ -160,6 +173,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
 
     overlay.replaceChildren(
       title("Choose Artifact"),
+      ...feedbackNotes(handlers.run),
       card(
         "choice-grid artifact-choice-grid",
         choices.map((artifact) => {
@@ -184,6 +198,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
     overlay.replaceChildren(
       title("Investment Returned"),
       note(`+${handlers.run.lastInvestmentReturn} Shells`),
+      ...feedbackNotes(handlers.run),
       button("Continue", handlers.onContinue),
       button("Home", handlers.onHome),
       button("End Run", handlers.onEndRun),
@@ -192,18 +207,20 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
   }
 
   const missingFish = Math.max(0, handlers.run.maxFishCount - handlers.run.fishCount);
-  const canKelp = handlers.run.currency >= 100 && missingFish > 0;
+  const recoverableFish = Math.max(missingFish, totalFishCounts(handlers.run.lostFishCounts));
+  const canKelp = handlers.run.currency >= 100 && recoverableFish > 0;
   const canInvest = handlers.run.currency >= 100 && handlers.run.invested === 0;
 
   overlay.replaceChildren(
     title("Break"),
     note(`Fish ${handlers.run.fishCount}/${handlers.run.maxFishCount}`),
+    ...feedbackNotes(handlers.run),
     card("choice-grid small-choice-grid", [
       card("choice-card", [
         marker("fish-card-marker", "o"),
         note("Feed Kelp"),
         small("100 Shells"),
-        small(`Recover up to ${Math.min(5, missingFish)} fish`),
+        small(`Recover up to ${Math.min(5, recoverableFish)} fish`),
         button("Feed Kelp", () => handlers.onChoose("heal"), !canKelp),
       ]),
       card("choice-card", [
