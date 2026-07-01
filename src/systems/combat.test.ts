@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aliveFish, applyContactSharkBite, applySharkAttack, summarizeAliveFishCounts } from "./combat";
+import { aliveFish, applyContactSharkBite, applySharkAttack, hasLivingSchoolFish, summarizeAliveFishCounts } from "./combat";
 import { createLevelConfig } from "./levels";
 import type { Fish, Shark } from "../game/types";
 
@@ -77,6 +77,24 @@ describe("applySharkAttack", () => {
     expect(summary.fishCounts.salmon).toBe(1);
   });
 
+  it("keeps the school alive when tilapia are gone but recruited fish remain", () => {
+    const fish = makeFish(4);
+    fish[0].caught = true;
+    fish[1].caught = true;
+    fish[2].caught = true;
+    fish[3].typeId = "parrotfish";
+    fish[3].className = "fast";
+    fish[3].health = 2;
+    fish[3].maxHealth = 2;
+
+    const summary = summarizeAliveFishCounts(fish);
+
+    expect(summary.fishCount).toBe(1);
+    expect(summary.fishCounts.tilapia ?? 0).toBe(0);
+    expect(summary.fishCounts.parrotfish).toBe(1);
+    expect(hasLivingSchoolFish(fish)).toBe(true);
+  });
+
   it("catches seven to eight fish from a 40 fish round-one school", () => {
     const fish = makeFish(40);
     const shark = makeShark();
@@ -129,6 +147,40 @@ describe("applySharkAttack", () => {
 
     expect(result.caught).toBe(0);
     expect(fish.every((candidate) => !candidate.caught)).toBe(true);
+  });
+
+  it("lets evasive recruited fish dodge a selected shark attack", () => {
+    const fish = makeFish(1);
+    fish[0].typeId = "parrotfish";
+    fish[0].className = "fast";
+    fish[0].health = 1;
+    fish[0].maxHealth = 1;
+    fish[0].evasion = 1;
+    const shark = makeShark();
+    const rolls = [0, 0.5];
+
+    const result = applySharkAttack(fish, shark, createLevelConfig(1), () => rolls.shift() ?? 0.5);
+
+    expect(result.caught).toBe(0);
+    expect(fish[0].caught).toBe(false);
+  });
+
+  it("lets protection and catch resistance keep tank fish swimming longer", () => {
+    const fish = makeFish(1);
+    fish[0].typeId = "grouper";
+    fish[0].className = "tank";
+    fish[0].health = 2;
+    fish[0].maxHealth = 2;
+    fish[0].protection = 0.35;
+    const shark = makeShark();
+
+    const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0.9, {
+      catchResistance: 0.25,
+    });
+
+    expect(result.caught).toBe(0);
+    expect(fish[0].caught).toBe(false);
+    expect(fish[0].health).toBeGreaterThan(0);
   });
 
   it("uses a more readable caught fade window for shark-caused removals", () => {

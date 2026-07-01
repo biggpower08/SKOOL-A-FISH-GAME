@@ -61,6 +61,31 @@ describe("upgrades", () => {
     expect(run.schoolEnergy).toBe(62);
   });
 
+  it("lets kelp recovery artifacts restore extra missing fish", () => {
+    const run = applyChoice(
+      {
+        ...createNewRun(),
+        ownedArtifacts: ["kelp-bandage"],
+        currency: 140,
+        fishCount: 20,
+        maxFishCount: 30,
+        fishCounts: { tilapia: 20 },
+        schoolEnergy: 50,
+      },
+      "heal",
+    );
+
+    expect(run.fishCount).toBeGreaterThan(25);
+    expect(run.currency).toBe(40);
+  });
+
+  it("lets Shell economy artifacts affect real reward payouts", () => {
+    const base = applyLevelReward(createNewRun(), createLevelConfig(2));
+    const boosted = applyLevelReward({ ...createNewRun(), ownedArtifacts: ["pearl-cache"] }, createLevelConfig(2));
+
+    expect(boosted.currency).toBeGreaterThan(base.currency);
+  });
+
   it("spends currency on a placeholder artifact without adding fish", () => {
     const run = applyChoice({ ...createNewRun(), currency: 12, fishCount: 10 }, "artifact");
 
@@ -77,7 +102,8 @@ describe("upgrades", () => {
   });
 
   it("alternates reward popups by completed level interval", () => {
-    expect(rewardFlowForCompletedLevel(1)).toBe("none");
+    expect(rewardFlowForCompletedLevel(1)).toBe("recruit");
+    expect(rewardFlowForCompletedLevel(2)).toBe("none");
     expect(rewardFlowForCompletedLevel(3)).toBe("artifact");
     expect(rewardFlowForCompletedLevel(5)).toBe("recruit");
     expect(rewardFlowForCompletedLevel(15)).toBe("recruit");

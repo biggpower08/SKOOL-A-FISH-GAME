@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import { createSchool } from "./School";
 import { createSharks, updateSharks } from "./Shark";
 import { createLevelConfig } from "../systems/levels";
+import { getSchoolModifiers } from "../systems/artifactEffects";
+import { createNewRun } from "../systems/upgrades";
+import { fishTypes } from "../systems/fishTypes";
 
 describe("entities", () => {
   it("creates active fish as placeholder circles without support fish", () => {
@@ -34,6 +37,30 @@ describe("entities", () => {
     expect(school.find((fish) => fish.typeId === "mahi-mahi")?.maxSpeed).toBeGreaterThan(
       school.find((fish) => fish.typeId === "salmon")?.maxSpeed ?? 0,
     );
+  });
+
+  it("applies artifact modifiers to recruited fish spawn stats", () => {
+    const modifiers = getSchoolModifiers({
+      ...createNewRun(),
+      ownedArtifacts: ["parrotfish-mood-ring", "grouper-hard-hat"],
+      fishCounts: {
+        parrotfish: 1,
+        grouper: 1,
+      },
+    });
+    const school = createSchool(
+      0,
+      0,
+      { width: 600, height: 400 },
+      {
+        parrotfish: 1,
+        grouper: 1,
+      },
+      modifiers,
+    );
+
+    expect(school.find((fish) => fish.typeId === "parrotfish")?.maxSpeed).toBeGreaterThan(fishTypes.parrotfish.maxSpeed);
+    expect(school.find((fish) => fish.typeId === "grouper")?.maxHealth).toBeGreaterThan(fishTypes.grouper.maxHealth);
   });
 
   it("creates sharks from level config and moves them toward the school", () => {
