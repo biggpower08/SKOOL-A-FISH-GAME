@@ -155,6 +155,13 @@ const groupHealthRatio = (fish: Fish[]): number => {
   return maxHealth === 0 ? 0 : health / maxHealth;
 };
 
+export const schoolCounterText = (fish: Fish[], run: Pick<RunState, "fishCount" | "maxFishCount">): string => {
+  const live = fish.filter((candidate) => !candidate.caught).length;
+  const total = Math.max(live, run.fishCount, run.maxFishCount);
+
+  return `Fish ${live} / ${total}`;
+};
+
 export const drawHud = (
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -177,7 +184,7 @@ export const drawHud = (
   ctx.fillStyle = "#f8fbff";
   ctx.font = "12px system-ui, sans-serif";
   ctx.fillText(`L${config.level}`, x + 14, 26);
-  ctx.fillText(`Fish ${fish.filter((candidate) => !candidate.caught).length}`, x + 56, 26);
+  ctx.fillText(schoolCounterText(fish, run), x + 52, 26);
   ctx.fillText(`Shells ${run.currency}`, x + 14, 43);
   ctx.fillText(`Best L${run.bestLevel}`, x + 88, 43);
 

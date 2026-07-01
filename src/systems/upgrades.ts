@@ -3,7 +3,7 @@ import { getSchoolModifiers } from "./artifactEffects";
 import { defaultFishCounts, fishTypes } from "./fishTypes";
 import { clamp } from "./vector";
 
-export const STARTING_FISH_COUNT = 40;
+export const STARTING_FISH_COUNT = 54;
 const KELP_COST = 100;
 const KELP_RESTORE_COUNT = 5;
 const INVESTMENT_AMOUNT = 100;

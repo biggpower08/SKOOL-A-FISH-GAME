@@ -675,6 +675,7 @@ export class Game {
     this.canvas.dataset.screen = this.screen;
     this.canvas.dataset.level = String(this.run?.level ?? 0);
     this.canvas.dataset.fishCount = String(this.run?.fishCount ?? 0);
+    this.canvas.dataset.fishTotal = String(this.run?.maxFishCount ?? 0);
     this.canvas.dataset.tilapia = String(this.run?.fishCounts.tilapia ?? 0);
     this.canvas.dataset.parrotfish = String(this.run?.fishCounts.parrotfish ?? 0);
     this.canvas.dataset.artifacts = String(this.run?.ownedArtifacts.length ?? 0);
