@@ -1,8 +1,9 @@
-import type { Fish, LevelConfig, Ripple, RunState, Shark, SpriteManifestEntry, Vector } from "../game/types";
+import type { Fish, LevelConfig, RunState, Shark, SpriteManifestEntry, Vector } from "../game/types";
 import { getFishSprite, getSharkSprite, spriteDrawSize } from "./sprites";
 import type { WaterDisturbanceField } from "./waterDisturbance";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
+import { swimPoseForFish } from "./fishMotion";
 
 const CAUGHT_FADE_SECONDS = 0.56;
 
@@ -90,6 +91,8 @@ const drawSprite = (
   alpha: number,
   tint: string | null = null,
   facingX?: 1 | -1,
+  offsetY = 0,
+  rotation = 0,
 ): boolean => {
   if (!sprite) {
     return false;
@@ -108,7 +111,8 @@ const drawSprite = (
 
   ctx.save();
   ctx.globalAlpha *= alpha;
-  ctx.translate(pos.x, pos.y);
+  ctx.translate(pos.x, pos.y + offsetY);
+  ctx.rotate(rotation);
   ctx.scale(flip, 1);
   ctx.drawImage(tint ? (tintedImageFor(cached.image, sprite, tint) ?? cached.image) : cached.image, x, y, size.width, size.height);
 
@@ -194,45 +198,12 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   }
 };
 
-const drawWaterRipples = (ctx: CanvasRenderingContext2D, ripples: Ripple[], time: number): void => {
-  for (const ripple of ripples) {
-    const wobble = Math.sin(time * 0.002 + ripple.x * 0.013 + ripple.y * 0.017) * 0.08;
-    ctx.save();
-    ctx.translate(ripple.x, ripple.y);
-    ctx.scale(ripple.scaleX + wobble, ripple.scaleY - wobble * 0.35);
-    ctx.globalAlpha = Math.max(0, ripple.opacity);
-    ctx.strokeStyle = "rgba(126, 199, 235, 0.42)";
-    ctx.lineWidth = 1.2;
-    ctx.beginPath();
-    ctx.ellipse(0, 0, ripple.radius, ripple.radius, 0, Math.PI * 0.05, Math.PI * 1.95);
-    ctx.stroke();
-
-    ctx.globalAlpha = Math.max(0, ripple.opacity * 0.48);
-    ctx.strokeStyle = "rgba(210, 230, 244, 0.24)";
-    ctx.lineWidth = 0.9;
-    ctx.beginPath();
-    ctx.moveTo(-ripple.radius * 0.85, Math.sin(time * 0.004) * 2);
-    ctx.quadraticCurveTo(-ripple.radius * 0.18, -ripple.radius * 0.18, ripple.radius * 0.22, 0);
-    ctx.quadraticCurveTo(ripple.radius * 0.58, ripple.radius * 0.14, ripple.radius * 0.92, -ripple.radius * 0.03);
-    ctx.stroke();
-
-    if (ripple.radius > 12) {
-      ctx.globalAlpha = Math.max(0, ripple.opacity * 0.42);
-      ctx.beginPath();
-      ctx.ellipse(0, 0, ripple.radius * 0.62, ripple.radius * 0.62, 0, Math.PI * 0.22, Math.PI * 1.48);
-      ctx.stroke();
-    }
-
-    ctx.restore();
-  }
-};
-
 export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#021318");
-  gradient.addColorStop(0.34, "#07313a");
-  gradient.addColorStop(0.68, "#102944");
-  gradient.addColorStop(1, "#05080f");
+  gradient.addColorStop(0, "#01070d");
+  gradient.addColorStop(0.34, "#052123");
+  gradient.addColorStop(0.68, "#101830");
+  gradient.addColorStop(1, "#020309");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 };
@@ -240,10 +211,10 @@ export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, hei
 const drawWaterShade = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
   const drift = Math.sin(time * 0.00028) * width * 0.08;
   const shade = ctx.createLinearGradient(drift, 0, width + drift, height);
-  shade.addColorStop(0, "rgba(45, 98, 103, 0.12)");
-  shade.addColorStop(0.45, "rgba(28, 71, 93, 0.09)");
-  shade.addColorStop(0.72, "rgba(11, 20, 34, 0.16)");
-  shade.addColorStop(1, "rgba(0, 0, 0, 0.24)");
+  shade.addColorStop(0, "rgba(18, 77, 70, 0.12)");
+  shade.addColorStop(0.45, "rgba(20, 55, 78, 0.1)");
+  shade.addColorStop(0.72, "rgba(22, 16, 45, 0.18)");
+  shade.addColorStop(1, "rgba(0, 0, 0, 0.32)");
   ctx.fillStyle = shade;
   ctx.fillRect(0, 0, width, height);
 };
@@ -254,7 +225,7 @@ const drawWaveBands = (ctx: CanvasRenderingContext2D, width: number, height: num
     const bandHeight = 18 + band * 2;
     const drift = (time * (0.009 + band * 0.0015) + band * 41) % (width + 160);
 
-    ctx.fillStyle = band % 2 === 0 ? "rgba(75, 161, 157, 0.07)" : "rgba(121, 164, 196, 0.055)";
+    ctx.fillStyle = band % 2 === 0 ? "rgba(47, 122, 114, 0.055)" : "rgba(82, 88, 135, 0.05)";
     ctx.beginPath();
 
     for (let step = -160; step <= width + 160; step += 34) {
@@ -285,7 +256,7 @@ const drawWaterCurrents = (ctx: CanvasRenderingContext2D, width: number, height:
   for (let band = 0; band < 9; band += 1) {
     const yBase = ((band + 1) / 10) * height;
     const drift = (time * 0.014 + band * 57) % (width + 180);
-    ctx.strokeStyle = band % 2 === 0 ? "rgba(153, 220, 218, 0.14)" : "rgba(118, 174, 204, 0.1)";
+    ctx.strokeStyle = band % 2 === 0 ? "rgba(118, 197, 188, 0.13)" : "rgba(119, 126, 178, 0.095)";
     ctx.beginPath();
 
     for (let step = -180; step <= width + 20; step += 28) {
@@ -311,7 +282,6 @@ export const drawCombat = (
   config: LevelConfig,
   fish: Fish[],
   sharks: Shark[],
-  ripples: Ripple[] = [],
   waterDisturbance?: WaterDisturbanceField,
   time = 0,
 ): void => {
@@ -320,7 +290,6 @@ export const drawCombat = (
   drawWaveBands(ctx, width - hudWidth(), height, time);
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
   waterDisturbance?.draw(ctx);
-  drawWaterRipples(ctx, ripples, time);
 
   for (const candidate of fish) {
     if (candidate.caught && (candidate.caughtTimer ?? 0) <= 0) {
@@ -330,19 +299,20 @@ export const drawCombat = (
     const definition = candidate.typeId === "support" ? null : fishTypes[candidate.typeId as ActiveFishTypeId];
     const fill = candidate.threatened ? "#ff4058" : (definition?.color ?? "#ffffff");
     const fade = candidate.caught ? Math.max(0.16, Math.min(1, (candidate.caughtTimer ?? 0) / CAUGHT_FADE_SECONDS)) : 1;
+    const pose = swimPoseForFish(candidate, time);
     ctx.save();
     ctx.globalAlpha = fade;
     const sprite = getFishSprite(candidate.typeId);
     const tint = candidate.threatened ? "rgba(255, 42, 68, 0.32)" : null;
 
-    if (!drawSprite(ctx, sprite, candidate.pos, candidate.vel, candidate.radius, 1, tint, candidate.facingX)) {
-      drawCircle(ctx, candidate.pos.x, candidate.pos.y, candidate.radius, fill);
+    if (!drawSprite(ctx, sprite, candidate.pos, candidate.vel, candidate.radius, 1, tint, candidate.facingX, pose.offsetY, pose.rotation)) {
+      drawCircle(ctx, candidate.pos.x, candidate.pos.y + pose.offsetY, candidate.radius, fill);
     }
 
     if (candidate.kind === "support") {
       ctx.strokeStyle = "#4daac2";
       ctx.beginPath();
-      ctx.arc(candidate.pos.x, candidate.pos.y, candidate.radius + 3, 0, Math.PI * 2);
+      ctx.arc(candidate.pos.x, candidate.pos.y + pose.offsetY, candidate.radius + 3, 0, Math.PI * 2);
       ctx.stroke();
     }
     ctx.restore();
