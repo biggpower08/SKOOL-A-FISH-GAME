@@ -95,6 +95,22 @@ describe("applySharkAttack", () => {
     expect(hasLivingSchoolFish(fish)).toBe(true);
   });
 
+  it("ends only when every fish is gone, not when one type is wiped out", () => {
+    const fish = makeFish(3);
+    fish[0].caught = true;
+    fish[1].caught = true;
+    fish[2].typeId = "grouper";
+    fish[2].className = "tank";
+    fish[2].health = 7;
+    fish[2].maxHealth = 7;
+
+    expect(hasLivingSchoolFish(fish)).toBe(true);
+
+    fish[2].caught = true;
+
+    expect(hasLivingSchoolFish(fish)).toBe(false);
+  });
+
   it("catches seven to eight fish from a 40 fish round-one school", () => {
     const fish = makeFish(40);
     const shark = makeShark();

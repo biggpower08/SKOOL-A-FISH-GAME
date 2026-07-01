@@ -6,11 +6,11 @@ describe("upgrades", () => {
   it("starts with managed fish and no active support fish", () => {
     expect(createNewRun()).toMatchObject({
       level: 1,
-      fishCount: 40,
-      maxFishCount: 40,
+      fishCount: 54,
+      maxFishCount: 54,
       supportCount: 0,
       fishCounts: {
-        tilapia: 40,
+        tilapia: 54,
       },
       ownedArtifacts: [],
       schoolEnergy: 100,
@@ -20,9 +20,9 @@ describe("upgrades", () => {
   it("adds fish without adding a faction system", () => {
     const run = applyChoice({ ...createNewRun(), level: 8 }, "tilapia");
 
-    expect(run.fishCount).toBeGreaterThan(40);
-    expect(run.maxFishCount).toBeGreaterThan(40);
-    expect(run.fishCounts.tilapia).toBe(45);
+    expect(run.fishCount).toBeGreaterThan(54);
+    expect(run.maxFishCount).toBeGreaterThan(54);
+    expect(run.fishCounts.tilapia).toBe(62);
     expect(run.supportCount).toBe(0);
   });
 
@@ -30,9 +30,9 @@ describe("upgrades", () => {
     const parrotfish = applyChoice(createNewRun(), "parrotfish");
     const mahi = applyChoice(createNewRun(), "mahi-mahi");
 
-    expect(parrotfish.fishCounts.parrotfish).toBe(2);
-    expect(parrotfish.maxFishCount).toBe(42);
-    expect(mahi.fishCounts["mahi-mahi"]).toBe(2);
+    expect(parrotfish.fishCounts.parrotfish).toBe(4);
+    expect(parrotfish.maxFishCount).toBe(58);
+    expect(mahi.fishCounts["mahi-mahi"]).toBe(4);
   });
 
   it("invests 100 Shells and returns double after three completed rounds", () => {
