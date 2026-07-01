@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { artifactDefinitions, isArtifactId } from "./artifacts";
+import { artifactBuildArchetypes, artifactBuildTagLabels, artifactDefinitions, isArtifactId } from "./artifacts";
 
 describe("artifact definitions", () => {
   it("has about 50 compact named artifacts for the placeholder collection page", () => {
@@ -40,5 +40,30 @@ describe("artifact definitions", () => {
     });
     expect(kelpBandage?.upgradeShellCost).toBeGreaterThan(0);
     expect(sharkToothCharm?.maxLevel).toBeUndefined();
+  });
+
+  it("connects artifacts to visible fish-role build archetypes", () => {
+    expect(artifactBuildArchetypes).toEqual([
+      "balanced-school",
+      "tilapia-swarm",
+      "parrotfish-evasion",
+      "grouper-protector",
+      "mahi-tempo",
+      "salmon-generalist",
+      "shell-economy",
+      "kelp-recovery",
+      "anti-shark-survival",
+      "risky-joke",
+    ]);
+
+    for (const archetype of artifactBuildArchetypes) {
+      expect(artifactBuildTagLabels[archetype]).toMatch(/\S/);
+      expect(artifactDefinitions.some((artifact) => artifact.buildTags.includes(archetype))).toBe(true);
+    }
+
+    expect(artifactDefinitions.every((artifact) => artifact.buildTags.length > 0)).toBe(true);
+    expect(artifactDefinitions.find((artifact) => artifact.id === "tilapia-town-charter")?.buildTags).toContain("tilapia-swarm");
+    expect(artifactDefinitions.find((artifact) => artifact.id === "grouper-hard-hat")?.buildTags).toContain("grouper-protector");
+    expect(artifactDefinitions.find((artifact) => artifact.id === "parrotfish-mood-ring")?.buildTags).toContain("parrotfish-evasion");
   });
 });

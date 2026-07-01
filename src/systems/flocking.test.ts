@@ -240,4 +240,35 @@ describe("updateFlocking", () => {
     expect(averageVelocity.x / fish.length).toBeGreaterThan(0.18);
     expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
   });
+
+  it("lets the ocean current nudge fish without overpowering their max speed", () => {
+    const fish: Fish[] = [
+      {
+        id: "current-fish",
+        kind: "basic",
+        typeId: "salmon",
+        className: "normal",
+        pos: { x: 180, y: 160 },
+        vel: { x: 0, y: 0 },
+        radius: 4,
+        maxSpeed: 2,
+        health: 3,
+        maxHealth: 3,
+        threatened: false,
+        caught: false,
+      },
+    ];
+
+    updateFlocking(fish, [], {
+      width: 400,
+      height: 300,
+      threatRadius: 120,
+      dt: 1,
+      currentAt: () => ({ x: 0.45, y: 0.1 }),
+    });
+
+    expect(fish[0].vel.x).toBeGreaterThan(0);
+    expect(fish[0].pos.x).toBeGreaterThan(180);
+    expect(Math.hypot(fish[0].vel.x, fish[0].vel.y)).toBeLessThanOrEqual(fish[0].maxSpeed);
+  });
 });

@@ -32,4 +32,21 @@ describe("WaterDisturbanceField", () => {
     expect(field.isActive()).toBe(true);
     expect(field.energy()).toBeGreaterThan(0);
   });
+
+  it("supports directional wakes and a subtle current sample", () => {
+    const field = new WaterDisturbanceField(240, 160, 20);
+
+    field.touch(120, 80, 30, 0.9, { x: 4, y: 1 });
+
+    expect(field.isActive()).toBe(true);
+    expect(field.wakeCount()).toBe(1);
+
+    const current = field.sampleCurrent(80, 60, 1.5);
+    const laterCurrent = field.sampleCurrent(80, 90, 2.5);
+
+    expect(Number.isFinite(current.x)).toBe(true);
+    expect(Number.isFinite(current.y)).toBe(true);
+    expect(Math.hypot(current.x, current.y)).toBeLessThan(0.12);
+    expect(laterCurrent).not.toEqual(current);
+  });
 });
