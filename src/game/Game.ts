@@ -8,7 +8,7 @@ import { aliveFish, applyContactSharkBite, applySchoolPressure, applySharkAttack
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
-import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
+import { artifactBuildTagLabels, artifactDefinitions, isArtifactId } from "../systems/artifacts";
 import { applyArtifactReward, applyChoice, applyLevelReward, createNewRun, rewardFlowForCompletedLevel } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
@@ -339,6 +339,7 @@ export class Game {
       threatRadius: this.config.fishThreatRadius,
       dt: step,
       schoolIntent: this.schoolIntent(),
+      currentAt: (position) => this.waterDisturbance.sampleCurrent(position.x, position.y, this.elapsed),
     });
     updateSharks(this.sharks, this.fish, bounds, step, dt);
     this.updateCaughtFish(dt);
@@ -356,7 +357,7 @@ export class Game {
       if (contactResult.caught > 0) {
         const sprite = getSharkSprite(shark.kind);
         const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.35;
-        this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.34, 0.95);
+        this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.34, 0.95, shark.vel);
         this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.24));
       }
 
@@ -369,7 +370,7 @@ export class Game {
         if (result.caught > 0) {
           const sprite = getSharkSprite(shark.kind);
           const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.35;
-          this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.38, 1.05);
+          this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.38, 1.05, shark.vel);
           this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.26));
         }
 
@@ -475,7 +476,7 @@ export class Game {
 
       const sprite = getSharkSprite(shark.kind);
       const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.2;
-      this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.25, 0.2 * dt * 60);
+      this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.25, 0.2 * dt * 60, shark.vel);
     }
 
     if (this.fishRippleClock <= 0.08) {
@@ -485,7 +486,7 @@ export class Game {
         const fish = activeFish[index];
         const sprite = getFishSprite(fish.typeId);
         const size = sprite ? spriteRippleSize(sprite, fish.radius) : fish.radius * 2.2;
-        this.waterDisturbance.touch(fish.pos.x, fish.pos.y, size * 0.18, fish.threatened ? 0.14 : 0.08);
+        this.waterDisturbance.touch(fish.pos.x, fish.pos.y, size * 0.18, fish.threatened ? 0.14 : 0.08, fish.vel);
       }
     }
 
@@ -632,9 +633,12 @@ export class Game {
       name.textContent = artifact.name;
       const effect = document.createElement("p");
       effect.textContent = artifact.effect;
+      const tags = document.createElement("span");
+      tags.className = "artifact-tags";
+      tags.textContent = artifact.buildTags.slice(0, 2).map((tag) => artifactBuildTagLabels[tag]).join(" / ");
       const rarity = document.createElement("span");
       rarity.textContent = `${artifact.rarity} / ${artifact.category}`;
-      const children: HTMLElement[] = [icon, name, effect, rarity];
+      const children: HTMLElement[] = [icon, name, effect, tags, rarity];
 
       if (artifact.maxLevel && artifact.maxLevel > 1) {
         const upgrade = document.createElement("span");

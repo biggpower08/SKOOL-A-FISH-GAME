@@ -1,5 +1,5 @@
 import type { ArtifactId, ChoiceId, FishTypeId, LevelConfig, RewardFlow, RunState } from "../game/types";
-import { defaultFishCounts } from "./fishTypes";
+import { defaultFishCounts, fishTypes } from "./fishTypes";
 import { clamp } from "./vector";
 
 export const STARTING_FISH_COUNT = 40;
@@ -51,16 +51,7 @@ export const applyLevelReward = (run: RunState, config: LevelConfig): RunState =
 };
 
 export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
-  const fishToAdd =
-    choice === "tilapia"
-      ? 5
-      : choice === "salmon"
-        ? 3
-        : choice === "parrotfish" || choice === "mahi-mahi"
-          ? 2
-          : choice === "grouper"
-            ? 1
-            : 0;
+  const fishToAdd = choice in fishTypes ? fishTypes[choice as keyof typeof fishTypes].recruitAmount : 0;
 
   if (fishToAdd) {
     const fishChoice = choice as "tilapia" | "salmon" | "parrotfish" | "mahi-mahi" | "grouper";

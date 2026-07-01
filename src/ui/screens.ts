@@ -1,6 +1,7 @@
 import type { ArtifactId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
-import { artifactDefinitions } from "../systems/artifacts";
-import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
+import { artifactBuildTagLabels, artifactDefinitions } from "../systems/artifacts";
+import { type ActiveFishTypeId, fishTypes, recruitmentChoices } from "../systems/fishTypes";
+import { getFishSprite } from "../rendering/sprites";
 
 type HomeHandlers = {
   hasSave: boolean;
@@ -89,6 +90,22 @@ const marker = (className: string, text: string): HTMLDivElement => {
   return element;
 };
 
+const fishMarker = (typeId: ActiveFishTypeId): HTMLDivElement => {
+  const definition = fishTypes[typeId];
+  const element = marker("fish-card-marker fish-card-sprite", "o");
+  const sprite = getFishSprite(typeId);
+
+  if (!sprite) {
+    return element;
+  }
+
+  const image = document.createElement("img");
+  image.src = sprite.src;
+  image.alt = definition.label;
+  element.replaceChildren(image);
+  return element;
+};
+
 const small = (text: string): HTMLParagraphElement => {
   const element = note(text);
   element.className = "small-note";
@@ -114,27 +131,21 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
   overlay.className = "overlay menu compact";
 
   if (handlers.mode === "recruit") {
-    const options: Array<{ id: ActiveFishTypeId; amount: number; subtitle: string }> = [
-      { id: "tilapia", amount: 5, subtitle: "Stable schooling, low health." },
-      { id: "salmon", amount: 3, subtitle: "Balanced generalist." },
-      { id: "parrotfish", amount: 2, subtitle: "Fast evasion fish." },
-      { id: "mahi-mahi", amount: 2, subtitle: "Very fast, fragile." },
-      { id: "grouper", amount: 1, subtitle: "Slow durable tank." },
-    ];
-
     overlay.replaceChildren(
-      title("Adopt Fish"),
+      title("Recruit a Fish"),
+      small("Pick a role. The new fish joins the school for the next fight."),
       card(
-        "choice-grid",
-        options.map((option) => {
+        "choice-grid recruit-choice-grid",
+        recruitmentChoices.map((option) => {
           const definition = fishTypes[option.id];
-          return card("choice-card", [
-            marker("fish-card-marker", "o"),
+          return card("choice-card recruit-choice-card", [
+            fishMarker(option.id),
             note(definition.label),
-            small(definition.className),
-            small(option.subtitle),
-            small(`+${option.amount} fish`),
-            button("Adopt", () => handlers.onChoose(option.id)),
+            small(definition.role),
+            small(definition.description),
+            small(definition.mechanics),
+            small(`Add ${option.amount} to school`),
+            button("Add to School", () => handlers.onChoose(option.id)),
           ]);
         }),
       ),
@@ -158,6 +169,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
             note(artifact.name),
             small(artifact.rarity),
             small(artifact.effect),
+            small(artifact.buildTags.slice(0, 2).map((tag) => artifactBuildTagLabels[tag]).join(" / ")),
             button("Take", chooseArtifact),
           ], chooseArtifact);
         }),

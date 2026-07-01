@@ -5,6 +5,7 @@ export type FlockingOptions = Bounds & {
   threatRadius: number;
   dt: number;
   schoolIntent?: Vector;
+  currentAt?: (position: Vector) => Vector;
 };
 
 const NEIGHBOR_RADIUS = 74;
@@ -206,9 +207,10 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const flee = escape(fish, sharks, options.threatRadius);
     const edge = boundaryPush(fish, options);
     const intent = fish.threatened ? zero() : scale(sharedIntent, LARGE_SCHOOL_INTENT_STRENGTH);
+    const current = options.currentAt ? options.currentAt(fish.pos) : zero();
 
     fish.vel = limit(
-      add(add(add(add(add(add(fish.vel, sep), ali), coh), intent), scale(flee, 4.8)), scale(edge, 1.35)),
+      add(add(add(add(add(add(add(fish.vel, sep), ali), coh), intent), scale(flee, 4.8)), scale(edge, 1.35)), scale(current, 0.38)),
       fish.maxSpeed,
     );
     fish.pos = {

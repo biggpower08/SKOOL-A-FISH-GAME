@@ -25,7 +25,7 @@ body,
 button {
   width: 210px;
   min-height: 42px;
-  border: 1px solid #3b4652;
+  border: 2px solid #3b4652;
   border-radius: 6px;
   color: #f8fbff;
   background: #111820;
@@ -115,6 +115,9 @@ button:disabled {
   font-size: 34px;
   font-weight: 700;
   letter-spacing: 0;
+  text-shadow:
+    0 2px 0 #020406,
+    0 0 18px rgba(93, 206, 196, 0.28);
 }
 
 .overlay p {
@@ -136,9 +139,19 @@ button:disabled {
   justify-items: start;
   min-height: 164px;
   padding: 12px;
-  border: 1px solid #2f3a45;
+  border: 2px solid #2f3a45;
   border-radius: 6px;
   background: rgba(8, 13, 18, 0.94);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.52);
+}
+
+.recruit-choice-grid {
+  grid-template-columns: repeat(5, minmax(132px, 1fr));
+  width: min(900px, calc(100vw - 36px));
+}
+
+.recruit-choice-card {
+  min-height: 246px;
 }
 
 .clickable-choice-card,
@@ -176,8 +189,22 @@ button:disabled {
   border-radius: 4px;
 }
 
+.fish-card-sprite {
+  width: 52px;
+  height: 36px;
+  border-radius: 7px;
+  background: rgba(23, 43, 49, 0.86);
+}
+
+.fish-card-sprite img {
+  max-width: 48px;
+  max-height: 32px;
+  object-fit: contain;
+}
+
 .small-note {
   font-size: 12px;
+  line-height: 1.25;
 }
 
 .artifact-edge-button {
@@ -206,7 +233,7 @@ button:disabled {
   width: min(78vw, 900px);
   height: min(78vh, 720px);
   padding: 14px;
-  border: 1px solid #34414c;
+  border: 2px solid #34414c;
   border-radius: 6px;
   background: rgba(4, 8, 12, 0.94);
   overflow-y: auto;
@@ -233,7 +260,7 @@ button:disabled {
   margin: 0;
   min-width: 150px;
   padding: 5px 12px;
-  border: 1px solid #34414c;
+  border: 2px solid #34414c;
   border-radius: 5px;
   text-align: center;
   font-size: 16px;
@@ -260,11 +287,12 @@ button:disabled {
 }
 
 .artifact-card {
-  min-height: 92px;
+  min-height: 112px;
   padding: 7px;
-  border: 1px solid #2f3a45;
+  border: 2px solid #2f3a45;
   border-radius: 6px;
   background: rgba(12, 18, 24, 0.96);
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
 }
 
 .artifact-card.owned {
@@ -282,6 +310,12 @@ button:disabled {
 .artifact-card p {
   font-size: 10px;
   line-height: 1.15;
+}
+
+.artifact-tags {
+  display: block;
+  margin: 4px 0;
+  color: #9ee0d5;
 }
 
 .artifact-upgrade {
@@ -344,6 +378,10 @@ button:disabled {
   }
 
   .choice-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .recruit-choice-grid {
     grid-template-columns: 1fr 1fr;
   }
 

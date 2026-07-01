@@ -5,6 +5,7 @@ import { getFishSprite, getSharkSprite } from "../rendering/sprites";
 import type { SpriteManifestEntry } from "../game/types";
 
 const PANEL_WIDTH = 164;
+const BUILD_LABEL = "v0.1.0 ocean-recruit";
 
 type HudSpriteCacheEntry = {
   image: HTMLImageElement;
@@ -205,4 +206,8 @@ export const drawHud = (
     ctx.fillText(`x${summary.count}`, x + 39, rowY + 8);
     drawBar(ctx, x + 62, rowY + 3, 70, 7, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
+
+  ctx.fillStyle = "#6f7c89";
+  ctx.font = "10px system-ui, sans-serif";
+  ctx.fillText(BUILD_LABEL, x + 14, height - 16);
 };

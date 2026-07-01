@@ -1,5 +1,43 @@
 import type { ArtifactId } from "../game/types";
 
+export type ArtifactBuildTag =
+  | "balanced-school"
+  | "tilapia-swarm"
+  | "parrotfish-evasion"
+  | "grouper-protector"
+  | "mahi-tempo"
+  | "salmon-generalist"
+  | "shell-economy"
+  | "kelp-recovery"
+  | "anti-shark-survival"
+  | "risky-joke";
+
+export const artifactBuildArchetypes: ArtifactBuildTag[] = [
+  "balanced-school",
+  "tilapia-swarm",
+  "parrotfish-evasion",
+  "grouper-protector",
+  "mahi-tempo",
+  "salmon-generalist",
+  "shell-economy",
+  "kelp-recovery",
+  "anti-shark-survival",
+  "risky-joke",
+];
+
+export const artifactBuildTagLabels: Record<ArtifactBuildTag, string> = {
+  "balanced-school": "Balanced school",
+  "tilapia-swarm": "Tilapia swarm",
+  "parrotfish-evasion": "Parrotfish dodge",
+  "grouper-protector": "Grouper guard",
+  "mahi-tempo": "Mahi tempo",
+  "salmon-generalist": "Salmon generalist",
+  "shell-economy": "Shell economy",
+  "kelp-recovery": "Kelp recovery",
+  "anti-shark-survival": "Anti-shark survival",
+  "risky-joke": "Risky nonsense",
+};
+
 export type ArtifactDefinition = {
   id: ArtifactId;
   name: string;
@@ -7,21 +45,86 @@ export type ArtifactDefinition = {
   rarity: "common" | "rare" | "legendary";
   category: string;
   effect: string;
+  buildTags: ArtifactBuildTag[];
   level?: number;
   maxLevel?: number;
   upgradeShellCost?: number;
   upgradeText?: string;
 };
 
-export const artifactDefinitions: ArtifactDefinition[] = [
-  { id: "shark-tooth-charm", name: "Shark Tooth Charm", iconKey: "tooth", rarity: "common", category: "shark hunger drain", effect: "Sharks tire a little faster." },
+type ArtifactSeed = Omit<ArtifactDefinition, "buildTags"> & {
+  buildTags?: ArtifactBuildTag[];
+};
+
+const categoryBuildTags = (category: string): ArtifactBuildTag[] => {
+  if (category.includes("Shell") || category.includes("economy")) {
+    return ["shell-economy"];
+  }
+
+  if (category.includes("kelp")) {
+    return ["kelp-recovery"];
+  }
+
+  if (category.includes("shark")) {
+    return ["anti-shark-survival"];
+  }
+
+  if (category.includes("evasion")) {
+    return ["parrotfish-evasion", "anti-shark-survival"];
+  }
+
+  if (category.includes("schooling")) {
+    return ["balanced-school"];
+  }
+
+  if (category.includes("fast") || category.includes("speed")) {
+    return ["parrotfish-evasion", "mahi-tempo"];
+  }
+
+  if (category.includes("tank") || category.includes("health")) {
+    return ["grouper-protector", "anti-shark-survival"];
+  }
+
+  if (category.includes("normal")) {
+    return ["salmon-generalist", "balanced-school"];
+  }
+
+  if (category.includes("recruitment")) {
+    return ["balanced-school", "tilapia-swarm"];
+  }
+
+  if (category.includes("risky")) {
+    return ["risky-joke"];
+  }
+
+  return ["balanced-school"];
+};
+
+const artifactTagOverrides: Partial<Record<ArtifactId, ArtifactBuildTag[]>> = {
+  "bubble-net": ["parrotfish-evasion", "anti-shark-survival"],
+  "school-bell": ["balanced-school", "salmon-generalist"],
+  "pearl-cache": ["shell-economy"],
+  "kelp-bandage": ["kelp-recovery"],
+  "drift-scale": ["parrotfish-evasion", "mahi-tempo"],
+  "salmon-lane-pass": ["salmon-generalist", "balanced-school"],
+  "tilapia-town-charter": ["tilapia-swarm"],
+  "grouper-hard-hat": ["grouper-protector"],
+  "mahi-sprint-sticker": ["mahi-tempo"],
+  "parrotfish-mood-ring": ["parrotfish-evasion"],
+};
+
+const buildTagsForArtifact = (artifact: ArtifactSeed): ArtifactBuildTag[] =>
+  Array.from(new Set([...(artifact.buildTags ?? []), ...(artifactTagOverrides[artifact.id] ?? []), ...categoryBuildTags(artifact.category)]));
+
+const artifactSeeds: ArtifactSeed[] = [
+  { id: "shark-tooth-charm", name: "Shark Tooth Charm", iconKey: "tooth", rarity: "common", category: "shark hunger drain", effect: "Sharks tire like unpaid interns." },
   {
     id: "bubble-net",
     name: "Bubble Net",
     iconKey: "net",
     rarity: "common",
     category: "fish evasion",
-    effect: "Threatened fish flee harder.",
+    effect: "Catches bad decisions before they bite.",
     level: 1,
     maxLevel: 3,
     upgradeShellCost: 90,
@@ -33,7 +136,7 @@ export const artifactDefinitions: ArtifactDefinition[] = [
     iconKey: "bell",
     rarity: "common",
     category: "fish schooling",
-    effect: "School cohesion improves.",
+    effect: "The school remembers it is a school.",
     level: 1,
     maxLevel: 3,
     upgradeShellCost: 85,
@@ -45,7 +148,7 @@ export const artifactDefinitions: ArtifactDefinition[] = [
     iconKey: "pearl",
     rarity: "rare",
     category: "Shell rewards",
-    effect: "Round Shell rewards improve.",
+    effect: "Wins cough up more Shells.",
     level: 1,
     maxLevel: 4,
     upgradeShellCost: 130,
@@ -57,7 +160,7 @@ export const artifactDefinitions: ArtifactDefinition[] = [
     iconKey: "kelp",
     rarity: "common",
     category: "kelp recovery",
-    effect: "Kelp recovery improves.",
+    effect: "Nature's gross little band-aid.",
     level: 1,
     maxLevel: 3,
     upgradeShellCost: 75,
@@ -69,14 +172,14 @@ export const artifactDefinitions: ArtifactDefinition[] = [
     iconKey: "scale",
     rarity: "rare",
     category: "fast fish support",
-    effect: "Fast fish endure pressure.",
+    effect: "Fast fish wobble out of trouble.",
     level: 1,
     maxLevel: 3,
     upgradeShellCost: 120,
     upgradeText: "Improves fast fish survival.",
   },
   { id: "suspicious-sea-coupon", name: "Suspicious Sea Coupon", iconKey: "coupon", rarity: "common", category: "artifact/shop economy", effect: "Shop prices feel friendlier." },
-  { id: "peaceful-panic-whistle", name: "Peaceful Panic Whistle", iconKey: "whistle", rarity: "rare", category: "fish evasion", effect: "Panic turns into cleaner dodges." },
+  { id: "peaceful-panic-whistle", name: "Peaceful Panic Whistle", iconKey: "whistle", rarity: "rare", category: "fish evasion", effect: "Panic becomes usable dodges." },
   { id: "tiny-reef-lawyer", name: "Tiny Reef Lawyer", iconKey: "brief", rarity: "rare", category: "risky satirical", effect: "First bad bite is disputed." },
   { id: "emergency-kelp-jar", name: "Emergency Kelp Jar", iconKey: "jar", rarity: "common", category: "kelp recovery", effect: "Kelp restores one extra fish." },
   { id: "moon-tide-beads", name: "Moon Tide Beads", iconKey: "beads", rarity: "rare", category: "fish schooling", effect: "Wide schools pull together." },
@@ -120,6 +223,11 @@ export const artifactDefinitions: ArtifactDefinition[] = [
   { id: "tin-foil-fin", name: "Tin Foil Fin", iconKey: "foil", rarity: "common", category: "fish evasion", effect: "Outer fish dodge sooner." },
   { id: "reef-afterparty-pass", name: "Reef Afterparty Pass", iconKey: "party", rarity: "legendary", category: "recruitment bonuses", effect: "Recruit nodes feel richer." },
 ];
+
+export const artifactDefinitions: ArtifactDefinition[] = artifactSeeds.map((artifact) => ({
+  ...artifact,
+  buildTags: buildTagsForArtifact(artifact),
+}));
 
 export const isArtifactId = (value: string): value is ArtifactId =>
   artifactDefinitions.some((artifact) => artifact.id === value);

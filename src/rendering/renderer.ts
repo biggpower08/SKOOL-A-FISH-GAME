@@ -229,38 +229,68 @@ const drawWaterRipples = (ctx: CanvasRenderingContext2D, ripples: Ripple[], time
 
 export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#010205");
-  gradient.addColorStop(0.32, "#07111c");
-  gradient.addColorStop(0.7, "#0b0712");
-  gradient.addColorStop(1, "#11151b");
+  gradient.addColorStop(0, "#021318");
+  gradient.addColorStop(0.34, "#07313a");
+  gradient.addColorStop(0.68, "#102944");
+  gradient.addColorStop(1, "#05080f");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 };
 
 const drawWaterShade = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
-  const pulse = (Math.sin(time * 0.00035) + 1) * 0.5;
-  const x = width * (0.28 + pulse * 0.24);
-  const y = height * (0.34 + (1 - pulse) * 0.18);
-  const glow = ctx.createRadialGradient(x, y, 40, x, y, Math.max(width, height) * 0.9);
-  glow.addColorStop(0, "rgba(42, 70, 94, 0.18)");
-  glow.addColorStop(0.46, "rgba(35, 42, 74, 0.08)");
-  glow.addColorStop(1, "rgba(0, 0, 0, 0)");
-  ctx.fillStyle = glow;
+  const drift = Math.sin(time * 0.00028) * width * 0.08;
+  const shade = ctx.createLinearGradient(drift, 0, width + drift, height);
+  shade.addColorStop(0, "rgba(45, 98, 103, 0.12)");
+  shade.addColorStop(0.45, "rgba(28, 71, 93, 0.09)");
+  shade.addColorStop(0.72, "rgba(11, 20, 34, 0.16)");
+  shade.addColorStop(1, "rgba(0, 0, 0, 0.24)");
+  ctx.fillStyle = shade;
   ctx.fillRect(0, 0, width, height);
+};
+
+const drawWaveBands = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
+  for (let band = 0; band < 5; band += 1) {
+    const yBase = height * (0.18 + band * 0.16);
+    const bandHeight = 18 + band * 2;
+    const drift = (time * (0.009 + band * 0.0015) + band * 41) % (width + 160);
+
+    ctx.fillStyle = band % 2 === 0 ? "rgba(75, 161, 157, 0.07)" : "rgba(121, 164, 196, 0.055)";
+    ctx.beginPath();
+
+    for (let step = -160; step <= width + 160; step += 34) {
+      const x = step + drift - 120;
+      const y = yBase + Math.sin(time * 0.00085 + step * 0.024 + band) * (7 + band);
+
+      if (step === -160) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+
+    for (let step = width + 160; step >= -160; step -= 34) {
+      const x = step + drift - 120;
+      const y = yBase + bandHeight + Math.sin(time * 0.00075 + step * 0.02 + band + 2.1) * (5 + band * 0.8);
+      ctx.lineTo(x, y);
+    }
+
+    ctx.closePath();
+    ctx.fill();
+  }
 };
 
 const drawWaterCurrents = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
   ctx.lineWidth = 1;
 
-  for (let band = 0; band < 7; band += 1) {
-    const yBase = ((band + 1) / 8) * height;
-    const drift = (time * 0.012 + band * 57) % (width + 180);
-    ctx.strokeStyle = band % 2 === 0 ? "rgba(112, 144, 174, 0.08)" : "rgba(93, 84, 125, 0.07)";
+  for (let band = 0; band < 9; band += 1) {
+    const yBase = ((band + 1) / 10) * height;
+    const drift = (time * 0.014 + band * 57) % (width + 180);
+    ctx.strokeStyle = band % 2 === 0 ? "rgba(153, 220, 218, 0.14)" : "rgba(118, 174, 204, 0.1)";
     ctx.beginPath();
 
     for (let step = -180; step <= width + 20; step += 28) {
       const x = step + drift - 120;
-      const y = yBase + Math.sin(time * 0.0009 + step * 0.025 + band) * 8;
+      const y = yBase + Math.sin(time * 0.0009 + step * 0.025 + band) * (8 + band * 0.45);
 
       if (step === -180) {
         ctx.moveTo(x, y);
@@ -287,6 +317,7 @@ export const drawCombat = (
 ): void => {
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
+  drawWaveBands(ctx, width - hudWidth(), height, time);
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
   waterDisturbance?.draw(ctx);
   drawWaterRipples(ctx, ripples, time);
@@ -331,6 +362,7 @@ export const drawCombat = (
 export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
+  drawWaveBands(ctx, width - hudWidth(), height, time);
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
 
   const usableWidth = width - hudWidth();
