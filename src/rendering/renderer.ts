@@ -3,6 +3,8 @@ import { getFishSprite, getSharkSprite, spriteDrawSize } from "./sprites";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
 
+const CAUGHT_FADE_SECONDS = 0.56;
+
 type SpriteCacheEntry = {
   image: HTMLImageElement;
   loaded: boolean;
@@ -293,7 +295,7 @@ export const drawCombat = (
 
     const definition = candidate.typeId === "support" ? null : fishTypes[candidate.typeId as ActiveFishTypeId];
     const fill = candidate.threatened ? "#ff4058" : (definition?.color ?? "#ffffff");
-    const fade = candidate.caught ? Math.max(0.16, Math.min(1, (candidate.caughtTimer ?? 0) / 0.32)) : 1;
+    const fade = candidate.caught ? Math.max(0.16, Math.min(1, (candidate.caughtTimer ?? 0) / CAUGHT_FADE_SECONDS)) : 1;
     ctx.save();
     ctx.globalAlpha = fade;
     const sprite = getFishSprite(candidate.typeId);

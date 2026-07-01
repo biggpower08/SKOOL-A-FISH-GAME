@@ -12,6 +12,7 @@ const CATCH_SHARK_BODY_SCALE = 0.25;
 const CONTACT_FISH_BODY_SCALE = 3.4;
 const CONTACT_SHARK_BODY_SCALE = 0.7;
 const CONTACT_BITE_COOLDOWN_SECONDS = 0.28;
+const CAUGHT_FADE_SECONDS = 0.56;
 
 export const aliveFish = (fish: Fish[]): Fish[] => fish.filter((candidate) => !candidate.caught);
 
@@ -82,7 +83,9 @@ export const applySharkAttack = (
     (candidate) =>
       distance(candidate.pos, shark.pos) <= shark.attackRadius + candidate.radius * CATCH_FISH_BODY_SCALE + shark.radius * CATCH_SHARK_BODY_SCALE,
   );
-  const candidates = inRange.length > 0 ? inRange : available.slice(0, Math.max(1, Math.round(available.length * 0.1)));
+  const candidates = inRange
+    .slice()
+    .sort((left, right) => distance(left.pos, shark.pos) - distance(right.pos, shark.pos));
 
   if (candidates.length === 0) {
     return { caught: 0, damagedSupport: 0 };
@@ -110,7 +113,7 @@ export const applySharkAttack = (
 
     if (!item.candidate.caught) {
       item.candidate.caught = true;
-      item.candidate.caughtTimer = 0.32;
+      item.candidate.caughtTimer = CAUGHT_FADE_SECONDS;
       caught += 1;
     }
   }
@@ -157,7 +160,7 @@ export const applyContactSharkBite = (fish: Fish[], shark: Shark, config: LevelC
 
   if (closest.health <= 0 && !closest.caught) {
     closest.caught = true;
-    closest.caughtTimer = 0.32;
+    closest.caughtTimer = CAUGHT_FADE_SECONDS;
     caught = 1;
     shark.hunger = Math.min(shark.maxHunger, shark.hunger + 5.5 + config.level * 0.08);
   }

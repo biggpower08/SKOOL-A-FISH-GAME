@@ -508,8 +508,39 @@ Fish should school together without merging into one unreadable blob.
 - Add a soft body push-apart when fish overlap.
 - Keep velocities clamped so bumping does not become jitter or explosion.
 - Fish should still move as a school.
+- Large schools need a shared group direction so they do not swirl, collapse
+  inward, or orbit around one fish.
+- Fish should bump/avoid each other while still sharing a readable school
+  intention when not actively fleeing.
+- Shark approach should override the shared school direction and make fish
+  scatter; after danger passes, fish can regroup.
 - Bumping/collision feel is visual/game-feel polish only, not a new physics
   engine.
+
+## Fish Vanishing Audit Rule
+
+Fish should only disappear through a clear, documented lifecycle.
+
+- Normal movement, edge correction, bumping, save/load, and school pressure
+  should not remove fish.
+- Fish should not have a hidden hunger or starvation timer.
+- Shark attacks should only catch fish in the shark attack area.
+- Contact bites should handle visually overlapping catches.
+- Caught fish should linger long enough to read as eaten before fade removal.
+- Alive counters should match alive visible fish, excluding caught/fading fish.
+- Any future fish removal reason should be explicit in code and documentation.
+
+## Sprite Scale Prototype Direction
+
+Sprites should be large enough that the art reads during actual combat.
+
+- Use central sprite visual-scale data rather than scattered draw multipliers.
+- Increase fish and shark sprite rendering without changing gameplay hitboxes
+  unless a future pass intentionally adjusts hitboxes.
+- Shark should remain readable and threatening.
+- Fish should be easier to see without making the school unreadable.
+- Homepage preview and sidebar thumbnails should keep working.
+- Fallback circles should remain available when sprites fail to load.
 
 ## Tone
 
@@ -586,6 +617,11 @@ End Run, or Save and Return Home instead.
   catching it.
 - Shark eating should not create a visible pause; the shark keeps pursuing.
 - Fish use soft overlap push-apart so the school reads less like one blob.
+- Large schools use a light shared movement intention when not threatened, so
+  the group has a readable direction instead of swirling around one fish.
+- Fish only fade/remove after shark catch logic; off-range attack fallback
+  catches should not silently delete fish.
+- Caught fish fade is intentionally more readable before removal.
 - Fish bump/separation should be strong enough that fish do not merge into a
   blob, but still velocity-clamped so the school does not explode.
 - Edge behavior should avoid rapid sprite mirror jitter. Facing should follow
@@ -602,6 +638,14 @@ End Run, or Save and Return Home instead.
   for now instead of mostly hidden slots.
 - Selected artifacts can expose upgrade metadata such as level, max level, and
   Shell upgrade cost. Do not build the full artifact upgrade economy yet.
+- Fish and shark sprites are prototyped larger through central sprite visual
+  scale values; gameplay radii remain the hitbox source.
+- Shark visuals and edge behavior should be preserved unless a future focused
+  pass finds a regression.
+- Background/wave work is planning-only for now. See
+  `docs/BACKGROUND_EFFECT_PLAN.md`.
+- Artifact tuning and future icon prompts live in
+  `docs/ARTIFACT_DESIGN_BOARD.md`.
 
 ## Artifact Icon Image Prompt Prep
 

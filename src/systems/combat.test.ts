@@ -115,8 +115,36 @@ describe("applySharkAttack", () => {
     expect(fish.filter((candidate) => candidate.caught)).toHaveLength(9);
   });
 
+  it("does not catch fish when no fish are near the shark attack area", () => {
+    const fish = makeFish(20);
+    fish.forEach((candidate, index) => {
+      candidate.pos = { x: 500 + index * 2, y: 300 };
+    });
+    const shark = makeShark({
+      pos: { x: 100, y: 100 },
+      attackRadius: 24,
+    });
+
+    const result = applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
+
+    expect(result.caught).toBe(0);
+    expect(fish.every((candidate) => !candidate.caught)).toBe(true);
+  });
+
+  it("uses a more readable caught fade window for shark-caused removals", () => {
+    const fish = makeFish(10);
+    const shark = makeShark();
+
+    applySharkAttack(fish, shark, createLevelConfig(1), () => 0);
+
+    expect(fish.find((candidate) => candidate.caught)?.caughtTimer).toBeGreaterThanOrEqual(0.5);
+  });
+
   it("damages support fish before catching them", () => {
     const fish = makeFish(4);
+    fish.forEach((candidate, index) => {
+      candidate.pos = { x: 145 + index * 8, y: 100 };
+    });
     fish.push({
       id: "support-1",
       kind: "support",
@@ -135,7 +163,7 @@ describe("applySharkAttack", () => {
       pos: { x: 100, y: 100 },
     });
 
-    const rolls: number[] = [1, 1, 1, 1, 0];
+    const rolls: number[] = [0, 1, 1, 1, 1];
     const result = applySharkAttack(fish, shark, createLevelConfig(1), () => rolls.shift() ?? 1);
 
     expect(result.damagedSupport).toBe(1);

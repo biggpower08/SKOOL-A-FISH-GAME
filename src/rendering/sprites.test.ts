@@ -33,6 +33,14 @@ describe("sprite manifest", () => {
     expect(size.height / size.width).toBeCloseTo(tilapia!.height / tilapia!.width);
   });
 
+  it("uses larger prototype sprite scales so the fish and shark art is readable", () => {
+    const tilapia = getFishSprite("tilapia");
+    const shark = getSharkSprite("basic");
+
+    expect(tilapia?.visualScale).toBeGreaterThanOrEqual(6);
+    expect(shark?.visualScale).toBeGreaterThanOrEqual(3.6);
+  });
+
   it("uses sprite footprint and motion for ripple placement", () => {
     const salmon = getFishSprite("salmon");
 

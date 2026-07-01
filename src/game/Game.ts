@@ -333,6 +333,7 @@ export class Game {
       ...bounds,
       threatRadius: this.config.fishThreatRadius,
       dt: step,
+      schoolIntent: this.schoolIntent(),
     });
     updateSharks(this.sharks, this.fish, bounds, step, dt);
     this.updateCaughtFish(dt);
@@ -410,6 +411,15 @@ export class Game {
     }
 
     this.fish = this.fish.filter((fish) => !fish.caught || (fish.caughtTimer ?? 0) > 0);
+  }
+
+  private schoolIntent(): { x: number; y: number } {
+    const angle = this.elapsed * 0.16;
+
+    return {
+      x: Math.cos(angle) * 0.92 + 0.18,
+      y: Math.sin(angle) * 0.34,
+    };
   }
 
   private updateRipples(dt: number): void {

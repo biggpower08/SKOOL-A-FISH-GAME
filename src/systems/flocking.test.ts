@@ -198,4 +198,46 @@ describe("updateFlocking", () => {
 
     expect(fish[0].facingX).toBe(1);
   });
+
+  it("adds a shared movement intention for large schools that are not fleeing", () => {
+    const fish: Fish[] = Array.from({ length: 30 }, (_, index) => ({
+      id: `large-school-${index}`,
+      kind: "basic",
+      typeId: "tilapia",
+      className: "common",
+      pos: {
+        x: 140 + (index % 6) * 9,
+        y: 130 + Math.floor(index / 6) * 9,
+      },
+      vel: {
+        x: index % 2 === 0 ? -0.2 : 0.2,
+        y: index % 3 === 0 ? -0.15 : 0.15,
+      },
+      radius: 4,
+      maxSpeed: 2,
+      health: 1,
+      maxHealth: 1,
+      threatened: false,
+      caught: false,
+    }));
+
+    updateFlocking(fish, [], {
+      width: 500,
+      height: 360,
+      threatRadius: 120,
+      dt: 1,
+      schoolIntent: { x: 1, y: 0.1 },
+    });
+
+    const averageVelocity = fish.reduce(
+      (sum, candidate) => ({
+        x: sum.x + candidate.vel.x,
+        y: sum.y + candidate.vel.y,
+      }),
+      { x: 0, y: 0 },
+    );
+
+    expect(averageVelocity.x / fish.length).toBeGreaterThan(0.18);
+    expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+  });
 });

@@ -4,12 +4,15 @@ import { add, clamp, distance, limit, normalize, scale, subtract } from "./vecto
 export type FlockingOptions = Bounds & {
   threatRadius: number;
   dt: number;
+  schoolIntent?: Vector;
 };
 
 const NEIGHBOR_RADIUS = 74;
 const DESIRED_SEPARATION = 17;
 const SOFT_BODY_PADDING = 10;
 const FACING_VELOCITY_THRESHOLD = 0.18;
+const LARGE_SCHOOL_THRESHOLD = 20;
+const LARGE_SCHOOL_INTENT_STRENGTH = 0.7;
 
 const zero = (): Vector => ({ x: 0, y: 0 });
 
@@ -167,7 +170,29 @@ const updateFacing = (fish: Fish): void => {
   fish.facingX = fish.vel.x < 0 ? -1 : 1;
 };
 
+const largeSchoolIntent = (school: Fish[], options: FlockingOptions): Vector => {
+  const alive = school.filter((fish) => !fish.caught);
+
+  if (alive.length < LARGE_SCHOOL_THRESHOLD) {
+    return zero();
+  }
+
+  if (options.schoolIntent && Math.hypot(options.schoolIntent.x, options.schoolIntent.y) > 0.01) {
+    return normalize(options.schoolIntent);
+  }
+
+  const averageVelocity = alive.reduce<Vector>((sum, fish) => add(sum, fish.vel), zero());
+
+  if (Math.hypot(averageVelocity.x, averageVelocity.y) > 0.05) {
+    return normalize(averageVelocity);
+  }
+
+  return { x: 1, y: 0.12 };
+};
+
 export const updateFlocking = (school: Fish[], sharks: Shark[], options: FlockingOptions): void => {
+  const sharedIntent = largeSchoolIntent(school, options);
+
   for (const fish of school) {
     if (fish.caught) {
       continue;
@@ -180,9 +205,10 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const coh = center(fish, near);
     const flee = escape(fish, sharks, options.threatRadius);
     const edge = boundaryPush(fish, options);
+    const intent = fish.threatened ? zero() : scale(sharedIntent, LARGE_SCHOOL_INTENT_STRENGTH);
 
     fish.vel = limit(
-      add(add(add(add(add(fish.vel, sep), ali), coh), scale(flee, 4.8)), scale(edge, 1.35)),
+      add(add(add(add(add(add(fish.vel, sep), ali), coh), intent), scale(flee, 4.8)), scale(edge, 1.35)),
       fish.maxSpeed,
     );
     fish.pos = {

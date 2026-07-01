@@ -1,6 +1,8 @@
 import type { FishTypeId, SharkKind, SpriteManifestEntry, Vector } from "../game/types";
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/skool-a-fish/sprites`;
+const PROTOTYPE_FISH_VISUAL_BOOST = 1.18;
+const PROTOTYPE_SHARK_VISUAL_BOOST = 1.18;
 
 export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>> = {
   tilapia: {
@@ -12,7 +14,7 @@ export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.52,
     fallbackColor: "#ffffff",
-    visualScale: 5.1,
+    visualScale: 5.1 * PROTOTYPE_FISH_VISUAL_BOOST,
     rippleScale: 0.68,
   },
   salmon: {
@@ -24,7 +26,7 @@ export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.52,
     fallbackColor: "#f4d2c7",
-    visualScale: 5.4,
+    visualScale: 5.4 * PROTOTYPE_FISH_VISUAL_BOOST,
     rippleScale: 0.7,
   },
   "mahi-mahi": {
@@ -36,7 +38,7 @@ export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.52,
     fallbackColor: "#9fd8ff",
-    visualScale: 5.4,
+    visualScale: 5.4 * PROTOTYPE_FISH_VISUAL_BOOST,
     rippleScale: 0.72,
   },
   grouper: {
@@ -48,7 +50,7 @@ export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.54,
     fallbackColor: "#d6c99a",
-    visualScale: 5.0,
+    visualScale: 5.0 * PROTOTYPE_FISH_VISUAL_BOOST,
     rippleScale: 0.76,
   },
   parrotfish: {
@@ -60,7 +62,7 @@ export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.52,
     fallbackColor: "#8ff4d2",
-    visualScale: 5.8,
+    visualScale: 5.8 * PROTOTYPE_FISH_VISUAL_BOOST,
     rippleScale: 0.72,
   },
 };
@@ -75,7 +77,7 @@ export const sharkSpriteManifest: Partial<Record<SharkKind, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.52,
     fallbackColor: "#151a20",
-    visualScale: 3.1,
+    visualScale: 3.1 * PROTOTYPE_SHARK_VISUAL_BOOST,
     rippleScale: 0.78,
   },
 };
