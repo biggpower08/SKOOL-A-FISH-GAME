@@ -1,6 +1,7 @@
 import type { Fish, FishTypeId, LevelConfig, RunState, Shark, Vector } from "../game/types";
+import type { SchoolModifiers } from "./artifactEffects";
 import { ROUND_ONE_TARGET_CATCH_RATE } from "./levels";
-import { distance } from "./vector";
+import { clamp, distance } from "./vector";
 
 export type SharkAttackResult = {
   caught: number;
@@ -15,6 +16,8 @@ const CONTACT_BITE_COOLDOWN_SECONDS = 0.28;
 const CAUGHT_FADE_SECONDS = 0.56;
 
 export const aliveFish = (fish: Fish[]): Fish[] => fish.filter((candidate) => !candidate.caught);
+
+export const hasLivingSchoolFish = (fish: Fish[]): boolean => aliveFish(fish).length > 0;
 
 export const summarizeAliveFishCounts = (
   fish: Fish[],
@@ -72,11 +75,44 @@ const damageForFish = (fish: Fish, config: LevelConfig): number => {
   return 1 + config.level * 0.08;
 };
 
+type CombatModifiers = Partial<Pick<SchoolModifiers, "catchResistance" | "evasionBonusByType" | "protectionBonusByType">>;
+
+const typeBonus = (
+  values: Partial<Record<FishTypeId, number>> | undefined,
+  typeId: FishTypeId,
+): number => values?.[typeId] ?? 0;
+
+const damageFish = (
+  fish: Fish,
+  config: LevelConfig,
+  modifiers: CombatModifiers,
+  random: () => number,
+): { caught: boolean; damagedSupport: boolean } => {
+  const evasion = clamp((fish.evasion ?? 0) + typeBonus(modifiers.evasionBonusByType, fish.typeId), 0, 0.65);
+
+  if (evasion > 0 && random() > 1 - evasion) {
+    return { caught: false, damagedSupport: false };
+  }
+
+  const protection = clamp((fish.protection ?? 0) + (modifiers.catchResistance ?? 0) + typeBonus(modifiers.protectionBonusByType, fish.typeId), 0, 0.75);
+  fish.health -= damageForFish(fish, config) * (1 - protection);
+
+  if (fish.health > 0 || fish.caught) {
+    return { caught: false, damagedSupport: fish.kind === "support" };
+  }
+
+  fish.caught = true;
+  fish.caughtTimer = CAUGHT_FADE_SECONDS;
+
+  return { caught: true, damagedSupport: fish.kind === "support" };
+};
+
 export const applySharkAttack = (
   fish: Fish[],
   shark: Shark,
   config: LevelConfig,
   random: () => number = Math.random,
+  modifiers: CombatModifiers = {},
 ): SharkAttackResult => {
   const available = aliveFish(fish);
   const inRange = available.filter(
@@ -101,19 +137,13 @@ export const applySharkAttack = (
   let damagedSupport = 0;
 
   for (const item of chosen) {
-    item.candidate.health -= damageForFish(item.candidate, config);
+    const result = damageFish(item.candidate, config, modifiers, random);
 
-    if (item.candidate.kind === "support") {
+    if (result.damagedSupport) {
       damagedSupport += 1;
     }
 
-    if (item.candidate.health > 0) {
-      continue;
-    }
-
-    if (!item.candidate.caught) {
-      item.candidate.caught = true;
-      item.candidate.caughtTimer = CAUGHT_FADE_SECONDS;
+    if (result.caught) {
       caught += 1;
     }
   }
@@ -126,7 +156,13 @@ export const applySharkAttack = (
   return { caught, damagedSupport };
 };
 
-export const applyContactSharkBite = (fish: Fish[], shark: Shark, config: LevelConfig): SharkAttackResult => {
+export const applyContactSharkBite = (
+  fish: Fish[],
+  shark: Shark,
+  config: LevelConfig,
+  modifiers: CombatModifiers = {},
+  random: () => number = Math.random,
+): SharkAttackResult => {
   if ((shark.contactCooldown ?? 0) > 0 || shark.health <= 0 || shark.starved) {
     return { caught: 0, damagedSupport: 0 };
   }
@@ -152,15 +188,13 @@ export const applyContactSharkBite = (fish: Fish[], shark: Shark, config: LevelC
 
   let caught = 0;
   let damagedSupport = 0;
-  closest.health -= damageForFish(closest, config);
+  const result = damageFish(closest, config, modifiers, random);
 
-  if (closest.kind === "support") {
+  if (result.damagedSupport) {
     damagedSupport = 1;
   }
 
-  if (closest.health <= 0 && !closest.caught) {
-    closest.caught = true;
-    closest.caughtTimer = CAUGHT_FADE_SECONDS;
+  if (result.caught) {
     caught = 1;
     shark.hunger = Math.min(shark.maxHunger, shark.hunger + 5.5 + config.level * 0.08);
   }

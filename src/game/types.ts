@@ -37,6 +37,8 @@ export type Fish = {
   maxSpeed: number;
   health: number;
   maxHealth: number;
+  evasion?: number;
+  protection?: number;
   threatened: boolean;
   caught: boolean;
   caughtTimer?: number;

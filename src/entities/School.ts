@@ -1,5 +1,7 @@
 import type { Bounds, Fish, FishTypeId } from "../game/types";
+import type { SchoolModifiers } from "../systems/artifactEffects";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
+import { clamp } from "../systems/vector";
 
 let fishId = 0;
 
@@ -8,10 +10,18 @@ const nextFishId = (): string => {
   return `fish-${fishId}`;
 };
 
-const addFish = (school: Fish[], typeId: ActiveFishTypeId, index: number, centerX: number, centerY: number): void => {
+const addFish = (
+  school: Fish[],
+  typeId: ActiveFishTypeId,
+  index: number,
+  centerX: number,
+  centerY: number,
+  modifiers?: SchoolModifiers,
+): void => {
   const definition = fishTypes[typeId];
   const angle = index * 2.399;
   const ring = 18 + (index % 11) * 5.8 + Math.floor(index / 11) * 3;
+  const maxHealth = Math.max(1, Math.ceil(definition.maxHealth + (modifiers?.healthBonusByType[typeId] ?? 0)));
 
   school.push({
     id: nextFishId(),
@@ -27,9 +37,11 @@ const addFish = (school: Fish[], typeId: ActiveFishTypeId, index: number, center
       y: Math.sin(angle + 0.7) * 0.5,
     },
     radius: definition.radius,
-    maxSpeed: definition.maxSpeed,
-    health: definition.maxHealth,
-    maxHealth: definition.maxHealth,
+    maxSpeed: definition.maxSpeed * (modifiers?.speedMultiplierByType[typeId] ?? 1),
+    health: maxHealth,
+    maxHealth,
+    evasion: clamp(definition.evasion + (modifiers?.evasionBonusByType[typeId] ?? 0), 0, 0.65),
+    protection: clamp(definition.protection + (modifiers?.protectionBonusByType[typeId] ?? 0), 0, 0.7),
     threatened: false,
     caught: false,
     facingX: Math.cos(angle + 0.7) < -0.2 ? -1 : 1,
@@ -41,6 +53,7 @@ export const createSchool = (
   _supportCount: number,
   bounds: Bounds,
   fishCounts?: Partial<Record<FishTypeId, number>>,
+  modifiers?: SchoolModifiers,
 ): Fish[] => {
   const centerX = bounds.width * 0.42;
   const centerY = bounds.height * 0.5;
@@ -56,7 +69,7 @@ export const createSchool = (
     const count = counts[typeId] ?? 0;
 
     for (let typeIndex = 0; typeIndex < count; typeIndex += 1) {
-      addFish(school, typeId, index, centerX, centerY);
+      addFish(school, typeId, index, centerX, centerY, modifiers);
       index += 1;
     }
   }

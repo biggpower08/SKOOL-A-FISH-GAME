@@ -1,5 +1,6 @@
 import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
 import { summarizeSharks } from "../entities/Shark";
+import { buildHintForRun } from "../systems/artifactEffects";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { getFishSprite, getSharkSprite } from "../rendering/sprites";
 import type { SpriteManifestEntry } from "../game/types";
@@ -178,15 +179,21 @@ export const drawHud = (
   ctx.fillText(`L${config.level}`, x + 14, 26);
   ctx.fillText(`Fish ${fish.filter((candidate) => !candidate.caught).length}`, x + 56, 26);
   ctx.fillText(`Shells ${run.currency}`, x + 14, 43);
-
-  drawBar(ctx, x + 14, 56, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
+  ctx.fillText(`Best L${run.bestLevel}`, x + 88, 43);
 
   ctx.fillStyle = "#8f9aa7";
-  ctx.fillText("School", x + 14, 82);
+  ctx.font = "10px system-ui, sans-serif";
+  ctx.fillText(`Build ${buildHintForRun(run)}`, x + 14, 58);
+
+  drawBar(ctx, x + 14, 68, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
+
+  ctx.fillStyle = "#8f9aa7";
+  ctx.font = "12px system-ui, sans-serif";
+  ctx.fillText("School", x + 14, 94);
 
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
-    const rowY = 100 + index * 22;
+    const rowY = 112 + index * 22;
     if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), x + 22, rowY + 4, 24, 15)) {
       fallbackFishMark(ctx, x + 22, rowY + 4, definition.color);
     }
@@ -195,7 +202,7 @@ export const drawHud = (
     drawBar(ctx, x + 96, rowY + 1, 36, 6, groupHealthRatio(summary.alive), definition.color);
   });
 
-  const enemyY = 112 + summarizeFish(fish).length * 22;
+  const enemyY = 124 + summarizeFish(fish).length * 22;
   ctx.fillStyle = "#8f9aa7";
   ctx.fillText("Sharks", x + 14, enemyY);
 

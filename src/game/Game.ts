@@ -4,7 +4,8 @@ import { drawCombat, drawIdleScene } from "../rendering/renderer";
 import { spawnRipple, updateRipples } from "../rendering/ripples";
 import { getFishSprite, getSharkSprite, rippleOriginForMotion, spriteRippleSize } from "../rendering/sprites";
 import { WaterDisturbanceField } from "../rendering/waterDisturbance";
-import { aliveFish, applyContactSharkBite, applySchoolPressure, applySharkAttack, drainSharkHunger, summarizeAliveFishCounts } from "../systems/combat";
+import { applyContactSharkBite, applySchoolPressure, applySharkAttack, drainSharkHunger, hasLivingSchoolFish, summarizeAliveFishCounts } from "../systems/combat";
+import { getSchoolModifiers } from "../systems/artifactEffects";
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
@@ -270,7 +271,7 @@ export class Game {
     this.config = createLevelConfig(this.run.level);
     this.run.lastInvestmentReturn = 0;
     const bounds = this.combatBounds();
-    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts);
+    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts, getSchoolModifiers(this.run));
     this.sharks = createSharks(this.config, bounds);
     this.ripples = [];
     this.waterDisturbance.resize(bounds.width, bounds.height);
@@ -335,6 +336,7 @@ export class Game {
 
     const step = Math.max(0.25, dt * 60);
     const bounds = this.combatBounds();
+    const modifiers = getSchoolModifiers(this.run);
     this.elapsed += dt;
 
     if (this.victoryFeedback > 0) {
@@ -364,7 +366,7 @@ export class Game {
         continue;
       }
 
-      const contactResult = applyContactSharkBite(this.fish, shark, this.config);
+      const contactResult = applyContactSharkBite(this.fish, shark, this.config, modifiers);
       this.run.schoolEnergy -= contactResult.caught * (2.4 + this.config.level * 0.035) + contactResult.damagedSupport * 0.8;
 
       if (contactResult.caught > 0) {
@@ -377,7 +379,7 @@ export class Game {
       shark.attackCooldown -= dt;
 
       if (shark.attackCooldown <= 0) {
-        const result = applySharkAttack(this.fish, shark, this.config);
+        const result = applySharkAttack(this.fish, shark, this.config, Math.random, modifiers);
         this.run.schoolEnergy -= result.caught * (2.4 + this.config.level * 0.035) + result.damagedSupport * 0.8;
 
         if (result.caught > 0) {
@@ -394,7 +396,7 @@ export class Game {
     this.syncRunFishCountsFromSchool();
 
     applySchoolPressure(this.fish, this.sharks, dt);
-    drainSharkHunger(this.sharks, dt);
+    drainSharkHunger(this.sharks, dt * modifiers.sharkHungerDrainMultiplier);
 
     const supportCount = this.fish.filter((candidate) => candidate.kind === "support" && !candidate.caught).length;
     const activeSharks = this.sharks.filter((shark) => shark.health > 0 && !shark.starved).length;
@@ -404,7 +406,7 @@ export class Game {
       110,
     );
 
-    if (aliveFish(this.fish).length === 0 || this.run.schoolEnergy <= 0) {
+    if (!hasLivingSchoolFish(this.fish) || this.run.schoolEnergy <= 0) {
       this.endRun();
       return;
     }

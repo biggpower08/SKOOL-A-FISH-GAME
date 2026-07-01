@@ -1,4 +1,5 @@
 import type { ArtifactId, ChoiceId, FishTypeId, LevelConfig, RewardFlow, RunState } from "../game/types";
+import { getSchoolModifiers } from "./artifactEffects";
 import { defaultFishCounts, fishTypes } from "./fishTypes";
 import { clamp } from "./vector";
 
@@ -25,6 +26,10 @@ export const createNewRun = (): RunState => ({
 });
 
 export const rewardFlowForCompletedLevel = (level: number): RewardFlow => {
+  if (level === 1) {
+    return "recruit";
+  }
+
   if (level > 0 && level % 5 === 0) {
     return "recruit";
   }
@@ -39,10 +44,12 @@ export const rewardFlowForCompletedLevel = (level: number): RewardFlow => {
 export const applyLevelReward = (run: RunState, config: LevelConfig): RunState => {
   const returnedInvestment =
     run.invested > 0 && run.investmentReturnLevel !== null && config.level >= run.investmentReturnLevel ? run.invested * 2 : 0;
+  const modifiers = getSchoolModifiers(run);
+  const rewardCurrency = Math.round(config.rewardCurrency * modifiers.shellRewardMultiplier + modifiers.riskyShellBonus);
 
   return {
     ...run,
-    currency: run.currency + config.rewardCurrency + returnedInvestment,
+    currency: run.currency + rewardCurrency + returnedInvestment,
     invested: returnedInvestment > 0 ? 0 : run.invested,
     investmentReturnLevel: returnedInvestment > 0 ? null : run.investmentReturnLevel,
     lastInvestmentReturn: returnedInvestment,
@@ -51,11 +58,11 @@ export const applyLevelReward = (run: RunState, config: LevelConfig): RunState =
 };
 
 export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
-  const fishToAdd = choice in fishTypes ? fishTypes[choice as keyof typeof fishTypes].recruitAmount : 0;
+  const modifiers = getSchoolModifiers(run);
+  const fishChoice = choice as keyof typeof fishTypes;
+  const fishToAdd = choice in fishTypes ? fishTypes[fishChoice].recruitAmount + (modifiers.recruitBonusByType[fishChoice] ?? 0) : 0;
 
   if (fishToAdd) {
-    const fishChoice = choice as "tilapia" | "salmon" | "parrotfish" | "mahi-mahi" | "grouper";
-
     return {
       ...run,
       fishCount: run.fishCount + fishToAdd,
@@ -93,7 +100,7 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
   }
 
   const missing = Math.max(0, run.maxFishCount - run.fishCount);
-  const restored = run.currency >= KELP_COST ? Math.min(KELP_RESTORE_COUNT, missing) : 0;
+  const restored = run.currency >= KELP_COST ? Math.min(KELP_RESTORE_COUNT + modifiers.kelpRestoreBonus, missing) : 0;
   const fishCounts =
     restored > 0
       ? {
