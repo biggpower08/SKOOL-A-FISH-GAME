@@ -3,6 +3,7 @@ import { createSharks, updateSharks } from "../entities/Shark";
 import { drawCombat, drawIdleScene } from "../rendering/renderer";
 import { spawnRipple, updateRipples } from "../rendering/ripples";
 import { getFishSprite, getSharkSprite, rippleOriginForMotion, spriteRippleSize } from "../rendering/sprites";
+import { WaterDisturbanceField } from "../rendering/waterDisturbance";
 import { aliveFish, applyContactSharkBite, applySchoolPressure, applySharkAttack, drainSharkHunger, summarizeAliveFishCounts } from "../systems/combat";
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
@@ -80,6 +81,7 @@ export class Game {
   private fish: Fish[] = [];
   private sharks: Shark[] = [];
   private ripples: Ripple[] = [];
+  private waterDisturbance = new WaterDisturbanceField(960, 540);
   private width = 960;
   private height = 540;
   private lastTime = 0;
@@ -135,6 +137,7 @@ export class Game {
     this.canvas.style.width = `${this.width}px`;
     this.canvas.style.height = `${this.height}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this.waterDisturbance.resize(this.width - HUD_WIDTH, this.height);
   };
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
@@ -266,9 +269,11 @@ export class Game {
     this.showArtifactAccess();
     this.config = createLevelConfig(this.run.level);
     this.run.lastInvestmentReturn = 0;
-    this.fish = createSchool(this.run.fishCount, this.run.supportCount, this.combatBounds(), this.run.fishCounts);
-    this.sharks = createSharks(this.config, this.combatBounds());
+    const bounds = this.combatBounds();
+    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts);
+    this.sharks = createSharks(this.config, bounds);
     this.ripples = [];
+    this.waterDisturbance.resize(bounds.width, bounds.height);
     this.sharkRippleClock = 0;
     this.fishRippleClock = 0;
     this.elapsed = 0;
@@ -337,6 +342,7 @@ export class Game {
     });
     updateSharks(this.sharks, this.fish, bounds, step, dt);
     this.updateCaughtFish(dt);
+    this.updateWaterDisturbance(dt);
     this.updateRipples(dt);
 
     for (const shark of this.sharks) {
@@ -350,6 +356,7 @@ export class Game {
       if (contactResult.caught > 0) {
         const sprite = getSharkSprite(shark.kind);
         const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.35;
+        this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.34, 0.95);
         this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.24));
       }
 
@@ -362,6 +369,7 @@ export class Game {
         if (result.caught > 0) {
           const sprite = getSharkSprite(shark.kind);
           const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.35;
+          this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.38, 1.05);
           this.ripples.push(spawnRipple(rippleOriginForMotion(shark.pos, shark.vel, size), size, 0.26));
         }
 
@@ -457,6 +465,31 @@ export class Game {
     if (this.ripples.length > 80) {
       this.ripples = this.ripples.slice(-80);
     }
+  }
+
+  private updateWaterDisturbance(dt: number): void {
+    for (const shark of this.sharks) {
+      if (shark.health <= 0 || shark.starved || Math.hypot(shark.vel.x, shark.vel.y) < 0.45) {
+        continue;
+      }
+
+      const sprite = getSharkSprite(shark.kind);
+      const size = sprite ? spriteRippleSize(sprite, shark.radius) : shark.radius * 1.2;
+      this.waterDisturbance.touch(shark.pos.x, shark.pos.y, size * 0.25, 0.2 * dt * 60);
+    }
+
+    if (this.fishRippleClock <= 0.08) {
+      const activeFish = this.fish.filter((candidate) => !candidate.caught && (candidate.threatened || Math.hypot(candidate.vel.x, candidate.vel.y) > candidate.maxSpeed * 0.72));
+
+      for (let index = 0; index < activeFish.length; index += 9) {
+        const fish = activeFish[index];
+        const sprite = getFishSprite(fish.typeId);
+        const size = sprite ? spriteRippleSize(sprite, fish.radius) : fish.radius * 2.2;
+        this.waterDisturbance.touch(fish.pos.x, fish.pos.y, size * 0.18, fish.threatened ? 0.14 : 0.08);
+      }
+    }
+
+    this.waterDisturbance.update(dt);
   }
 
   private syncRunFishCountsFromSchool(): void {
@@ -647,7 +680,7 @@ export class Game {
     this.ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
 
     if (this.screen === "combat" && this.run) {
-      drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks, this.ripples, time);
+      drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks, this.ripples, this.waterDisturbance, time);
       return;
     }
 

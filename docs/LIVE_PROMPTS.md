@@ -647,6 +647,27 @@ End Run, or Save and Return Home instead.
 - Artifact tuning and future icon prompts live in
   `docs/ARTIFACT_DESIGN_BOARD.md`.
 
+## Lightweight Water Disturbance Prototype
+
+The current water direction is a tiny Canvas-native disturbance field inspired
+by public ripple concepts, not a dependency or port.
+
+- Borrow the API idea of programmatic drops/touches: `touch(x, y, radius,
+  strength)`.
+- Borrow the small algorithm idea of a low-resolution damped field that stops
+  when waves fade.
+- Do not add jQuery, WebGL, Pixi, Three, or a full external water repo.
+- Fish and sharks can disturb the water at their positions.
+- Shark disturbances should be stronger than fish disturbances.
+- Fish disturbances should be subtle, sprite-sized, and throttled for
+  performance.
+- Draw the effect as part of the water/background, behind sprites and away from
+  UI-like giant circles.
+- Preserve sprite readability, red threat tint, shark X-eyes, and the dark
+  aquatic background.
+- The field should remain easy to tune or remove if future research changes the
+  water direction.
+
 ## Artifact Icon Image Prompt Prep
 
 Do not implement actual artifact image assets in this pass. These prompts are

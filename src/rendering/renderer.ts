@@ -1,5 +1,6 @@
 import type { Fish, LevelConfig, Ripple, RunState, Shark, SpriteManifestEntry, Vector } from "../game/types";
 import { getFishSprite, getSharkSprite, spriteDrawSize } from "./sprites";
+import type { WaterDisturbanceField } from "./waterDisturbance";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
 
@@ -281,11 +282,13 @@ export const drawCombat = (
   fish: Fish[],
   sharks: Shark[],
   ripples: Ripple[] = [],
+  waterDisturbance?: WaterDisturbanceField,
   time = 0,
 ): void => {
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
+  waterDisturbance?.draw(ctx);
   drawWaterRipples(ctx, ripples, time);
 
   for (const candidate of fish) {
