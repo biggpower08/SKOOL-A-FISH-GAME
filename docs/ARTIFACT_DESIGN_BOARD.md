@@ -36,6 +36,26 @@ the runtime data source until a future pass intentionally changes that.
 - common fish support
 - anti-shark panic tools
 
+## Implemented Build Archetypes
+
+Runtime artifact cards now expose compact build tags. Use these as the current
+strategy vocabulary when revising names, effects, or future icon prompts:
+
+- Balanced school
+- Tilapia swarm
+- Parrotfish dodge
+- Grouper guard
+- Mahi tempo
+- Salmon generalist
+- Shell economy
+- Kelp recovery
+- Anti-shark survival
+- Risky nonsense
+
+`src/systems/artifacts.ts` maps categories and a few role-specific artifacts
+into these tags. Keep tags visible and mechanically meaningful; avoid joke-only
+artifacts with no build purpose.
+
 ## Reusable Artifact Icon Prompt Template
 
 ```text

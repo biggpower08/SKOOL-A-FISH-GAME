@@ -312,7 +312,20 @@ export class Game {
       buttons.push(button);
     }
 
-    this.devLevelScroller.replaceChildren(label, ...buttons);
+    const recruitButton = document.createElement("button");
+    recruitButton.type = "button";
+    recruitButton.textContent = "R";
+    recruitButton.title = "Open recruit test";
+    recruitButton.addEventListener("click", () => this.openRecruitTest());
+
+    this.devLevelScroller.replaceChildren(label, ...buttons, recruitButton);
+  }
+
+  private openRecruitTest(): void {
+    this.run ??= createNewRun();
+    saveRun(this.run);
+    this.hideArtifactPanel();
+    this.showIntermission("recruit");
   }
 
   private updateCombat(dt: number): void {
@@ -682,6 +695,7 @@ export class Game {
 
   private render(time: number): void {
     this.ctx.setTransform(window.devicePixelRatio || 1, 0, 0, window.devicePixelRatio || 1, 0, 0);
+    this.updateSmokeDataset();
 
     if (this.screen === "combat" && this.run) {
       drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks, this.ripples, this.waterDisturbance, time);
@@ -689,6 +703,16 @@ export class Game {
     }
 
     drawIdleScene(this.ctx, this.width, this.height, time);
+  }
+
+  private updateSmokeDataset(): void {
+    this.canvas.dataset.screen = this.screen;
+    this.canvas.dataset.level = String(this.run?.level ?? 0);
+    this.canvas.dataset.fishCount = String(this.run?.fishCount ?? 0);
+    this.canvas.dataset.tilapia = String(this.run?.fishCounts.tilapia ?? 0);
+    this.canvas.dataset.parrotfish = String(this.run?.fishCounts.parrotfish ?? 0);
+    this.canvas.dataset.artifacts = String(this.run?.ownedArtifacts.length ?? 0);
+    this.canvas.dataset.waterEnergy = this.waterDisturbance.energy().toFixed(3);
   }
 
   destroy(): void {

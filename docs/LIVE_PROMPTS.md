@@ -94,6 +94,27 @@ Recruitment choices can offer fish groups such as:
 Fish should have different strategic identities, but they can all use the same
 placeholder circle visual for now.
 
+Current implemented recruit panel:
+
+- Title: `Recruit a Fish`.
+- Each card shows fish sprite/icon, name, role, short personality line,
+  mechanical summary, recruit amount, and `Add to School`.
+- Selecting a card immediately adds that fish type to the run state; the next
+  fight rebuilds the visible school from typed fish counts.
+- Recruitment amount is defined in `src/systems/fishTypes.ts`, not duplicated in
+  UI copy.
+- The existing `DEV` scroller includes an `R` shortcut to open recruitment
+  immediately for browser smoke testing.
+
+Current role identities:
+
+- Tilapia: `Swarm filler`; weak, plentiful, high-schooling body count.
+- Salmon: `Balanced survivor`; baseline health, speed, and mixed-school value.
+- Parrotfish: `Fast evasive fish`; quick dodge identity and anti-shark survival
+  tags.
+- Mahi-Mahi: `Tempo sprinter`; fastest fragile fish for speed/tempo builds.
+- Grouper: `Tanky bodyguard`; slow, high health, protector-tagged fish.
+
 The goal is roster strategy, not infinite replacement purchases. Fish loss
 should matter, and the school should change over time.
 
@@ -123,6 +144,23 @@ Artifacts should become a major strategy system later. They can support:
 
 The game should support strategy, not pure RNG. Use both specific unlocks and
 limited random choices later.
+
+Current implemented artifact build archetypes:
+
+- balanced school
+- Tilapia swarm
+- Parrotfish speed/evasion
+- Grouper tank/protector
+- Mahi-Mahi speed/tempo
+- Salmon generalist
+- Shell economy
+- kelp/recovery
+- anti-shark survival
+- risky joke/satirical
+
+Runtime artifact cards now include compact build tags from
+`src/systems/artifacts.ts`. Keep effects short and readable; tags should explain
+what fish role or build the artifact supports.
 
 ## Artifact Collection / Artifact Section
 
@@ -181,6 +219,7 @@ Current artifact panel rules:
 - Future/unknown slots should say `Hidden`.
 - Hidden slots can use a tiny fog/cloud placeholder animation.
 - Keep cards short: icon, name, rarity/status, and one short effect.
+- Current visible cards also show one or two compact build tags.
 - Do not build the full 120-artifact collection yet.
 - The current artifact panel and Hidden cards are a good direction. Do not
   redesign them unless they conflict with a necessary gameplay fix.
@@ -206,7 +245,7 @@ Intermission rules:
   two-option popup should not look lopsided.
 - Artifact reward rounds still show artifact choices on the 3rd completed
   round interval.
-- Recruitment rounds still show adoption choices on the 5th completed round
+- Recruitment rounds still show recruit choices on the 5th completed round
   interval, and recruitment wins when both intervals line up.
 - Popup style should stay close to the existing compact overlay style.
 - The player can go Home or End Run from between-round screens.
@@ -647,13 +686,13 @@ End Run, or Save and Return Home instead.
 - Artifact tuning and future icon prompts live in
   `docs/ARTIFACT_DESIGN_BOARD.md`.
 
-## Lightweight Water Disturbance Prototype
+## Lightweight Ocean / Water Disturbance Prototype
 
 The current water direction is a tiny Canvas-native disturbance field inspired
 by public ripple concepts, not a dependency or port.
 
-- Borrow the API idea of programmatic drops/touches: `touch(x, y, radius,
-  strength)`.
+- Borrow the API idea of programmatic drops/touches:
+  `touch(x, y, radius, strength, velocity?)`.
 - Borrow the small algorithm idea of a low-resolution damped field that stops
   when waves fade.
 - Do not add jQuery, WebGL, Pixi, Three, or a full external water repo.
@@ -661,8 +700,12 @@ by public ripple concepts, not a dependency or port.
 - Shark disturbances should be stronger than fish disturbances.
 - Fish disturbances should be subtle, sprite-sized, and throttled for
   performance.
+- Moving fish and sharks can create directional wakes connected to their motion.
+- `sampleCurrent(x, y, time)` returns a tiny current vector that nudges flocking
+  without overpowering flee, edge, or school behavior.
 - Draw the effect as part of the water/background, behind sprites and away from
   UI-like giant circles.
+- The background now uses ocean-colored depth, wave bands, and current lines.
 - Preserve sprite readability, red threat tint, shark X-eyes, and the dark
   aquatic background.
 - The field should remain easy to tune or remove if future research changes the

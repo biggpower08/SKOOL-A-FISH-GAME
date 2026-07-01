@@ -1,30 +1,36 @@
 # Background Effect Plan
 
-This file started as planning only. As of the first water-disturbance prototype,
-the chosen direction is a tiny Canvas-native low-resolution disturbance field.
-Do not expand it into full wave physics, WebGL, shader displacement, or a port
-of an external repo without a future focused pass.
+This file started as planning only. The chosen direction is still Canvas-native:
+layered ocean color, soft moving wave/current bands, a tiny low-resolution
+disturbance field, directional wakes, and a very small current nudge. Do not
+expand it into full wave physics, WebGL, shader displacement, or a port of an
+external repo without a future focused pass.
 
 ## Current Status
 
-- The game uses a dark aquatic Canvas gradient.
-- Subtle current lines help the scene feel underwater without stealing focus.
-- Existing entity disturbance marks are lightweight and should not become the
-  main background system in this pass.
+- The game uses an ocean-colored Canvas gradient with layered depth.
+- Soft wave bands and current lines help the scene feel underwater without
+  stealing focus.
+- Existing entity disturbance marks are lightweight and should remain secondary
+  to sprites and shark/fish readability.
 - The black/dark background still supports sprite readability.
-- A prototype `WaterDisturbanceField` now supports `touch`, `update`, `draw`,
-  and `resize`.
+- `WaterDisturbanceField` supports `touch`, `update`, `draw`, `resize`,
+  `sampleCurrent`, and directional wake tracking.
 - Fish and sharks can touch the field at their positions; shark touches are
   stronger, fish touches are subtle and throttled.
+- Moving fish and sharks pass velocity into `touch`, so wakes trail behind their
+  motion instead of appearing as detached random ellipses.
+- Flocking samples a tiny current vector; this should remain subtle and must not
+  override flee, edge, or school movement.
 
 ## What Looks Good Now
 
 - Dark first-read, with fish and shark sprites clearly visible.
-- Quiet current-line motion.
+- Visible ocean depth, wave bands, and current-line motion.
 - No busy water texture fighting the school.
 - GitHub Pages-friendly Canvas implementation with no extra dependency.
-- The first field prototype draws behind sprites and above the static
-  background/current lines.
+- Directional wakes draw behind sprites and above the static background/current
+  lines.
 
 ## What Has Not Worked So Far
 
@@ -51,7 +57,7 @@ of an external repo without a future focused pass.
 2. Low-resolution ripple field: cheap grid influence rendered as faint shade.
    This is the current prototype direction.
 3. Flow field / vector field currents: subtle direction cues that can influence
-   background only, not fish physics.
+   fish physics lightly. This is now prototyped through `sampleCurrent`.
 4. Canvas displacement illusion: redraw low-alpha offset strips to fake water.
 5. Sprite-aware disturbance marks: small marks around moving sprites, kept
    secondary to the fish/shark silhouettes.
