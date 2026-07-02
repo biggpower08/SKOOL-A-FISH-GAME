@@ -9,7 +9,7 @@ import { getSchoolModifiers } from "../systems/artifactEffects";
 import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
-import { artifactBuildTagLabels, artifactDefinitions, isArtifactId } from "../systems/artifacts";
+import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
 import { applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, lostFishCountsAfterRound, rewardFlowForCompletedLevel } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
@@ -271,8 +271,9 @@ export class Game {
     this.run.lastInvestmentReturn = 0;
     this.levelStartFishCounts = { ...this.run.fishCounts };
     const bounds = this.combatBounds();
-    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts, getSchoolModifiers(this.run));
-    this.sharks = createSharks(this.config, bounds);
+    const modifiers = getSchoolModifiers(this.run);
+    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts, modifiers);
+    this.sharks = createSharks(this.config, bounds, modifiers);
     this.waterDisturbance.resize(bounds.width, bounds.height);
     this.fishRippleClock = 0;
     this.elapsed = 0;
@@ -618,12 +619,9 @@ export class Game {
       name.textContent = artifact.name;
       const effect = document.createElement("p");
       effect.textContent = artifact.effect;
-      const tags = document.createElement("span");
-      tags.className = "artifact-tags";
-      tags.textContent = artifact.buildTags.slice(0, 2).map((tag) => artifactBuildTagLabels[tag]).join(" / ");
       const rarity = document.createElement("span");
       rarity.textContent = `${artifact.rarity} / ${artifact.category}`;
-      const children: HTMLElement[] = [icon, name, effect, tags, rarity];
+      const children: HTMLElement[] = [icon, name, effect, rarity];
 
       if (artifact.maxLevel && artifact.maxLevel > 1) {
         const upgrade = document.createElement("span");
