@@ -211,7 +211,7 @@ export const applyRoundRecovery = (run: RunState, roundLostCounts: FishCountMap)
     run,
     recoveryPool,
     restoredCounts,
-    restored > 0 ? `Recovered ${restored} fish after the wave` : "",
+    restored > 0 ? `Recovered ${restored} fish after the wave: ${formatFishCountSummary(restoredCounts)}` : "",
   );
 };
 
@@ -277,7 +277,12 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
   const recoveryPool = totalFishCounts(savedRecoveryPool) > 0 ? savedRecoveryPool : { tilapia: missing };
   const restoredCounts = run.currency >= KELP_COST ? chooseRecoveryCounts(recoveryPool, Math.min(KELP_RESTORE_COUNT + modifiers.kelpRestoreBonus, missing)) : {};
   const restored = totalFishCounts(restoredCounts);
-  const recoveredRun = applyFishRecoveryCounts(run, recoveryPool, restoredCounts, restored > 0 ? `Recovered ${restored} fish with kelp` : "");
+  const recoveredRun = applyFishRecoveryCounts(
+    run,
+    recoveryPool,
+    restoredCounts,
+    restored > 0 ? `Recovered ${restored} fish with kelp: ${formatFishCountSummary(restoredCounts)}` : "",
+  );
 
   return {
     ...recoveredRun,

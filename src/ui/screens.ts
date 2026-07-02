@@ -150,6 +150,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
           const definition = fishTypes[option.id];
           const affordable = handlers.run.currency >= option.shellCost;
           const costText = option.shellCost === 0 ? "Free" : `${option.shellCost} Shells`;
+          const lockedText = `Need ${option.shellCost - handlers.run.currency} Shells`;
 
           return card(`choice-card recruit-choice-card${affordable ? "" : " locked"}`, [
             fishMarker(option.id),
@@ -159,7 +160,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
             small(definition.description),
             small(definition.mechanics),
             small(`Add ${formatFishCountSummary(option.fishCounts)}`),
-            button(affordable ? "Add to School" : "Need Shells", () => handlers.onChoose(option.id), !affordable),
+            button(affordable ? "Add to School" : lockedText, () => handlers.onChoose(option.id), !affordable),
           ]);
         }),
       ),
