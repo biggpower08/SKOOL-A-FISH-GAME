@@ -32,6 +32,7 @@ describe("HUD school counter", () => {
   });
 
   it("keeps fish health bars clear of longer sidebar names", () => {
-    expect(hudSource).toContain("drawBar(ctx, x + 124");
+    expect(hudSource).toContain("const FISH_ROW_HEIGHT = 28");
+    expect(hudSource).toContain("drawBar(ctx, x + 41, rowY + 14");
   });
 });

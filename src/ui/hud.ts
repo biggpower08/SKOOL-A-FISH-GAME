@@ -155,6 +155,8 @@ const groupHealthRatio = (fish: Fish[]): number => {
   return maxHealth === 0 ? 0 : health / maxHealth;
 };
 
+const FISH_ROW_HEIGHT = 28;
+
 export const schoolCounterText = (fish: Fish[], run: Pick<RunState, "fishCount" | "maxFishCount">): string => {
   const live = fish.filter((candidate) => !candidate.caught).length;
   const total = Math.max(live, run.fishCount, run.maxFishCount);
@@ -208,16 +210,16 @@ export const drawHud = (
 
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
-    const rowY = schoolY + 18 + index * 22;
+    const rowY = schoolY + 18 + index * FISH_ROW_HEIGHT;
     if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), x + 22, rowY + 4, 24, 15)) {
       fallbackFishMark(ctx, x + 22, rowY + 4, definition.color);
     }
     ctx.fillStyle = "#d8e1ea";
     ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 41, rowY + 8);
-    drawBar(ctx, x + 124, rowY + 1, 22, 6, groupHealthRatio(summary.alive), definition.color);
+    drawBar(ctx, x + 41, rowY + 14, 92, 5, groupHealthRatio(summary.alive), definition.color);
   });
 
-  const enemyY = schoolY + 30 + summarizeFish(fish).length * 22;
+  const enemyY = schoolY + 30 + summarizeFish(fish).length * FISH_ROW_HEIGHT;
   ctx.fillStyle = "#8f9aa7";
   ctx.fillText("Sharks", x + 14, enemyY);
 
