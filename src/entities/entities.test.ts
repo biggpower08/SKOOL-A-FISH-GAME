@@ -5,6 +5,7 @@ import { createLevelConfig } from "../systems/levels";
 import { getSchoolModifiers } from "../systems/artifactEffects";
 import { createNewRun } from "../systems/upgrades";
 import { fishTypes } from "../systems/fishTypes";
+import { distance } from "../systems/vector";
 
 describe("entities", () => {
   it("creates active fish as placeholder circles without support fish", () => {
@@ -61,6 +62,16 @@ describe("entities", () => {
 
     expect(school.find((fish) => fish.typeId === "parrotfish")?.maxSpeed).toBeGreaterThan(fishTypes.parrotfish.maxSpeed);
     expect(school.find((fish) => fish.typeId === "grouper")?.maxHealth).toBeGreaterThan(fishTypes.grouper.maxHealth);
+  });
+
+  it("spawns a large opening school with readable spacing", () => {
+    const school = createSchool(54, 0, { width: 796, height: 540 });
+    const nearestGaps = school.map((fish) =>
+      Math.min(...school.filter((candidate) => candidate !== fish).map((candidate) => distance(fish.pos, candidate.pos))),
+    );
+
+    expect(Math.min(...nearestGaps)).toBeGreaterThan(11);
+    expect(nearestGaps.filter((gap) => gap < 15)).toHaveLength(0);
   });
 
   it("creates sharks from level config and moves them toward the school", () => {

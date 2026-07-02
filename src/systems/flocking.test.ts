@@ -241,6 +241,51 @@ describe("updateFlocking", () => {
     expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
   });
 
+  it("opens dense large schools without exploding them apart", () => {
+    const fish: Fish[] = Array.from({ length: 54 }, (_, index) => ({
+      id: `dense-school-${index}`,
+      kind: "basic",
+      typeId: index % 9 === 0 ? "salmon" : "tilapia",
+      className: index % 9 === 0 ? "normal" : "common",
+      pos: {
+        x: 210 + (index % 9) * 5,
+        y: 150 + Math.floor(index / 9) * 5,
+      },
+      vel: { x: 0, y: 0 },
+      radius: index % 9 === 0 ? 4.5 : 4,
+      maxSpeed: index % 9 === 0 ? 2.22 : 2.12,
+      health: index % 9 === 0 ? 3 : 1,
+      maxHealth: index % 9 === 0 ? 3 : 1,
+      threatened: false,
+      caught: false,
+    }));
+
+    const averageNearestGap = (): number =>
+      fish.reduce((sum, candidate) => {
+        const nearest = Math.min(
+          ...fish.filter((other) => other !== candidate).map((other) => Math.hypot(other.pos.x - candidate.pos.x, other.pos.y - candidate.pos.y)),
+        );
+
+        return sum + nearest;
+      }, 0) / fish.length;
+
+    const startingGap = averageNearestGap();
+
+    for (let tick = 0; tick < 6; tick += 1) {
+      updateFlocking(fish, [], {
+        width: 500,
+        height: 360,
+        threatRadius: 120,
+        dt: 0.8,
+        schoolIntent: { x: 1, y: 0.1 },
+      });
+    }
+
+    expect(averageNearestGap()).toBeGreaterThan(startingGap + 7);
+    expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+    expect(fish.every((candidate) => candidate.pos.x > 110 && candidate.pos.x < 380)).toBe(true);
+  });
+
   it("lets the ocean current nudge fish without overpowering their max speed", () => {
     const fish: Fish[] = [
       {
