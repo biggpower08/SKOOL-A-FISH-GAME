@@ -96,6 +96,42 @@ const escape = (fish: Fish, sharks: Shark[], threatRadius: number): Vector => {
   return flee;
 };
 
+const dangerPathEscape = (fish: Fish, sharks: Shark[], threatRadius: number): Vector =>
+  sharks.reduce<Vector>((sum, shark) => {
+    if (shark.health <= 0 || shark.starved) {
+      return sum;
+    }
+
+    const sharkSpeed = Math.hypot(shark.vel.x, shark.vel.y);
+
+    if (sharkSpeed < 0.2) {
+      return sum;
+    }
+
+    const direction = normalize(shark.vel);
+    const toFish = subtract(fish.pos, shark.pos);
+    const forward = toFish.x * direction.x + toFish.y * direction.y;
+    const laneRange = Math.min(threatRadius, shark.attackRadius + 28);
+
+    if (forward <= 0 || forward > laneRange) {
+      return sum;
+    }
+
+    const lateral = toFish.x * -direction.y + toFish.y * direction.x;
+    const laneWidth = shark.radius + fish.radius * 4.5;
+
+    if (Math.abs(lateral) > laneWidth) {
+      return sum;
+    }
+
+    const side = lateral >= 0 ? 1 : -1;
+    const roleMultiplier = fish.typeId === "parrotfish" ? 1.28 : fish.typeId === "mahi-mahi" ? 1.12 : fish.typeId === "grouper" ? 0.68 : 1;
+    const urgency = (1 - forward / laneRange) * (1 - Math.abs(lateral) / laneWidth);
+    const perpendicular = { x: -direction.y * side, y: direction.x * side };
+
+    return add(sum, scale(perpendicular, urgency * roleMultiplier * 1.6));
+  }, zero());
+
 const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
   const margin = 72;
   const cornerMargin = 96;
@@ -205,12 +241,13 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const ali = align(fish, near);
     const coh = center(fish, near);
     const flee = escape(fish, sharks, options.threatRadius);
+    const danger = dangerPathEscape(fish, sharks, options.threatRadius);
     const edge = boundaryPush(fish, options);
     const intent = fish.threatened ? zero() : scale(sharedIntent, LARGE_SCHOOL_INTENT_STRENGTH);
     const current = options.currentAt ? options.currentAt(fish.pos) : zero();
 
     fish.vel = limit(
-      add(add(add(add(add(add(add(fish.vel, sep), ali), coh), intent), scale(flee, 4.8)), scale(edge, 1.35)), scale(current, 0.38)),
+      add(add(add(add(add(add(add(add(fish.vel, sep), ali), coh), intent), scale(flee, 4.8)), danger), scale(edge, 1.35)), scale(current, 0.38)),
       fish.maxSpeed,
     );
     fish.pos = {
