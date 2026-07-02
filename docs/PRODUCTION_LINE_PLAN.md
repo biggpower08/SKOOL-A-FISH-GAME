@@ -1,17 +1,34 @@
 # SKOOL-A Fish Game Production-Line Plan
 
+## Activation Status
+
+- `qa/harden-workstreams-1-3` merged into `main` after tests, build, coverage, audit, and Playwright browser smoke passed.
+- Resulting hardening/base commit: `09d8b813e4be5ee6dfcccf019a4722ccd7ebea95`.
+- Sidebar fish health bars are fixed: bars render below fish names/counts in the HUD fish rows.
+- ECC production-line mode is active: one branch, one scope, one verification report.
+- `main` is stable and should only receive reviewed merges or small production-line housekeeping commits.
+
+Active lane branches to create from updated `main`:
+
+```txt
+fix/fish-balance-polish
+fix/recruitment-recovery-polish
+feature/artifact-mechanics
+feature/fish-ai-danger
+feature/run-progression-feedback
+```
+
 ## Current Branch Strategy
 
 - `main` is the stable deployable branch. Do not run multiple Codex sessions directly on `main`.
-- Hardening work starts from `qa/harden-workstreams-1-3`.
-- Focused follow-up branches should branch from the latest accepted hardening base, then merge back in small reviewed chunks.
+- Hardening work from `qa/harden-workstreams-1-3` has been accepted into `main`.
+- Focused follow-up branches should branch from the latest `main`, then merge back in small reviewed chunks.
 - Each lane should have one owner/session at a time when it touches shared gameplay state.
 
 Recommended lanes:
 
 ```txt
 qa/harden-workstreams-1-3
-fix/visual-ocean-polish
 fix/fish-balance-polish
 fix/recruitment-recovery-polish
 feature/artifact-mechanics
@@ -39,13 +56,12 @@ These should be sequenced because they share run state, combat timing, or save s
 
 ## Merge Order
 
-1. `qa/harden-workstreams-1-3`
-2. `fix/visual-ocean-polish`
-3. `fix/fish-balance-polish`
-4. `fix/recruitment-recovery-polish`
-5. `feature/artifact-mechanics`
+1. `qa/harden-workstreams-1-3` - merged
+2. `fix/fish-balance-polish`
+3. `fix/recruitment-recovery-polish`
+4. `feature/artifact-mechanics`
+5. `feature/fish-ai-danger`
 6. `feature/run-progression-feedback`
-7. `feature/fish-ai-danger`
 
 If two branches touch the same shared file, merge the smaller hardening branch first and rebase the larger feature branch.
 
