@@ -38,6 +38,7 @@ describe("artifact effect modifiers", () => {
     expect(modifiers.shellRewardMultiplier).toBeGreaterThan(1);
     expect(modifiers.kelpRestoreBonus).toBeGreaterThan(0);
     expect(modifiers.sharkHungerDrainMultiplier).toBeGreaterThan(1);
+    expect(modifiers.sharkSpeedMultiplier).toBeLessThan(1);
     expect(modifiers.riskyShellBonus).toBeGreaterThan(0);
     expect(modifiers.recruitBonusByType.tilapia).toBeGreaterThan(0);
   });
