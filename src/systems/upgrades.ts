@@ -122,6 +122,7 @@ const applyFishRecoveryCounts = (run: RunState, recoveryPool: FishCountMap, rest
     fishCount: run.fishCount + restored,
     fishCounts: addFishCounts(run.fishCounts, restoredCounts),
     lostFishCounts: subtractFishCounts(recoveryPool, restoredCounts),
+    lastRecruitmentSummary: "",
     lastRecoverySummary: summary,
   };
 };
@@ -242,6 +243,7 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
       maxFishCount: Math.max(run.maxFishCount, run.fishCount) + fishToAdd,
       fishCounts: addFishCounts(run.fishCounts, fishCounts),
       lastRecruitmentSummary: `School grew! ${formatFishCountSummary(fishCounts)}`,
+      lastRecoverySummary: "",
     };
   }
 

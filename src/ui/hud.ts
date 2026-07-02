@@ -194,7 +194,7 @@ export const drawHud = (
 
   drawBar(ctx, x + 14, 68, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
 
-  const feedback = run.lastRecruitmentSummary || run.lastRecoverySummary;
+  const feedback = run.lastRecoverySummary || run.lastRecruitmentSummary;
   const schoolY = feedback ? 110 : 94;
 
   if (feedback) {
@@ -214,7 +214,7 @@ export const drawHud = (
     }
     ctx.fillStyle = "#d8e1ea";
     ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 41, rowY + 8);
-    drawBar(ctx, x + 96, rowY + 1, 36, 6, groupHealthRatio(summary.alive), definition.color);
+    drawBar(ctx, x + 124, rowY + 1, 22, 6, groupHealthRatio(summary.alive), definition.color);
   });
 
   const enemyY = schoolY + 30 + summarizeFish(fish).length * 22;

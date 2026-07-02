@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Fish, RunState } from "../game/types";
+import hudSource from "./hud.ts?raw";
 import { schoolCounterText } from "./hud";
 import { createNewRun } from "../systems/upgrades";
 
@@ -28,5 +29,9 @@ describe("HUD school counter", () => {
     };
 
     expect(schoolCounterText([makeFish("a"), makeFish("b"), makeFish("c", true)], run)).toBe("Fish 2 / 54");
+  });
+
+  it("keeps fish health bars clear of longer sidebar names", () => {
+    expect(hudSource).toContain("drawBar(ctx, x + 124");
   });
 });

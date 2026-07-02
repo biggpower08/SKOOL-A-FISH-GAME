@@ -112,10 +112,11 @@ const small = (text: string): HTMLParagraphElement => {
   return element;
 };
 
-const feedbackNotes = (run: RunState): HTMLParagraphElement[] =>
-  [run.lastRecoverySummary, run.lastRecruitmentSummary]
-    .filter((message) => message.length > 0)
-    .map((message) => small(message));
+const feedbackNotes = (run: RunState): HTMLParagraphElement[] => {
+  const message = run.lastRecoverySummary || run.lastRecruitmentSummary;
+
+  return message ? [small(message)] : [];
+};
 
 const totalFishCounts = (fishCounts: RunState["fishCounts"]): number =>
   Object.values(fishCounts).reduce((sum, count) => sum + (count ?? 0), 0);

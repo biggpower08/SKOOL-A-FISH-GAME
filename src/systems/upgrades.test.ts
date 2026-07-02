@@ -46,7 +46,7 @@ describe("upgrades", () => {
   });
 
   it("buys mixed fish bundles with Shells and updates school capacity", () => {
-    const run = applyChoice({ ...createNewRun(), currency: 15 }, "grouper");
+    const run = applyChoice({ ...createNewRun(), currency: 15, lastRecoverySummary: "Recovered 2 fish after the wave" }, "grouper");
 
     expect(run.currency).toBe(3);
     expect(run.fishCount).toBe(59);
@@ -54,6 +54,7 @@ describe("upgrades", () => {
     expect(run.fishCounts.grouper).toBe(2);
     expect(run.fishCounts.salmon).toBe(3);
     expect(run.lastRecruitmentSummary).toBe("School grew! +2 Grouper, +3 Salmon");
+    expect(run.lastRecoverySummary).toBe("");
   });
 
   it("invests 100 Shells and returns double after three completed rounds", () => {
@@ -113,6 +114,7 @@ describe("upgrades", () => {
           "mahi-mahi": 1,
           grouper: 1,
         },
+        lastRecruitmentSummary: "School grew! +4 Parrotfish",
       },
       {
         tilapia: 6,
@@ -136,6 +138,7 @@ describe("upgrades", () => {
       grouper: 1,
     });
     expect(run.lastRecoverySummary).toBe("Recovered 3 fish after the wave");
+    expect(run.lastRecruitmentSummary).toBe("");
   });
 
   it.each(["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"] as const)("can recover dead %s from the saved dead pool", (typeId) => {

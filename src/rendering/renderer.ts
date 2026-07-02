@@ -200,10 +200,10 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
 
 export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
   const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, "#01070d");
-  gradient.addColorStop(0.34, "#052123");
-  gradient.addColorStop(0.68, "#101830");
-  gradient.addColorStop(1, "#020309");
+  gradient.addColorStop(0, "#00040a");
+  gradient.addColorStop(0.34, "#03181b");
+  gradient.addColorStop(0.68, "#0a1025");
+  gradient.addColorStop(1, "#010207");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
 };

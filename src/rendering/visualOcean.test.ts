@@ -41,7 +41,7 @@ describe("visual ocean readability", () => {
 
     drawBackground(context as unknown as CanvasRenderingContext2D, 800, 480);
 
-    expect(stops.map((stop) => stop.color)).toEqual(["#01070d", "#052123", "#101830", "#020309"]);
+    expect(stops.map((stop) => stop.color)).toEqual(["#00040a", "#03181b", "#0a1025", "#010207"]);
   });
 
   it("keeps fish wakes movement-tied, subtle, and speed-sensitive", () => {

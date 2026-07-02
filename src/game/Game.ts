@@ -688,7 +688,7 @@ export class Game {
     this.canvas.dataset.mahi = String(this.run?.fishCounts["mahi-mahi"] ?? 0);
     this.canvas.dataset.grouper = String(this.run?.fishCounts.grouper ?? 0);
     this.canvas.dataset.artifacts = String(this.run?.ownedArtifacts.length ?? 0);
-    this.canvas.dataset.feedback = this.run?.lastRecruitmentSummary || this.run?.lastRecoverySummary || "";
+    this.canvas.dataset.feedback = this.run?.lastRecoverySummary || this.run?.lastRecruitmentSummary || "";
     this.canvas.dataset.waterEnergy = this.waterDisturbance.energy().toFixed(3);
   }
 
