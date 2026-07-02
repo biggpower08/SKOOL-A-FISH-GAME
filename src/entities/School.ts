@@ -20,7 +20,7 @@ const addFish = (
 ): void => {
   const definition = fishTypes[typeId];
   const angle = index * 2.399;
-  const ring = 18 + (index % 11) * 5.8 + Math.floor(index / 11) * 3;
+  const ring = 18 + Math.sqrt(index) * 16;
   const maxHealth = Math.max(1, Math.ceil(definition.maxHealth + (modifiers?.healthBonusByType[typeId] ?? 0)));
 
   school.push({

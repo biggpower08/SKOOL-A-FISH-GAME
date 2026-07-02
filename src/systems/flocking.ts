@@ -9,8 +9,9 @@ export type FlockingOptions = Bounds & {
 };
 
 const NEIGHBOR_RADIUS = 74;
-const DESIRED_SEPARATION = 17;
-const SOFT_BODY_PADDING = 10;
+const DESIRED_SEPARATION = 20;
+const CROWD_RADIUS = 32;
+const SOFT_BODY_PADDING = 12;
 const FACING_VELOCITY_THRESHOLD = 0.18;
 const LARGE_SCHOOL_THRESHOLD = 20;
 const LARGE_SCHOOL_INTENT_STRENGTH = 0.7;
@@ -37,15 +38,17 @@ const avoid = (fish: Fish, near: Fish[]): Vector => {
   const steering = near.reduce<Vector>((sum, candidate) => {
     const gap = distance(fish.pos, candidate.pos);
 
-    if (gap === 0 || gap > DESIRED_SEPARATION) {
+    const desiredGap = Math.max(DESIRED_SEPARATION, fish.radius + candidate.radius + SOFT_BODY_PADDING);
+
+    if (gap === 0 || gap > desiredGap) {
       return sum;
     }
 
-    const push = scale(normalize(subtract(fish.pos, candidate.pos)), (DESIRED_SEPARATION - gap) / DESIRED_SEPARATION);
+    const push = scale(normalize(subtract(fish.pos, candidate.pos)), (desiredGap - gap) / desiredGap);
     return add(sum, push);
   }, zero());
 
-  return scale(steering, 0.9);
+  return scale(steering, 1.05);
 };
 
 const align = (fish: Fish, near: Fish[]): Vector => {
@@ -61,7 +64,10 @@ const align = (fish: Fish, near: Fish[]): Vector => {
   return scale(subtract(average, fish.vel), 0.05);
 };
 
-const center = (fish: Fish, near: Fish[]): Vector => {
+const localCrowding = (fish: Fish, near: Fish[]): number =>
+  near.filter((candidate) => distance(candidate.pos, fish.pos) < CROWD_RADIUS).length;
+
+const center = (fish: Fish, near: Fish[], crowding: number): Vector => {
   if (near.length === 0) {
     return zero();
   }
@@ -71,7 +77,22 @@ const center = (fish: Fish, near: Fish[]): Vector => {
     1 / near.length,
   );
 
-  return scale(subtract(centroid, fish.pos), 0.012);
+  const crowdedCohesion = crowding >= 5 ? 0.005 : 0.012;
+  return scale(subtract(centroid, fish.pos), crowdedCohesion);
+};
+
+const crowdPressure = (fish: Fish, near: Fish[]): Vector => {
+  const pressure = near.reduce<Vector>((sum, candidate) => {
+    const gap = distance(fish.pos, candidate.pos);
+
+    if (gap === 0 || gap >= CROWD_RADIUS) {
+      return sum;
+    }
+
+    return add(sum, scale(normalize(subtract(fish.pos, candidate.pos)), (CROWD_RADIUS - gap) / CROWD_RADIUS));
+  }, zero());
+
+  return scale(pressure, 0.38);
 };
 
 const escape = (fish: Fish, sharks: Shark[], threatRadius: number): Vector => {
@@ -135,6 +156,11 @@ const applySoftBodySeparation = (school: Fish[], bounds: Bounds): void => {
     for (let rightIndex = leftIndex + 1; rightIndex < alive.length; rightIndex += 1) {
       const left = alive[leftIndex];
       const right = alive[rightIndex];
+
+      if (left.threatened || right.threatened) {
+        continue;
+      }
+
       const gap = distance(left.pos, right.pos);
       const minGap = left.radius + right.radius + SOFT_BODY_PADDING;
 
@@ -201,16 +227,18 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
 
     sanitizeFishMotion(fish, options);
     const near = around(fish, school);
+    const crowding = localCrowding(fish, near);
     const sep = avoid(fish, near);
     const ali = align(fish, near);
-    const coh = center(fish, near);
+    const coh = center(fish, near, crowding);
+    const crowd = crowding >= 5 ? crowdPressure(fish, near) : zero();
     const flee = escape(fish, sharks, options.threatRadius);
     const edge = boundaryPush(fish, options);
     const intent = fish.threatened ? zero() : scale(sharedIntent, LARGE_SCHOOL_INTENT_STRENGTH);
     const current = options.currentAt ? options.currentAt(fish.pos) : zero();
 
     fish.vel = limit(
-      add(add(add(add(add(add(add(fish.vel, sep), ali), coh), intent), scale(flee, 4.8)), scale(edge, 1.35)), scale(current, 0.38)),
+      add(add(add(add(add(add(add(add(fish.vel, sep), crowd), ali), coh), intent), scale(flee, 4.8)), scale(edge, 1.35)), scale(current, 0.38)),
       fish.maxSpeed,
     );
     fish.pos = {

@@ -3,6 +3,8 @@ import { updateFlocking } from "./flocking";
 import type { Fish, Shark } from "../game/types";
 
 describe("updateFlocking", () => {
+  const withinMaxSpeed = (fish: Fish): boolean => Math.hypot(fish.vel.x, fish.vel.y) <= fish.maxSpeed + 0.000001;
+
   it("marks fish threatened and pushes them away from a nearby shark", () => {
     const fish: Fish[] = [
       {
@@ -167,7 +169,7 @@ describe("updateFlocking", () => {
     });
 
     expect(Math.abs(fish[1].pos.x - fish[0].pos.x)).toBeGreaterThan(9);
-    expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+    expect(fish.every(withinMaxSpeed)).toBe(true);
   });
 
   it("keeps sprite facing stable on tiny horizontal velocity jitter", () => {
@@ -238,7 +240,7 @@ describe("updateFlocking", () => {
     );
 
     expect(averageVelocity.x / fish.length).toBeGreaterThan(0.18);
-    expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+    expect(fish.every(withinMaxSpeed)).toBe(true);
   });
 
   it("opens dense large schools without exploding them apart", () => {
@@ -282,7 +284,7 @@ describe("updateFlocking", () => {
     }
 
     expect(averageNearestGap()).toBeGreaterThan(startingGap + 7);
-    expect(fish.every((candidate) => Math.hypot(candidate.vel.x, candidate.vel.y) <= candidate.maxSpeed)).toBe(true);
+    expect(fish.every(withinMaxSpeed)).toBe(true);
     expect(fish.every((candidate) => candidate.pos.x > 110 && candidate.pos.x < 380)).toBe(true);
   });
 
