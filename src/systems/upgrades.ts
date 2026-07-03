@@ -1,10 +1,12 @@
 import type { ArtifactId, ChoiceId, FishTypeId, LevelConfig, RewardFlow, RunState } from "../game/types";
+import { artifactDefinitions } from "./artifacts";
 import { getSchoolModifiers } from "./artifactEffects";
 import { activeFishTypeIds, defaultFishCounts, fishTypes, formatFishCountSummary, getRecruitmentChoice } from "./fishTypes";
 import { clamp } from "./vector";
 
 export const STARTING_FISH_COUNT = 54;
 export const DEV_FREE_PURCHASES = import.meta.env.MODE === "development";
+export const ARTIFACT_EXHAUSTION_SHELL_BONUS = 120;
 const KELP_COST = 100;
 const KELP_RESTORE_COUNT = 5;
 const INVESTMENT_AMOUNT = 100;
@@ -306,6 +308,16 @@ export const applyArtifactReward = (run: RunState, artifactId: ArtifactId): RunS
     ownedArtifacts: [...run.ownedArtifacts, artifactId],
   };
 };
+
+export const hasArtifactChoicesRemaining = (run: Pick<RunState, "ownedArtifacts">): boolean =>
+  artifactDefinitions.some((artifact) => !run.ownedArtifacts.includes(artifact.id));
+
+export const applyArtifactExhaustionFallback = (run: RunState): RunState => ({
+  ...run,
+  currency: run.currency + ARTIFACT_EXHAUSTION_SHELL_BONUS,
+  lastRecruitmentSummary: `All artifacts collected: +${ARTIFACT_EXHAUSTION_SHELL_BONUS} Shells`,
+  lastRecoverySummary: "",
+});
 
 export const normalizeRun = (run: RunState): RunState => {
   const legacySupport = run.fishCounts.support ?? 0;

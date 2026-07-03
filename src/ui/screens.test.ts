@@ -10,4 +10,10 @@ describe("choice screens", () => {
     expect(screensSource).toContain("recruitmentChoicesForLevel(handlers.run.level)");
     expect(screensSource).toContain('"Dev Buy"');
   });
+
+  it("does not render an empty artifact-choice screen when artifacts are exhausted", () => {
+    expect(screensSource).toContain("if (choices.length === 0)");
+    expect(screensSource).toContain("All Artifacts Collected");
+    expect(screensSource).toContain("Bonus Shells awarded.");
+  });
 });
