@@ -1,4 +1,5 @@
 import type { Bounds, Fish, Shark, Vector } from "../game/types";
+import { FISH_NEURAL_STEERING_ENABLED, fishSteeringFeatureVector, steeringVectorFromModel } from "./fishSteeringModel";
 import { add, clamp, distance, limit, normalize, scale, subtract } from "./vector";
 
 export type FlockingOptions = Bounds & {
@@ -154,8 +155,8 @@ const dangerPathEscape = (fish: Fish, sharks: Shark[], threatRadius: number): Ve
   }, zero());
 
 const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
-  const margin = 72;
-  const cornerMargin = 96;
+  const margin = 86;
+  const cornerMargin = 112;
   const push = zero();
 
   if (fish.pos.x < margin) {
@@ -179,7 +180,7 @@ const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
 
   if (nearHorizontalEdge && nearVerticalEdge) {
     const arenaCenter = { x: bounds.width / 2, y: bounds.height / 2 };
-    return add(push, scale(normalize(subtract(arenaCenter, fish.pos)), 1.4));
+    return add(push, scale(normalize(subtract(arenaCenter, fish.pos)), 1.9));
   }
 
   return push;
@@ -255,6 +256,21 @@ const largeSchoolIntent = (school: Fish[], options: FlockingOptions): Vector => 
 
 export const updateFlocking = (school: Fish[], sharks: Shark[], options: FlockingOptions): void => {
   const sharedIntent = largeSchoolIntent(school, options);
+  const livingSchool = school.filter((fish) => !fish.caught);
+  const schoolCentroid =
+    livingSchool.length > 0
+      ? scale(
+          livingSchool.reduce<Vector>(
+            (sum, fish) =>
+              add(sum, {
+                x: finiteOr(fish.pos.x, options.width / 2),
+                y: finiteOr(fish.pos.y, options.height / 2),
+              }),
+            zero(),
+          ),
+          1 / livingSchool.length,
+        )
+      : { x: options.width / 2, y: options.height / 2 };
 
   for (const fish of school) {
     if (fish.caught) {
@@ -271,11 +287,17 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
     const flee = escape(fish, sharks, options.threatRadius);
     const danger = dangerPathEscape(fish, sharks, options.threatRadius);
     const edge = boundaryPush(fish, options);
+    const neural = FISH_NEURAL_STEERING_ENABLED
+      ? steeringVectorFromModel(fishSteeringFeatureVector(fish, sharks, options, schoolCentroid, crowding, options.threatRadius))
+      : zero();
     const intent = fish.threatened ? zero() : scale(sharedIntent, LARGE_SCHOOL_INTENT_STRENGTH);
     const current = options.currentAt ? options.currentAt(fish.pos) : zero();
 
     fish.vel = limit(
-      add(add(add(add(add(add(add(add(add(fish.vel, sep), crowd), ali), coh), intent), scale(flee, 4.8)), danger), scale(edge, 1.35)), scale(current, 0.38)),
+      add(
+        add(add(add(add(add(add(add(add(add(fish.vel, sep), crowd), ali), coh), intent), scale(flee, 4.8)), danger), scale(edge, 1.45)), neural),
+        scale(current, 0.38),
+      ),
       fish.maxSpeed,
     );
     fish.pos = {
