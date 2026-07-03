@@ -23,6 +23,34 @@ const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius:
   ctx.fill();
 };
 
+const drawUnitHealthBar = (
+  ctx: CanvasRenderingContext2D,
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+  ratio: number,
+  fill: string,
+): void => {
+  const safeRatio = Math.max(0, Math.min(1, ratio));
+  ctx.fillStyle = "rgba(3, 5, 8, 0.82)";
+  ctx.fillRect(x - width / 2, y, width, height);
+  ctx.fillStyle = fill;
+  ctx.fillRect(x - width / 2, y, width * safeRatio, height);
+  ctx.strokeStyle = "rgba(210, 222, 234, 0.56)";
+  ctx.strokeRect(x - width / 2, y, width, height);
+};
+
+const drawSharkHealthBar = (ctx: CanvasRenderingContext2D, shark: Shark, bodyHeight: number): void => {
+  if (shark.starved || shark.maxHealth <= 0) {
+    return;
+  }
+
+  const width = Math.max(28, shark.radius * 1.55);
+  const y = shark.pos.y + bodyHeight * 0.5 + 7;
+  drawUnitHealthBar(ctx, shark.pos.x, y, width, 5, shark.health / shark.maxHealth, "#d8e1ea");
+};
+
 const getCachedSprite = (sprite: SpriteManifestEntry): SpriteCacheEntry | undefined => {
   if (typeof Image === "undefined") {
     return undefined;
@@ -132,7 +160,7 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
       const size = sharkSprite ? spriteDrawSize(sharkSprite, shark.radius) : { width: shark.radius * 2, height: shark.radius * 2 };
       const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
       const headX = shark.pos.x + flip * size.width * 0.23;
-      const eyeY = shark.pos.y - size.height * 0.1;
+      const eyeY = shark.pos.y - size.height * 0.015;
       const eyes = [
         { x: headX - flip * size.width * 0.035, y: eyeY },
         { x: headX + flip * size.width * 0.055, y: eyeY + size.height * 0.095 },
@@ -149,6 +177,7 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
       ctx.lineWidth = 1;
     }
 
+    drawSharkHealthBar(ctx, shark, sharkSprite ? spriteDrawSize(sharkSprite, shark.radius).height : shark.radius * 2);
     return;
   }
 
@@ -185,7 +214,7 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
     ctx.strokeStyle = "#020305";
     ctx.lineWidth = 3;
     const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
-    const eyeY = shark.pos.y - shark.radius * 0.25;
+    const eyeY = shark.pos.y - shark.radius * 0.1;
     for (const eyeX of [shark.pos.x + flip * shark.radius * 0.22, shark.pos.x + flip * shark.radius * 0.5]) {
       ctx.beginPath();
       ctx.moveTo(eyeX - 3, eyeY - 3);
@@ -196,6 +225,8 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
     }
     ctx.lineWidth = 1;
   }
+
+  drawSharkHealthBar(ctx, shark, shark.kind === "barracuda" ? shark.radius * 1.04 : shark.radius * 2);
 };
 
 export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
@@ -220,12 +251,12 @@ const drawWaterShade = (ctx: CanvasRenderingContext2D, width: number, height: nu
 };
 
 const drawWaveBands = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
-  for (let band = 0; band < 5; band += 1) {
+  for (let band = 0; band < 7; band += 1) {
     const yBase = height * (0.18 + band * 0.16);
-    const bandHeight = 18 + band * 2;
+    const bandHeight = 16 + band * 1.8;
     const drift = (time * (0.009 + band * 0.0015) + band * 41) % (width + 160);
 
-    ctx.fillStyle = band % 2 === 0 ? "rgba(47, 122, 114, 0.055)" : "rgba(82, 88, 135, 0.05)";
+    ctx.fillStyle = band % 2 === 0 ? "rgba(47, 122, 114, 0.064)" : "rgba(82, 88, 135, 0.056)";
     ctx.beginPath();
 
     for (let step = -160; step <= width + 160; step += 34) {

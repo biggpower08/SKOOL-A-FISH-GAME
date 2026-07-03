@@ -30,8 +30,8 @@ export const fishWakeFor = (fish: Fish): FishWake | null => {
   const typeScale = fish.typeId === "mahi-mahi" ? 1.22 : fish.typeId === "parrotfish" ? 1.08 : 1;
 
   return {
-    radius: fish.radius * (1.45 + speedRatio * 1.55) * typeScale,
-    strength: clamp((0.025 + speedRatio * 0.075) * typeScale, 0.025, 0.16),
+    radius: fish.radius * (1.58 + speedRatio * 1.72) * typeScale,
+    strength: clamp((0.032 + speedRatio * 0.086) * typeScale, 0.032, 0.18),
     velocity: fish.vel,
   };
 };

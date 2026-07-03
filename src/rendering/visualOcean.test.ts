@@ -51,9 +51,20 @@ describe("visual ocean readability", () => {
 
     expect(slow).toBeNull();
     expect(tilapia?.strength).toBeGreaterThan(0);
-    expect(tilapia?.strength).toBeLessThan(0.18);
+    expect(tilapia?.strength).toBeLessThanOrEqual(0.18);
     expect(mahi?.radius).toBeGreaterThan(tilapia?.radius ?? 0);
     expect(mahi?.strength).toBeGreaterThan(tilapia?.strength ?? 0);
+  });
+
+  it("draws shark health bars below sharks instead of beside them", () => {
+    expect(rendererSource).toContain("const drawSharkHealthBar");
+    expect(rendererSource).toContain("shark.pos.y + bodyHeight * 0.5 + 7");
+    expect(rendererSource).toContain('drawUnitHealthBar(ctx, shark.pos.x, y, width, 5, shark.health / shark.maxHealth, "#d8e1ea")');
+  });
+
+  it("places starved shark X-eyes lower on the head area", () => {
+    expect(rendererSource).toContain("const eyeY = shark.pos.y - size.height * 0.015");
+    expect(rendererSource).toContain("const eyeY = shark.pos.y - shark.radius * 0.1");
   });
 
   it("adds a subtle visual swim pose without changing gameplay position", () => {
