@@ -137,7 +137,7 @@ describe("upgrades", () => {
       "mahi-mahi": 1,
       grouper: 1,
     });
-    expect(run.lastRecoverySummary).toBe("Recovered 3 fish after the wave");
+    expect(run.lastRecoverySummary).toBe("Recovered 3 fish after the wave: +1 Tilapia, +1 Salmon, +1 Mahi-Mahi");
     expect(run.lastRecruitmentSummary).toBe("");
   });
 
