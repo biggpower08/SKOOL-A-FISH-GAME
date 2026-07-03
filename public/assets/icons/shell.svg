@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Shell icon">
+  <path fill="#d8b85f" stroke="#2b2430" stroke-width="4" stroke-linejoin="round" d="M10 44c3-18 12-28 22-28s19 10 22 28H10Z"/>
+  <path fill="#f4df91" d="M18 42c3-11 8-18 14-18s11 7 14 18H18Z"/>
+  <path fill="none" stroke="#7a5d33" stroke-width="3" stroke-linecap="round" d="M32 19v22M22 26l6 15M42 26l-6 15M15 36l10 7M49 36l-10 7"/>
+</svg>

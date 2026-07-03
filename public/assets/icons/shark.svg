@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Shark icon">
+  <path fill="#2d3a44" stroke="#0a1118" stroke-width="4" stroke-linejoin="round" d="M6 34c12-14 34-17 48-4l6-7v20l-6-7C40 49 18 48 6 34Z"/>
+  <path fill="#6f8491" d="M26 24l9-13 4 15-13-2Z"/>
+  <circle cx="46" cy="30" r="2.6" fill="#f5f7fa"/>
+  <path fill="none" stroke="#f5f7fa" stroke-width="2.5" stroke-linecap="round" d="M45 38l5-1"/>
+</svg>
