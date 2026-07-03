@@ -37,6 +37,10 @@ as visible card copy.
 The pipeline is intentionally compact. Add new artifact mechanics here before
 threading one-off checks through combat, UI, or save code.
 
+Artifact card text should describe these broad implemented modifiers. Avoid
+promising specific systems such as shop discounts, investment cleanup, targeting
+confusion, shark overshoot, or low-energy protection until those mechanics exist.
+
 ## Current Gameplay Hooks
 
 - School creation applies fish speed, health, evasion, and protection modifiers.

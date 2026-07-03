@@ -129,3 +129,5 @@ Check back with ChatGPT before:
 - Workstreams 1-3 are playable but still need browser-feel judgment, not just passing tests.
 - Early hardening found feedback stacking in recruitment/recovery screens and a background that could go darker.
 - Keep future hardening small: polish what the player sees, then stop.
+- All listed ECC production-line branches were merged into `main` before the July 3, 2026 merged-game QA pass.
+- Merged-game QA found copy/math mismatches rather than a major system regression: artifact cards now avoid unimplemented promises, and kelp recovery text reflects artifact-adjusted restore limits.

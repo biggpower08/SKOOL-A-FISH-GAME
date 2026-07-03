@@ -1,4 +1,5 @@
 import type { ArtifactId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
+import { getSchoolModifiers } from "../systems/artifactEffects";
 import { artifactBuildTagLabels, artifactDefinitions } from "../systems/artifacts";
 import { type ActiveFishTypeId, fishTypes, formatFishCountSummary, recruitmentChoices } from "../systems/fishTypes";
 import { getFishSprite } from "../rendering/sprites";
@@ -226,6 +227,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
 
   const missingFish = Math.max(0, handlers.run.maxFishCount - handlers.run.fishCount);
   const recoverableFish = Math.max(missingFish, totalFishCounts(handlers.run.lostFishCounts));
+  const kelpRestoreLimit = 5 + getSchoolModifiers(handlers.run).kelpRestoreBonus;
   const canKelp = handlers.run.currency >= 100 && recoverableFish > 0;
   const canInvest = handlers.run.currency >= 100 && handlers.run.invested === 0;
 
@@ -238,7 +240,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
         marker("fish-card-marker", "o"),
         note("Feed Kelp"),
         small("100 Shells"),
-        small(`Recover up to ${Math.min(5, recoverableFish)} fish`),
+        small(`Recover up to ${Math.min(kelpRestoreLimit, recoverableFish)} fish`),
         button("Feed Kelp", () => handlers.onChoose("heal"), !canKelp),
       ]),
       card("choice-card", [

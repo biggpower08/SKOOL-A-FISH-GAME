@@ -66,4 +66,13 @@ describe("artifact definitions", () => {
     expect(artifactDefinitions.find((artifact) => artifact.id === "grouper-hard-hat")?.buildTags).toContain("grouper-protector");
     expect(artifactDefinitions.find((artifact) => artifact.id === "parrotfish-mood-ring")?.buildTags).toContain("parrotfish-evasion");
   });
+
+  it("keeps runtime artifact copy honest about implemented generic modifiers", () => {
+    expect(artifactDefinitions.find((artifact) => artifact.id === "suspicious-sea-coupon")?.effect).toBe("Wins pay a few more Shells.");
+    expect(artifactDefinitions.find((artifact) => artifact.id === "shark-detour-sign")?.effect).toBe("Sharks lose a little speed.");
+    expect(artifactDefinitions.find((artifact) => artifact.id === "reef-afterparty-pass")?.effect).toBe("Tilapia recruits arrive bigger.");
+    expect(artifactDefinitions.map((artifact) => artifact.effect).join(" ")).not.toMatch(
+      /shop prices|investments mature|targeting gets confused|overshoots|low energy|first bad bite|basic sharks|costs track|buy now|bold fish|forecast|bad advice/i,
+    );
+  });
 });
