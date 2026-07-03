@@ -155,6 +155,13 @@ const groupHealthRatio = (fish: Fish[]): number => {
 };
 
 const FISH_ROW_HEIGHT = 28;
+const sharkLabels: Record<Shark["kind"], string> = {
+  basic: "Norman",
+  fast: "Steezy",
+  center: "Bill",
+  barracuda: "Grog",
+  eel: "Eel",
+};
 
 export const schoolCounterText = (fish: Fish[], run: Pick<RunState, "fishCount" | "maxFishCount">): string => {
   const live = fish.filter((candidate) => !candidate.caught).length;
@@ -216,11 +223,12 @@ export const drawHud = (
   ctx.fillText("Sharks", x + 14, enemyY);
 
   summarizeSharks(sharks).forEach((summary, index) => {
-    const rowY = enemyY + 17 + index * 24;
+    const rowY = enemyY + 17 + index * 31;
     sharkMark(ctx, summary.kind, x + 23, rowY + 4);
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`x${summary.count}`, x + 39, rowY + 8);
-    drawBar(ctx, x + 62, rowY + 3, 70, 7, summary.totalHunger / summary.maxHunger, "#5f7186");
+    ctx.fillText(`${sharkLabels[summary.kind]} ${summary.count}`, x + 41, rowY + 2);
+    drawBar(ctx, x + 41, rowY + 8, 92, 5, summary.totalHealth / summary.maxHealth, "#d8e1ea");
+    drawBar(ctx, x + 41, rowY + 16, 92, 5, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
 
   ctx.fillStyle = "#6f7c89";

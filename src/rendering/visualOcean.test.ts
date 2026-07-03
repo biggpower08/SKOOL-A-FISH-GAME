@@ -56,15 +56,21 @@ describe("visual ocean readability", () => {
     expect(mahi?.strength).toBeGreaterThan(tilapia?.strength ?? 0);
   });
 
-  it("draws shark health bars below sharks instead of beside them", () => {
-    expect(rendererSource).toContain("const drawSharkHealthBar");
-    expect(rendererSource).toContain("shark.pos.y + bodyHeight * 0.5 + 7");
-    expect(rendererSource).toContain('drawUnitHealthBar(ctx, shark.pos.x, y, width, 5, shark.health / shark.maxHealth, "#d8e1ea")');
+  it("keeps shark health out of the playfield renderer", () => {
+    expect(rendererSource).not.toContain("drawSharkHealthBar");
+    expect(rendererSource).not.toContain("drawUnitHealthBar");
+    expect(rendererSource).not.toContain("shark.health / shark.maxHealth");
   });
 
-  it("places starved shark X-eyes lower on the head area", () => {
-    expect(rendererSource).toContain("const eyeY = shark.pos.y - size.height * 0.015");
-    expect(rendererSource).toContain("const eyeY = shark.pos.y - shark.radius * 0.1");
+  it("uses tint and accessories instead of dead shark X-eyes", () => {
+    expect(rendererSource).toContain("const sharkTintFor");
+    expect(rendererSource).toContain("const drawSharkAccessory");
+    expect(rendererSource).toContain('"Norman"');
+    expect(rendererSource).toContain('"Grog"');
+    expect(rendererSource).toContain('"Steezy"');
+    expect(rendererSource).toContain('"Bill"');
+    expect(rendererSource).not.toContain("eyeY");
+    expect(rendererSource).not.toContain("lineTo(eye.x + 3");
   });
 
   it("adds a subtle visual swim pose without changing gameplay position", () => {

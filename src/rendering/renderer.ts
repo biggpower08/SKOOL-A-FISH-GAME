@@ -23,34 +23,6 @@ const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius:
   ctx.fill();
 };
 
-const drawUnitHealthBar = (
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  ratio: number,
-  fill: string,
-): void => {
-  const safeRatio = Math.max(0, Math.min(1, ratio));
-  ctx.fillStyle = "rgba(3, 5, 8, 0.82)";
-  ctx.fillRect(x - width / 2, y, width, height);
-  ctx.fillStyle = fill;
-  ctx.fillRect(x - width / 2, y, width * safeRatio, height);
-  ctx.strokeStyle = "rgba(210, 222, 234, 0.56)";
-  ctx.strokeRect(x - width / 2, y, width, height);
-};
-
-const drawSharkHealthBar = (ctx: CanvasRenderingContext2D, shark: Shark, bodyHeight: number): void => {
-  if (shark.starved || shark.maxHealth <= 0) {
-    return;
-  }
-
-  const width = Math.max(28, shark.radius * 1.55);
-  const y = shark.pos.y + bodyHeight * 0.5 + 7;
-  drawUnitHealthBar(ctx, shark.pos.x, y, width, 5, shark.health / shark.maxHealth, "#d8e1ea");
-};
-
 const getCachedSprite = (sprite: SpriteManifestEntry): SpriteCacheEntry | undefined => {
   if (typeof Image === "undefined") {
     return undefined;
@@ -149,45 +121,89 @@ const drawSprite = (
   return true;
 };
 
+const sharkNames: Record<Shark["kind"], string> = {
+  basic: "Norman",
+  fast: "Steezy",
+  center: "Bill",
+  barracuda: "Grog",
+  eel: "Eel",
+};
+
+const sharkTintFor = (shark: Shark): string | null => {
+  if (shark.starved || shark.health <= 0) {
+    return "rgba(135, 152, 164, 0.58)";
+  }
+
+  const healthRatio = shark.health / Math.max(1, shark.maxHealth);
+
+  if (healthRatio < 0.35) {
+    return "rgba(210, 72, 84, 0.34)";
+  }
+
+  if (healthRatio < 0.68) {
+    return "rgba(210, 157, 82, 0.22)";
+  }
+
+  return null;
+};
+
+const drawSharkAccessory = (ctx: CanvasRenderingContext2D, shark: Shark, bodyWidth: number, bodyHeight: number): void => {
+  const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
+  const headX = shark.pos.x + flip * bodyWidth * 0.23;
+  const topY = shark.pos.y - bodyHeight * 0.28;
+
+  ctx.save();
+  ctx.lineWidth = 2;
+
+  if (sharkNames[shark.kind] === "Grog") {
+    ctx.fillStyle = "#2f2630";
+    ctx.strokeStyle = "#d8c27a";
+    ctx.fillRect(headX - 8, topY - 8, 16, 8);
+    ctx.beginPath();
+    ctx.moveTo(headX - 12, topY);
+    ctx.lineTo(headX + 12, topY);
+    ctx.stroke();
+  }
+
+  if (sharkNames[shark.kind] === "Steezy") {
+    ctx.strokeStyle = "#d8c27a";
+    ctx.beginPath();
+    ctx.arc(headX + flip * 5, shark.pos.y + bodyHeight * 0.08, 4, 0.3, Math.PI * 1.35);
+    ctx.stroke();
+  }
+
+  if (sharkNames[shark.kind] === "Bill") {
+    ctx.fillStyle = "#6f7c89";
+    ctx.beginPath();
+    ctx.moveTo(headX + flip * 10, shark.pos.y - 2);
+    ctx.lineTo(headX + flip * 22, shark.pos.y + 4);
+    ctx.lineTo(headX + flip * 9, shark.pos.y + 8);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.restore();
+};
+
 const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   const sharkSprite = getSharkSprite(shark.kind);
-  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, 1, null, shark.facingX);
+  const tint = sharkTintFor(shark);
+  const alpha = shark.starved ? 0.68 : 1;
+  const spriteSize = sharkSprite ? spriteDrawSize(sharkSprite, shark.radius) : { width: shark.radius * 2, height: shark.radius * 2 };
+  const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, alpha, tint, shark.facingX);
 
   if (drewSprite) {
-    if (shark.starved) {
-      ctx.strokeStyle = "#020305";
-      ctx.lineWidth = 3;
-      const size = sharkSprite ? spriteDrawSize(sharkSprite, shark.radius) : { width: shark.radius * 2, height: shark.radius * 2 };
-      const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
-      const headX = shark.pos.x + flip * size.width * 0.23;
-      const eyeY = shark.pos.y - size.height * 0.015;
-      const eyes = [
-        { x: headX - flip * size.width * 0.035, y: eyeY },
-        { x: headX + flip * size.width * 0.055, y: eyeY + size.height * 0.095 },
-      ];
-
-      for (const eye of eyes) {
-        ctx.beginPath();
-        ctx.moveTo(eye.x - 3, eye.y - 3);
-        ctx.lineTo(eye.x + 3, eye.y + 3);
-        ctx.moveTo(eye.x + 3, eye.y - 3);
-        ctx.lineTo(eye.x - 3, eye.y + 3);
-        ctx.stroke();
-      }
-      ctx.lineWidth = 1;
-    }
-
-    drawSharkHealthBar(ctx, shark, sharkSprite ? spriteDrawSize(sharkSprite, shark.radius).height : shark.radius * 2);
+    drawSharkAccessory(ctx, shark, spriteSize.width, spriteSize.height);
     return;
   }
 
   if (shark.kind === "barracuda") {
-    ctx.fillStyle = "#151a20";
+    ctx.fillStyle = tint ?? "#151a20";
     ctx.beginPath();
     ctx.ellipse(shark.pos.x, shark.pos.y, shark.radius * 1.35, shark.radius * 0.52, 0, 0, Math.PI * 2);
     ctx.fill();
   } else {
-    drawCircle(ctx, shark.pos.x, shark.pos.y, shark.radius, "#151a20");
+    drawCircle(ctx, shark.pos.x, shark.pos.y, shark.radius, tint ?? "#151a20");
   }
 
   ctx.strokeStyle = shark.starved ? "#aeb7c2" : "#5b6470";
@@ -210,23 +226,7 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
     drawCircle(ctx, shark.pos.x, shark.pos.y, 3, "#8f9aa7");
   }
 
-  if (shark.starved) {
-    ctx.strokeStyle = "#020305";
-    ctx.lineWidth = 3;
-    const flip = shark.facingX ?? (shark.vel.x < -0.18 ? -1 : 1);
-    const eyeY = shark.pos.y - shark.radius * 0.1;
-    for (const eyeX of [shark.pos.x + flip * shark.radius * 0.22, shark.pos.x + flip * shark.radius * 0.5]) {
-      ctx.beginPath();
-      ctx.moveTo(eyeX - 3, eyeY - 3);
-      ctx.lineTo(eyeX + 3, eyeY + 3);
-      ctx.moveTo(eyeX + 3, eyeY - 3);
-      ctx.lineTo(eyeX - 3, eyeY + 3);
-      ctx.stroke();
-    }
-    ctx.lineWidth = 1;
-  }
-
-  drawSharkHealthBar(ctx, shark, shark.kind === "barracuda" ? shark.radius * 1.04 : shark.radius * 2);
+  drawSharkAccessory(ctx, shark, shark.kind === "barracuda" ? shark.radius * 2.7 : shark.radius * 2, shark.kind === "barracuda" ? shark.radius * 1.04 : shark.radius * 2);
 };
 
 export const drawBackground = (ctx: CanvasRenderingContext2D, width: number, height: number): void => {
