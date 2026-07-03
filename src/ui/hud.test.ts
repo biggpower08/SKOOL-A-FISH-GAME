@@ -28,7 +28,7 @@ describe("HUD school counter", () => {
       fishCounts: { tilapia: 2 },
     };
 
-    expect(schoolCounterText([makeFish("a"), makeFish("b"), makeFish("c", true)], run)).toBe("Fish 2 / 54");
+    expect(schoolCounterText([makeFish("a"), makeFish("b"), makeFish("c", true)], run)).toBe("2 / 54");
   });
 
   it("keeps fish health bars clear of longer sidebar names", () => {
@@ -40,5 +40,9 @@ describe("HUD school counter", () => {
     expect(hudSource).not.toContain("Best L");
     expect(hudSource).not.toContain("Build ${buildHintForRun(run)}");
     expect(hudSource).not.toContain("run.schoolEnergy / 110");
+    expect(hudSource).not.toContain('"School"');
+    expect(hudSource).not.toContain('"Sharks"');
+    expect(hudSource).not.toContain("Shells ${run.currency}");
+    expect(hudSource).not.toContain("BUILD_LABEL");
   });
 });

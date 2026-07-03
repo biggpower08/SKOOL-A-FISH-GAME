@@ -5,7 +5,6 @@ import { getFishSprite, getSharkSprite } from "../rendering/sprites";
 import type { SpriteManifestEntry } from "../game/types";
 
 const PANEL_WIDTH = 164;
-const BUILD_LABEL = "v0.1.0 ocean-recruit";
 
 type HudSpriteCacheEntry = {
   image: HTMLImageElement;
@@ -96,6 +95,18 @@ const fallbackFishMark = (ctx: CanvasRenderingContext2D, x: number, y: number, c
   ctx.fill();
 };
 
+const shellMark = (ctx: CanvasRenderingContext2D, x: number, y: number): void => {
+  ctx.fillStyle = "#d8c27a";
+  ctx.strokeStyle = "#f4e3a3";
+  ctx.beginPath();
+  ctx.arc(x, y + 2, 7, Math.PI, 0);
+  ctx.lineTo(x + 7, y + 6);
+  ctx.lineTo(x - 7, y + 6);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+};
+
 const sharkMark = (ctx: CanvasRenderingContext2D, kind: Shark["kind"], x: number, y: number): void => {
   if (drawHudThumbnail(ctx, getSharkSprite(kind), x + 1, y, 28, 16)) {
     return;
@@ -155,12 +166,19 @@ const groupHealthRatio = (fish: Fish[]): number => {
 };
 
 const FISH_ROW_HEIGHT = 28;
+const sharkLabels: Record<Shark["kind"], string> = {
+  basic: "Basic",
+  fast: "Fast",
+  center: "Center",
+  barracuda: "Striker",
+  eel: "Eel",
+};
 
 export const schoolCounterText = (fish: Fish[], run: Pick<RunState, "fishCount" | "maxFishCount">): string => {
   const live = fish.filter((candidate) => !candidate.caught).length;
   const total = Math.max(live, run.fishCount, run.maxFishCount);
 
-  return `Fish ${live} / ${total}`;
+  return `${live} / ${total}`;
 };
 
 export const drawHud = (
@@ -184,25 +202,25 @@ export const drawHud = (
 
   ctx.fillStyle = "#f8fbff";
   ctx.font = "12px system-ui, sans-serif";
-  ctx.fillText(`L${config.level}`, x + 14, 26);
-  ctx.fillText(schoolCounterText(fish, run), x + 52, 26);
-  ctx.fillText(`Shells ${run.currency}`, x + 14, 43);
+  ctx.fillText(`L${config.level}`, x - 42, 26);
+  fallbackFishMark(ctx, x + 22, 24, "#d8e1ea");
+  ctx.fillText(schoolCounterText(fish, run), x + 40, 28);
+  shellMark(ctx, x + 22, 43);
+  ctx.fillText(String(run.currency), x + 40, 47);
 
   const feedback = run.lastRecoverySummary || run.lastRecruitmentSummary;
-  const schoolY = feedback ? 86 : 70;
+  const schoolY = feedback ? 82 : 62;
 
   if (feedback) {
     ctx.fillStyle = "#d8e1ea";
     ctx.fillText(feedback.slice(0, 28), x + 14, 64);
   }
 
-  ctx.fillStyle = "#8f9aa7";
   ctx.font = "12px system-ui, sans-serif";
-  ctx.fillText("School", x + 14, schoolY);
 
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
-    const rowY = schoolY + 18 + index * FISH_ROW_HEIGHT;
+    const rowY = schoolY + index * FISH_ROW_HEIGHT;
     if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), x + 22, rowY + 4, 24, 15)) {
       fallbackFishMark(ctx, x + 22, rowY + 4, definition.color);
     }
@@ -211,19 +229,13 @@ export const drawHud = (
     drawBar(ctx, x + 41, rowY + 14, 92, 5, groupHealthRatio(summary.alive), definition.color);
   });
 
-  const enemyY = schoolY + 30 + summarizeFish(fish).length * FISH_ROW_HEIGHT;
-  ctx.fillStyle = "#8f9aa7";
-  ctx.fillText("Sharks", x + 14, enemyY);
+  const enemyY = schoolY + 12 + summarizeFish(fish).length * FISH_ROW_HEIGHT;
 
   summarizeSharks(sharks).forEach((summary, index) => {
-    const rowY = enemyY + 17 + index * 24;
+    const rowY = enemyY + index * 24;
     sharkMark(ctx, summary.kind, x + 23, rowY + 4);
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`x${summary.count}`, x + 39, rowY + 8);
-    drawBar(ctx, x + 62, rowY + 3, 70, 7, summary.totalHunger / summary.maxHunger, "#5f7186");
+    ctx.fillText(`${sharkLabels[summary.kind]} ${summary.count}`, x + 41, rowY + 8);
+    drawBar(ctx, x + 41, rowY + 14, 92, 5, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
-
-  ctx.fillStyle = "#6f7c89";
-  ctx.font = "10px system-ui, sans-serif";
-  ctx.fillText(BUILD_LABEL, x + 14, height - 16);
 };
