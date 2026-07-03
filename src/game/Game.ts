@@ -10,7 +10,7 @@ import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
-import { applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, lostFishCountsAfterRound, rewardFlowForCompletedLevel } from "../systems/upgrades";
+import { DEV_FREE_PURCHASES, applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, lostFishCountsAfterRound, rewardFlowForCompletedLevel } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
 import type { Bounds, Fish, FishTypeId, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
@@ -552,7 +552,7 @@ export class Game {
       return;
     }
 
-    this.run = isArtifactId(choice) ? applyArtifactReward(this.run, choice) : applyChoice(this.run, choice);
+    this.run = isArtifactId(choice) ? applyArtifactReward(this.run, choice) : applyChoice(this.run, choice, { freePurchases: DEV_FREE_PURCHASES });
     saveRun(this.run);
     this.startLevel();
   }

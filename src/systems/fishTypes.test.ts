@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fishTypeDefinitions, fishTypes, recruitmentChoices } from "./fishTypes";
+import { fishTypeDefinitions, fishTypes, recruitmentChoices, recruitmentChoicesForLevel } from "./fishTypes";
 
 describe("fish type definitions", () => {
   it("keeps each recruitable fish mechanically distinct and readable", () => {
@@ -70,18 +70,36 @@ describe("fish type definitions", () => {
     });
     expect(choicesById.parrotfish).toMatchObject({
       amount: 4,
-      shellCost: 8,
+      shellCost: 70,
       fishCounts: { parrotfish: 4 },
     });
     expect(choicesById["mahi-mahi"]).toMatchObject({
       amount: 4,
-      shellCost: 8,
+      shellCost: 75,
       fishCounts: { "mahi-mahi": 4 },
     });
     expect(choicesById.grouper).toMatchObject({
       amount: 5,
-      shellCost: 12,
+      shellCost: 110,
       fishCounts: { grouper: 2, salmon: 3 },
+    });
+  });
+
+  it("varies recruit bundles by level while keeping basic free choices", () => {
+    const levelTwelve = Object.fromEntries(recruitmentChoicesForLevel(12).map((choice) => [choice.id, choice]));
+    const levelFifteen = Object.fromEntries(recruitmentChoicesForLevel(15).map((choice) => [choice.id, choice]));
+
+    expect(levelTwelve.tilapia).toMatchObject({
+      shellCost: 0,
+      fishCounts: { tilapia: 7, salmon: 2 },
+    });
+    expect(levelTwelve.salmon).toMatchObject({
+      shellCost: 0,
+      fishCounts: { salmon: 8 },
+    });
+    expect(levelTwelve.parrotfish?.shellCost).toBeGreaterThan(recruitmentChoices.find((choice) => choice.id === "parrotfish")?.shellCost ?? 0);
+    expect(levelFifteen.grouper).toMatchObject({
+      fishCounts: { grouper: 3, salmon: 2 },
     });
   });
 });

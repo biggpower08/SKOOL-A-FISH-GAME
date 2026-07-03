@@ -4,12 +4,16 @@ import { activeFishTypeIds, defaultFishCounts, fishTypes, formatFishCountSummary
 import { clamp } from "./vector";
 
 export const STARTING_FISH_COUNT = 54;
+export const DEV_FREE_PURCHASES = import.meta.env.MODE === "development";
 const KELP_COST = 100;
 const KELP_RESTORE_COUNT = 5;
 const INVESTMENT_AMOUNT = 100;
 const INVESTMENT_RETURN_ROUNDS = 3;
 const ACTIVE_RECRUIT_TYPES = new Set<FishTypeId>(["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"]);
 type FishCountMap = Partial<Record<FishTypeId, number>>;
+type ChoiceOptions = {
+  freePurchases?: boolean;
+};
 
 export const createNewRun = (): RunState => ({
   level: 1,
@@ -215,12 +219,13 @@ export const applyRoundRecovery = (run: RunState, roundLostCounts: FishCountMap)
   );
 };
 
-export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
+export const applyChoice = (run: RunState, choice: ChoiceId, options: ChoiceOptions = {}): RunState => {
   const modifiers = getSchoolModifiers(run);
-  const recruitmentChoice = getRecruitmentChoice(choice);
+  const freePurchases = options.freePurchases ?? DEV_FREE_PURCHASES;
+  const recruitmentChoice = getRecruitmentChoice(choice, run.level);
 
   if (recruitmentChoice) {
-    if (run.currency < recruitmentChoice.shellCost) {
+    if (!freePurchases && run.currency < recruitmentChoice.shellCost) {
       return {
         ...run,
         lastRecruitmentSummary: "Not enough Shells",
@@ -238,7 +243,7 @@ export const applyChoice = (run: RunState, choice: ChoiceId): RunState => {
 
     return {
       ...run,
-      currency: run.currency - recruitmentChoice.shellCost,
+      currency: freePurchases ? Math.max(0, run.currency - recruitmentChoice.shellCost) : run.currency - recruitmentChoice.shellCost,
       fishCount: run.fishCount + fishToAdd,
       maxFishCount: Math.max(run.maxFishCount, run.fishCount) + fishToAdd,
       fishCounts: addFishCounts(run.fishCounts, fishCounts),

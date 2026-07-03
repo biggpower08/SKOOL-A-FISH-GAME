@@ -1,6 +1,7 @@
 import type { ArtifactId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
 import { artifactDefinitions } from "../systems/artifacts";
-import { type ActiveFishTypeId, fishTypes, formatFishCountSummary, recruitmentChoices } from "../systems/fishTypes";
+import { type ActiveFishTypeId, fishTypes, formatFishCountSummary, recruitmentChoicesForLevel } from "../systems/fishTypes";
+import { DEV_FREE_PURCHASES } from "../systems/upgrades";
 import { getFishSprite } from "../rendering/sprites";
 
 type HomeHandlers = {
@@ -162,11 +163,12 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
       ...feedbackNotes(handlers.run),
       card(
         "choice-grid recruit-choice-grid",
-        recruitmentChoices.map((option) => {
+        recruitmentChoicesForLevel(handlers.run.level).map((option) => {
           const definition = fishTypes[option.id];
-          const affordable = handlers.run.currency >= option.shellCost;
+          const affordable = handlers.run.currency >= option.shellCost || DEV_FREE_PURCHASES;
           const costText = option.shellCost === 0 ? "Free" : `${option.shellCost} Shells`;
           const lockedText = `Need ${option.shellCost - handlers.run.currency} Shells`;
+          const buttonText = handlers.run.currency < option.shellCost && DEV_FREE_PURCHASES ? "Dev Buy" : "Add to School";
 
           return card(`choice-card recruit-choice-card${affordable ? "" : " locked"}`, [
             fishMarker(option.id),
@@ -176,7 +178,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
             small(definition.description),
             small(definition.mechanics),
             small(`Add ${formatFishCountSummary(option.fishCounts)}`),
-            button(affordable ? "Add to School" : lockedText, () => handlers.onChoose(option.id), !affordable),
+            button(affordable ? buttonText : lockedText, () => handlers.onChoose(option.id), !affordable),
           ]);
         }),
       ),

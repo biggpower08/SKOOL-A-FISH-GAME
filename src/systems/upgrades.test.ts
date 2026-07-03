@@ -27,11 +27,11 @@ describe("upgrades", () => {
   });
 
   it("recruits fast fish through adoption choices", () => {
-    const parrotfish = applyChoice({ ...createNewRun(), currency: 12 }, "parrotfish");
-    const mahi = applyChoice({ ...createNewRun(), currency: 12 }, "mahi-mahi");
+    const parrotfish = applyChoice({ ...createNewRun(), currency: 90 }, "parrotfish");
+    const mahi = applyChoice({ ...createNewRun(), currency: 90 }, "mahi-mahi");
 
     expect(parrotfish.fishCounts.parrotfish).toBe(4);
-    expect(parrotfish.currency).toBe(4);
+    expect(parrotfish.currency).toBe(20);
     expect(parrotfish.maxFishCount).toBe(58);
     expect(mahi.fishCounts["mahi-mahi"]).toBe(4);
   });
@@ -46,15 +46,33 @@ describe("upgrades", () => {
   });
 
   it("buys mixed fish bundles with Shells and updates school capacity", () => {
-    const run = applyChoice({ ...createNewRun(), currency: 15, lastRecoverySummary: "Recovered 2 fish after the wave" }, "grouper");
+    const run = applyChoice({ ...createNewRun(), currency: 130, lastRecoverySummary: "Recovered 2 fish after the wave" }, "grouper");
 
-    expect(run.currency).toBe(3);
+    expect(run.currency).toBe(20);
     expect(run.fishCount).toBe(59);
     expect(run.maxFishCount).toBe(59);
     expect(run.fishCounts.grouper).toBe(2);
     expect(run.fishCounts.salmon).toBe(3);
     expect(run.lastRecruitmentSummary).toBe("School grew! +2 Grouper, +3 Salmon");
     expect(run.lastRecoverySummary).toBe("");
+  });
+
+  it("allows dev-mode recruitment bypass without negative Shells", () => {
+    const run = applyChoice({ ...createNewRun(), currency: 0 }, "grouper", { freePurchases: true });
+
+    expect(run.currency).toBe(0);
+    expect(run.fishCount).toBe(59);
+    expect(run.fishCounts.grouper).toBe(2);
+    expect(run.lastRecruitmentSummary).toBe("School grew! +2 Grouper, +3 Salmon");
+  });
+
+  it("uses level-varying recruitment bundles during application", () => {
+    const run = applyChoice({ ...createNewRun(), level: 12, currency: 150 }, "parrotfish");
+
+    expect(run.fishCounts.parrotfish).toBe(4);
+    expect(run.fishCounts.tilapia).toBe(57);
+    expect(run.fishCount).toBe(61);
+    expect(run.currency).toBe(16);
   });
 
   it("invests 100 Shells and returns double after three completed rounds", () => {

@@ -166,7 +166,7 @@ export const fishTypes = Object.fromEntries(
   fishTypeDefinitions.map((definition) => [definition.id, definition]),
 ) as Record<ActiveFishTypeId, FishTypeDefinition>;
 
-const recruitmentBundles: Record<ActiveFishTypeId, FishRecruitCounts> = {
+const baseRecruitmentBundles: Record<ActiveFishTypeId, FishRecruitCounts> = {
   tilapia: { tilapia: 8 },
   salmon: { salmon: 5 },
   parrotfish: { parrotfish: 4 },
@@ -174,24 +174,61 @@ const recruitmentBundles: Record<ActiveFishTypeId, FishRecruitCounts> = {
   grouper: { grouper: 2, salmon: 3 },
 };
 
-const recruitmentShellCosts: Record<ActiveFishTypeId, number> = {
+const baseRecruitmentShellCosts: Record<ActiveFishTypeId, number> = {
   tilapia: 0,
   salmon: 0,
-  parrotfish: 8,
-  "mahi-mahi": 8,
-  grouper: 12,
+  parrotfish: 70,
+  "mahi-mahi": 75,
+  grouper: 110,
 };
 
 const countFishBundle = (fishCounts: FishRecruitCounts): number =>
   Object.values(fishCounts).reduce((sum, count) => sum + (count ?? 0), 0);
 
-export const recruitmentChoices: RecruitmentChoice[] = fishTypeDefinitions.map((definition) => {
-  const fishCounts = recruitmentBundles[definition.id];
+const bundleForLevel = (typeId: ActiveFishTypeId, level: number): FishRecruitCounts => {
+  const safeLevel = Math.max(1, Math.floor(level));
+
+  if (typeId === "tilapia" && safeLevel >= 10 && safeLevel % 2 === 0) {
+    return { tilapia: 7, salmon: 2 };
+  }
+
+  if (typeId === "salmon" && safeLevel % 4 === 0) {
+    return { salmon: 8 };
+  }
+
+  if (typeId === "parrotfish" && safeLevel % 3 === 0) {
+    return { parrotfish: 4, tilapia: 3 };
+  }
+
+  if (typeId === "mahi-mahi" && safeLevel > 1 && safeLevel % 4 === 1) {
+    return { "mahi-mahi": 5 };
+  }
+
+  if (typeId === "grouper" && safeLevel % 5 === 0) {
+    return { grouper: 3, salmon: 2 };
+  }
+
+  return baseRecruitmentBundles[typeId];
+};
+
+const shellCostForLevel = (typeId: ActiveFishTypeId, level: number, fishCounts: FishRecruitCounts): number => {
+  const baseCost = baseRecruitmentShellCosts[typeId];
+
+  if (baseCost === 0) {
+    return 0;
+  }
+
+  const extraFish = Math.max(0, countFishBundle(fishCounts) - countFishBundle(baseRecruitmentBundles[typeId]));
+  return baseCost + extraFish * 18 + Math.floor(Math.max(0, level - 1) / 10) * 10;
+};
+
+export const recruitmentChoicesForLevel = (level: number): RecruitmentChoice[] => fishTypeDefinitions.map((definition) => {
+  const fishCounts = bundleForLevel(definition.id, level);
 
   return {
     id: definition.id,
     amount: countFishBundle(fishCounts),
-    shellCost: recruitmentShellCosts[definition.id],
+    shellCost: shellCostForLevel(definition.id, level, fishCounts),
     fishCounts,
     role: definition.role,
     description: definition.description,
@@ -200,8 +237,10 @@ export const recruitmentChoices: RecruitmentChoice[] = fishTypeDefinitions.map((
   };
 });
 
-export const getRecruitmentChoice = (typeId: string): RecruitmentChoice | undefined =>
-  recruitmentChoices.find((choice) => choice.id === typeId);
+export const recruitmentChoices: RecruitmentChoice[] = recruitmentChoicesForLevel(1);
+
+export const getRecruitmentChoice = (typeId: string, level = 1): RecruitmentChoice | undefined =>
+  recruitmentChoicesForLevel(level).find((choice) => choice.id === typeId);
 
 export const formatFishCountSummary = (fishCounts: Partial<Record<FishTypeId, number>>): string =>
   Object.entries(fishCounts)
