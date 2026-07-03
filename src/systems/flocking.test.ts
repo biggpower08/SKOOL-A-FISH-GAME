@@ -318,4 +318,92 @@ describe("updateFlocking", () => {
     expect(fish[0].pos.x).toBeGreaterThan(180);
     expect(Math.hypot(fish[0].vel.x, fish[0].vel.y)).toBeLessThanOrEqual(fish[0].maxSpeed);
   });
+
+  it("steers fish sideways out of a shark attack path", () => {
+    const fish: Fish[] = [
+      {
+        id: "lane-fish",
+        kind: "basic",
+        typeId: "salmon",
+        className: "normal",
+        pos: { x: 160, y: 103 },
+        vel: { x: 0, y: 0 },
+        radius: 4,
+        maxSpeed: 2.2,
+        health: 3,
+        maxHealth: 3,
+        threatened: false,
+        caught: false,
+      },
+    ];
+    const shark: Shark = {
+      id: "lane-shark",
+      kind: "basic",
+      pos: { x: 100, y: 100 },
+      vel: { x: 2.2, y: 0 },
+      radius: 24,
+      health: 100,
+      maxHealth: 100,
+      hunger: 60,
+      maxHunger: 60,
+      hungerDrain: 1,
+      speed: 2.2,
+      acceleration: 0.22,
+      attackCooldown: 0.2,
+      attackRate: 4,
+      attackRadius: 140,
+      starved: false,
+    };
+
+    updateFlocking(fish, [shark], {
+      width: 400,
+      height: 300,
+      threatRadius: 120,
+      dt: 1,
+    });
+
+    expect(fish[0].vel.y).toBeGreaterThan(0.35);
+  });
+
+  it("lets evasive fish react harder to shark danger paths than tanks", () => {
+    const makeFish = (typeId: Fish["typeId"], className: Fish["className"], y: number, maxSpeed: number): Fish => ({
+      id: `${typeId}-lane`,
+      kind: "basic",
+      typeId,
+      className,
+      pos: { x: 160, y },
+      vel: { x: 0, y: 0 },
+      radius: 4,
+      maxSpeed,
+      health: 2,
+      maxHealth: 2,
+      threatened: false,
+      caught: false,
+    });
+    const shark: Shark = {
+      id: "role-shark",
+      kind: "basic",
+      pos: { x: 100, y: 100 },
+      vel: { x: 2.2, y: 0 },
+      radius: 24,
+      health: 100,
+      maxHealth: 100,
+      hunger: 60,
+      maxHunger: 60,
+      hungerDrain: 1,
+      speed: 2.2,
+      acceleration: 0.22,
+      attackCooldown: 0.2,
+      attackRate: 4,
+      attackRadius: 140,
+      starved: false,
+    };
+    const parrotfish = [makeFish("parrotfish", "fast", 103, 2.38)];
+    const grouper = [makeFish("grouper", "tank", 103, 1.62)];
+
+    updateFlocking(parrotfish, [shark], { width: 400, height: 300, threatRadius: 120, dt: 1 });
+    updateFlocking(grouper, [shark], { width: 400, height: 300, threatRadius: 120, dt: 1 });
+
+    expect(Math.abs(parrotfish[0].vel.y)).toBeGreaterThan(Math.abs(grouper[0].vel.y));
+  });
 });
