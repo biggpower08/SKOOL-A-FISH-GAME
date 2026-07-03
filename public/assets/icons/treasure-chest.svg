@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Treasure chest icon">
+  <path fill="#7b4a24" stroke="#251610" stroke-width="4" stroke-linejoin="round" d="M12 28h40v24H12z"/>
+  <path fill="#b87534" stroke="#251610" stroke-width="4" stroke-linejoin="round" d="M14 28c2-10 9-16 18-16s16 6 18 16H14Z"/>
+  <path fill="#d8b85f" d="M29 28h6v24h-6zM12 36h40v5H12z"/>
+  <rect x="27" y="34" width="10" height="9" rx="2" fill="#f4df91" stroke="#251610" stroke-width="3"/>
+</svg>

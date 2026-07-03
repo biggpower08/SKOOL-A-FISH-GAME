@@ -22,13 +22,37 @@ without creating a heavy asset pipeline.
 5. Kelp Bandage: recovery.
 6. Drift Scale: fast fish survival.
 
+## Placeholder Asset Set
+
+Original SVG placeholders now live in `public/assets/icons/`:
+
+- `shell.svg` for Shell economy and reward UI.
+- `fish.svg` for school size, recruitment, and fish-count UI.
+- `shark.svg` for enemy status and anti-shark artifacts.
+- `treasure-chest.svg` for artifact rewards and shop/economy cards.
+
+These are repo-owned placeholders, not downloaded clipart. They are safe to use
+until final transparent PNG artifact icons are generated or commissioned.
+
 ## Sprite/Icon Rules
 
 - Transparent PNG with true alpha.
+- SVG placeholders are acceptable only for generic UI/icon scaffolding.
 - One readable object per icon.
 - Thick cartoon outline and high contrast at small size.
 - No text, UI panels, fake checkerboard transparency, or water background.
 - Keep fallback glyphs available until every icon exists.
+
+## Transparent Icon Prompt Rules
+
+- Ask for one centered object on a transparent background.
+- Keep the object fully visible with no crop.
+- Use chunky cartoon shape language and a dark outline.
+- Avoid tiny written labels, UI cards, water scenes, and realistic stock-photo
+  texture.
+- Match the artifact's implemented function. If an artifact only adds `+8%`
+  Shell rewards, show a Shell/economy object rather than promising a shop
+  discount.
 
 ## Later Priority Groups
 
