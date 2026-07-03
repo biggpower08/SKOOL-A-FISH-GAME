@@ -5,4 +5,10 @@ describe("choice screens", () => {
   it("shows exact Shell shortage on locked recruit buttons", () => {
     expect(screensSource).toContain("Need ${option.shellCost - handlers.run.currency} Shells");
   });
+
+  it("does not render an empty artifact-choice screen when artifacts are exhausted", () => {
+    expect(screensSource).toContain("if (choices.length === 0)");
+    expect(screensSource).toContain("All Artifacts Collected");
+    expect(screensSource).toContain("Bonus Shells awarded.");
+  });
 });

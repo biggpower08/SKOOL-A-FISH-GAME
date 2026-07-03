@@ -189,6 +189,18 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
   if (handlers.mode === "artifact") {
     const choices = artifactDefinitions.filter((artifact) => !handlers.run.ownedArtifacts.includes(artifact.id)).slice(0, 3);
 
+    if (choices.length === 0) {
+      overlay.replaceChildren(
+        title("All Artifacts Collected"),
+        note("Bonus Shells awarded."),
+        ...feedbackNotes(handlers.run),
+        button("Continue", handlers.onContinue),
+        button("Home", handlers.onHome),
+        button("End Run", handlers.onEndRun),
+      );
+      return;
+    }
+
     overlay.replaceChildren(
       title("Choose Artifact"),
       ...feedbackNotes(handlers.run),

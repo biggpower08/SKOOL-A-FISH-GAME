@@ -10,7 +10,17 @@ import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
-import { applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, lostFishCountsAfterRound, rewardFlowForCompletedLevel } from "../systems/upgrades";
+import {
+  applyArtifactExhaustionFallback,
+  applyArtifactReward,
+  applyChoice,
+  applyLevelReward,
+  applyRoundRecovery,
+  createNewRun,
+  hasArtifactChoicesRemaining,
+  lostFishCountsAfterRound,
+  rewardFlowForCompletedLevel,
+} from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
 import type { Bounds, Fish, FishTypeId, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
@@ -534,6 +544,12 @@ export class Game {
   private showIntermission(rewardMode = rewardFlowForCompletedLevel(Math.max(0, (this.run?.level ?? 1) - 1))): void {
     if (!this.run) {
       return;
+    }
+
+    if (rewardMode === "artifact" && !hasArtifactChoicesRemaining(this.run)) {
+      this.run = applyArtifactExhaustionFallback(this.run);
+      saveRun(this.run);
+      rewardMode = "none";
     }
 
     this.screen = "choice";

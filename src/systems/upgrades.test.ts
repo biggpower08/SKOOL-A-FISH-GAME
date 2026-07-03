@@ -1,6 +1,17 @@
 import { describe, expect, it } from "vitest";
 import { createLevelConfig } from "./levels";
-import { applyArtifactReward, applyChoice, applyLevelReward, applyRoundRecovery, createNewRun, rewardFlowForCompletedLevel } from "./upgrades";
+import {
+  ARTIFACT_EXHAUSTION_SHELL_BONUS,
+  applyArtifactExhaustionFallback,
+  applyArtifactReward,
+  applyChoice,
+  applyLevelReward,
+  applyRoundRecovery,
+  createNewRun,
+  hasArtifactChoicesRemaining,
+  rewardFlowForCompletedLevel,
+} from "./upgrades";
+import { artifactDefinitions } from "./artifacts";
 
 describe("upgrades", () => {
   it("starts with managed fish and no active support fish", () => {
@@ -179,6 +190,19 @@ describe("upgrades", () => {
 
     expect(first.ownedArtifacts).toEqual(["bubble-net"]);
     expect(second.ownedArtifacts).toEqual(["bubble-net"]);
+  });
+
+  it("detects artifact exhaustion and grants fallback Shells", () => {
+    const allArtifacts = artifactDefinitions.map((artifact) => artifact.id);
+    const exhausted = { ...createNewRun(), currency: 40, ownedArtifacts: allArtifacts };
+
+    expect(hasArtifactChoicesRemaining(exhausted)).toBe(false);
+
+    const fallback = applyArtifactExhaustionFallback(exhausted);
+
+    expect(fallback.currency).toBe(40 + ARTIFACT_EXHAUSTION_SHELL_BONUS);
+    expect(fallback.ownedArtifacts).toEqual(allArtifacts);
+    expect(fallback.lastRecruitmentSummary).toBe(`All artifacts collected: +${ARTIFACT_EXHAUSTION_SHELL_BONUS} Shells`);
   });
 
   it("alternates reward popups by completed level interval", () => {
