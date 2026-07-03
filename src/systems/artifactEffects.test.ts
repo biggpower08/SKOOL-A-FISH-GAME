@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { artifactDefinitions } from "./artifacts";
 import { createNewRun } from "./upgrades";
 import { buildHintForRun, getSchoolModifiers } from "./artifactEffects";
 
@@ -54,5 +55,16 @@ describe("artifact effect modifiers", () => {
     };
 
     expect(buildHintForRun(run)).toBe("Parrotfish dodge");
+  });
+
+  it("keeps artifact copy numeric and out of baseline-fix language", () => {
+    const byId = Object.fromEntries(artifactDefinitions.map((artifact) => [artifact.id, artifact]));
+
+    expect(byId["soft-coral-bumper"].name).not.toBe("Soft Coral Bumper");
+    expect(byId["soft-coral-bumper"].effect).not.toContain("Overlaps bump");
+    expect(byId["school-spirit-sash"].effect).not.toContain("Large schools stay readable");
+    expect(byId["chill-current-permit"].effect).not.toContain("Less jitter near edges");
+    expect(byId["pearl-cache"].effect).toContain("+8%");
+    expect(byId["cosmic-kelp-thermos"].effect).toContain("+2");
   });
 });
