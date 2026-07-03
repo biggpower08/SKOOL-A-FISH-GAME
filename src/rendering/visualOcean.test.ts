@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import type { Fish } from "../game/types";
 import gameSource from "../game/Game.ts?raw";
 import rendererSource from "./renderer.ts?raw";
+import waterDisturbanceSource from "./waterDisturbance.ts?raw";
 import { drawBackground } from "./renderer";
 import { fishWakeFor, swimPoseForFish } from "./fishMotion";
 
@@ -60,6 +61,13 @@ describe("visual ocean readability", () => {
     expect(rendererSource).not.toContain("drawSharkHealthBar");
     expect(rendererSource).not.toContain("drawUnitHealthBar");
     expect(rendererSource).not.toContain("shark.health / shark.maxHealth");
+  });
+
+  it("uses filled wave fields instead of clunky wake line strokes", () => {
+    expect(rendererSource).toContain("const drawWaveGlowFields");
+    expect(rendererSource).not.toContain("const drawWaterCurrents");
+    expect(waterDisturbanceSource).not.toContain("ctx.stroke()");
+    expect(waterDisturbanceSource).not.toContain("quadraticCurveTo");
   });
 
   it("uses tint and accessories instead of dead shark X-eyes", () => {

@@ -281,28 +281,28 @@ const drawWaveBands = (ctx: CanvasRenderingContext2D, width: number, height: num
   }
 };
 
-const drawWaterCurrents = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
-  ctx.lineWidth = 1;
+const drawWaveGlowFields = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
 
-  for (let band = 0; band < 9; band += 1) {
-    const yBase = ((band + 1) / 10) * height;
-    const drift = (time * 0.014 + band * 57) % (width + 180);
-    ctx.strokeStyle = band % 2 === 0 ? "rgba(118, 197, 188, 0.13)" : "rgba(119, 126, 178, 0.095)";
+  for (let band = 0; band < 8; band += 1) {
+    const yBase = ((band + 1) / 9) * height;
+    const drift = (time * (0.01 + band * 0.001) + band * 61) % (width + 220);
+    const x = drift - 110;
+    const y = yBase + Math.sin(time * 0.00055 + band) * 18;
+    const radiusX = width * (0.28 + band * 0.018);
+    const radiusY = 18 + band * 2.5;
+
+    ctx.fillStyle = band % 2 === 0 ? "rgba(108, 196, 186, 0.045)" : "rgba(116, 126, 186, 0.04)";
     ctx.beginPath();
-
-    for (let step = -180; step <= width + 20; step += 28) {
-      const x = step + drift - 120;
-      const y = yBase + Math.sin(time * 0.0009 + step * 0.025 + band) * (8 + band * 0.45);
-
-      if (step === -180) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
-      }
-    }
-
-    ctx.stroke();
+    ctx.ellipse(x, y, radiusX, radiusY, Math.sin(band) * 0.08, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.ellipse(x - width * 0.52, y + radiusY * 0.45, radiusX * 0.82, radiusY * 0.72, -0.05, 0, Math.PI * 2);
+    ctx.fill();
   }
+
+  ctx.restore();
 };
 
 export const drawCombat = (
@@ -319,7 +319,7 @@ export const drawCombat = (
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
   drawWaveBands(ctx, width - hudWidth(), height, time);
-  drawWaterCurrents(ctx, width - hudWidth(), height, time);
+  drawWaveGlowFields(ctx, width - hudWidth(), height, time);
   waterDisturbance?.draw(ctx);
 
   for (const candidate of fish) {
@@ -364,7 +364,7 @@ export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, heig
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
   drawWaveBands(ctx, width - hudWidth(), height, time);
-  drawWaterCurrents(ctx, width - hudWidth(), height, time);
+  drawWaveGlowFields(ctx, width - hudWidth(), height, time);
 
   const usableWidth = width - hudWidth();
   const previewFish = [
