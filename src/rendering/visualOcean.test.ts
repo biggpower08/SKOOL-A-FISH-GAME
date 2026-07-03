@@ -76,4 +76,10 @@ describe("visual ocean readability", () => {
     expect(Math.abs(first.rotation)).toBeLessThanOrEqual(0.08);
     expect(later).not.toEqual(first);
   });
+
+  it("uses a larger animated fish school on the idle screen", () => {
+    expect(rendererSource).toContain("const previewFish = [");
+    expect(rendererSource.match(/\"tilapia\"|\"salmon\"|\"parrotfish\"|\"mahi-mahi\"|\"grouper\"/g)?.length).toBeGreaterThanOrEqual(12);
+    expect(rendererSource).toContain("const loop = (time *");
+  });
 });
