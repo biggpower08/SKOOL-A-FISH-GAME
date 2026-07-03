@@ -153,7 +153,6 @@ export class WaterDisturbanceField {
 
     ctx.save();
     ctx.globalCompositeOperation = "screen";
-    ctx.lineWidth = 1;
 
     if (this.active) {
       for (let row = 1; row < this.rows - 1; row += 1) {
@@ -168,13 +167,11 @@ export class WaterDisturbanceField {
           const alpha = Math.min(0.2, magnitude * 0.14);
           const x = column * this.cellSize;
           const y = row * this.cellSize;
-          const lift = Math.max(2, Math.min(9, magnitude * 9));
 
-          ctx.strokeStyle = value > 0 ? `rgba(128, 210, 230, ${alpha})` : `rgba(222, 244, 238, ${alpha * 0.78})`;
+          ctx.fillStyle = value > 0 ? `rgba(128, 210, 230, ${alpha})` : `rgba(222, 244, 238, ${alpha * 0.78})`;
           ctx.beginPath();
-          ctx.moveTo(x - this.cellSize * 0.42, y + lift * 0.2);
-          ctx.quadraticCurveTo(x, y - lift, x + this.cellSize * 0.42, y + lift * 0.2);
-          ctx.stroke();
+          ctx.ellipse(x, y, this.cellSize * 0.46, this.cellSize * 0.18, value * 0.18, 0, Math.PI * 2);
+          ctx.fill();
         }
       }
     }
@@ -217,31 +214,29 @@ export class WaterDisturbanceField {
       const normalY = wake.dirX;
       const tail = wake.radius * (0.75 + progress * 1.4);
       const spread = wake.radius * (0.38 + progress * 0.68);
-      const originX = wake.x - wake.dirX * wake.radius * 0.16;
-      const originY = wake.y - wake.dirY * wake.radius * 0.16;
       const tailX = wake.x - wake.dirX * tail;
       const tailY = wake.y - wake.dirY * tail;
 
-      ctx.lineWidth = Math.max(1, wake.radius * 0.035);
-      ctx.strokeStyle = `rgba(174, 231, 236, ${alpha})`;
+      ctx.fillStyle = `rgba(174, 231, 236, ${alpha})`;
 
       for (const side of [-1, 1]) {
         ctx.beginPath();
-        ctx.moveTo(originX + normalX * side * wake.radius * 0.12, originY + normalY * side * wake.radius * 0.12);
-        ctx.quadraticCurveTo(
-          wake.x - wake.dirX * tail * 0.52 + normalX * side * spread * 0.38,
-          wake.y - wake.dirY * tail * 0.52 + normalY * side * spread * 0.38,
+        ctx.ellipse(
           tailX + normalX * side * spread,
           tailY + normalY * side * spread,
+          spread * 0.8,
+          Math.max(2, wake.radius * 0.14),
+          Math.atan2(wake.dirY, wake.dirX) + side * 0.18,
+          0,
+          Math.PI * 2,
         );
-        ctx.stroke();
+        ctx.fill();
       }
 
-      ctx.strokeStyle = `rgba(225, 246, 238, ${alpha * 0.45})`;
+      ctx.fillStyle = `rgba(225, 246, 238, ${alpha * 0.28})`;
       ctx.beginPath();
-      ctx.moveTo(originX, originY);
-      ctx.lineTo(tailX, tailY);
-      ctx.stroke();
+      ctx.ellipse(tailX, tailY, spread * 0.5, Math.max(1.5, wake.radius * 0.08), Math.atan2(wake.dirY, wake.dirX), 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 
