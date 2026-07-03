@@ -26,6 +26,9 @@ type SavesHandlers = {
 
 type GameOverHandlers = {
   bestLevel: number;
+  finalFish: number;
+  maxFish: number;
+  schoolEnergy: number;
   onHome: () => void;
   onNewCampaign: () => void;
 };
@@ -120,6 +123,19 @@ const feedbackNotes = (run: RunState): HTMLParagraphElement[] => {
 
 const totalFishCounts = (fishCounts: RunState["fishCounts"]): number =>
   Object.values(fishCounts).reduce((sum, count) => sum + (count ?? 0), 0);
+
+export const saveSummaryText = (run: RunState): string[] => [
+  `Level ${run.level}`,
+  `Best ${run.bestLevel}`,
+  `School ${run.fishCount}/${run.maxFishCount}`,
+  `Shells ${run.currency}`,
+];
+
+export const gameOverSummaryText = (summary: Pick<GameOverHandlers, "bestLevel" | "finalFish" | "maxFish" | "schoolEnergy">): string[] => [
+  `Reached L${summary.bestLevel}`,
+  `School ${summary.finalFish}/${summary.maxFish}`,
+  `Energy ${Math.round(summary.schoolEnergy)}`,
+];
 
 export const clearOverlay = (overlay: HTMLElement): void => {
   overlay.replaceChildren();
@@ -255,8 +271,7 @@ export const renderSaves = (overlay: HTMLElement, handlers: SavesHandlers): void
 
   overlay.replaceChildren(
     title("Saves"),
-    note(`Level ${handlers.run.level}`),
-    note(`Best ${handlers.run.bestLevel}`),
+    ...saveSummaryText(handlers.run).map(note),
     button("Back", handlers.onBack),
   );
 };
@@ -265,7 +280,7 @@ export const renderGameOver = (overlay: HTMLElement, handlers: GameOverHandlers)
   overlay.className = "overlay menu compact";
   overlay.replaceChildren(
     title("Run Ended"),
-    note(`Best ${handlers.bestLevel}`),
+    ...gameOverSummaryText(handlers).map(note),
     button("New Campaign", handlers.onNewCampaign),
     button("Home", handlers.onHome),
   );

@@ -559,11 +559,17 @@ export class Game {
 
   private endRun(): void {
     const bestLevel = Math.max(this.run?.bestLevel ?? 1, this.config.level);
+    const finalFish = this.run?.fishCount ?? 0;
+    const maxFish = this.run?.maxFishCount ?? finalFish;
+    const schoolEnergy = this.run?.schoolEnergy ?? 0;
     clearRun();
     this.screen = "gameover";
     this.hideArtifactPanel();
     renderGameOver(this.overlay, {
       bestLevel,
+      finalFish,
+      maxFish,
+      schoolEnergy,
       onHome: () => this.showHome(),
       onNewCampaign: () => this.newCampaign(),
     });
