@@ -1,5 +1,5 @@
 import type { ArtifactId, RewardChoiceId, RewardFlow, RunState } from "../game/types";
-import { artifactBuildTagLabels, artifactDefinitions } from "../systems/artifacts";
+import { artifactDefinitions } from "../systems/artifacts";
 import { type ActiveFishTypeId, fishTypes, formatFishCountSummary, recruitmentChoices } from "../systems/fishTypes";
 import { getFishSprite } from "../rendering/sprites";
 
@@ -201,7 +201,6 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
             note(artifact.name),
             small(artifact.rarity),
             small(artifact.effect),
-            small(artifact.buildTags.slice(0, 2).map((tag) => artifactBuildTagLabels[tag]).join(" / ")),
             button("Take", chooseArtifact),
           ], chooseArtifact);
         }),

@@ -1,6 +1,5 @@
 import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
 import { summarizeSharks } from "../entities/Shark";
-import { buildHintForRun } from "../systems/artifactEffects";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { getFishSprite, getSharkSprite } from "../rendering/sprites";
 import type { SpriteManifestEntry } from "../game/types";
@@ -188,20 +187,13 @@ export const drawHud = (
   ctx.fillText(`L${config.level}`, x + 14, 26);
   ctx.fillText(schoolCounterText(fish, run), x + 52, 26);
   ctx.fillText(`Shells ${run.currency}`, x + 14, 43);
-  ctx.fillText(`Best L${run.bestLevel}`, x + 88, 43);
-
-  ctx.fillStyle = "#8f9aa7";
-  ctx.font = "10px system-ui, sans-serif";
-  ctx.fillText(`Build ${buildHintForRun(run)}`, x + 14, 58);
-
-  drawBar(ctx, x + 14, 68, 118, 8, run.schoolEnergy / 110, "#e8f4ff");
 
   const feedback = run.lastRecoverySummary || run.lastRecruitmentSummary;
-  const schoolY = feedback ? 110 : 94;
+  const schoolY = feedback ? 86 : 70;
 
   if (feedback) {
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(feedback.slice(0, 28), x + 14, 91);
+    ctx.fillText(feedback.slice(0, 28), x + 14, 64);
   }
 
   ctx.fillStyle = "#8f9aa7";
