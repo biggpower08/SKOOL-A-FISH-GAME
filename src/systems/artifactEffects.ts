@@ -15,6 +15,7 @@ export type SchoolModifiers = {
   shellRewardMultiplier: number;
   kelpRestoreBonus: number;
   sharkHungerDrainMultiplier: number;
+  sharkSpeedMultiplier: number;
   riskyShellBonus: number;
 };
 
@@ -28,6 +29,7 @@ export const defaultSchoolModifiers = (): SchoolModifiers => ({
   shellRewardMultiplier: 1,
   kelpRestoreBonus: 0,
   sharkHungerDrainMultiplier: 1,
+  sharkSpeedMultiplier: 1,
   riskyShellBonus: 0,
 });
 
@@ -110,6 +112,7 @@ export const getSchoolModifiers = (run: Pick<RunState, "fishCounts" | "ownedArti
   modifiers.shellRewardMultiplier = 1 + Math.min(0.45, shell * 0.08);
   modifiers.kelpRestoreBonus = Math.min(6, kelp * 2);
   modifiers.sharkHungerDrainMultiplier = 1 + Math.min(0.35, antiShark * 0.045);
+  modifiers.sharkSpeedMultiplier = 1 - Math.min(0.22, antiShark * 0.025);
   modifiers.riskyShellBonus = Math.min(20, risky * 4);
 
   return modifiers;

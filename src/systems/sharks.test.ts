@@ -127,6 +127,15 @@ describe("shark hunger and predator types", () => {
     expect(shark.speed).toBeGreaterThan(school[0].maxSpeed);
   });
 
+  it("lets artifact modifiers slow sharks without changing level config", () => {
+    const config = createLevelConfig(1);
+    const base = createSharks(config, { width: 600, height: 400 })[0];
+    const slowed = createSharks(config, { width: 600, height: 400 }, { sharkSpeedMultiplier: 0.9 })[0];
+
+    expect(slowed.speed).toBeLessThan(base.speed);
+    expect(slowed.vel.x).toBeGreaterThan(base.vel.x);
+  });
+
   it("steers sharks back into the arena when they hit an edge", () => {
     const school = createSchool(1, 0, { width: 600, height: 400 });
     school[0].pos = { x: 4, y: 4 };

@@ -1,4 +1,5 @@
 import type { Bounds, Fish, LevelConfig, Shark } from "../game/types";
+import type { SchoolModifiers } from "../systems/artifactEffects";
 import { aliveFish, schoolCenter } from "../systems/combat";
 import { add, centerOf, clamp, distance, limit, normalize, scale, subtract } from "../systems/vector";
 
@@ -50,8 +51,9 @@ const sharkStats = {
   },
 } satisfies Record<Shark["kind"], Record<"radius" | "health" | "hunger" | "speed" | "acceleration" | "drain" | "attackRadius", number>>;
 
-export const createSharks = (config: LevelConfig, bounds: Bounds): Shark[] => {
+export const createSharks = (config: LevelConfig, bounds: Bounds, modifiers?: Pick<SchoolModifiers, "sharkSpeedMultiplier">): Shark[] => {
   const sharks: Shark[] = [];
+  const speedMultiplier = modifiers?.sharkSpeedMultiplier ?? 1;
 
   for (let index = 0; index < config.sharkCount; index += 1) {
     const y = ((index + 1) / (config.sharkCount + 1)) * bounds.height;
@@ -68,14 +70,14 @@ export const createSharks = (config: LevelConfig, bounds: Bounds): Shark[] => {
         x: bounds.width - 70 - index * 12,
         y,
       },
-      vel: { x: -config.sharkSpeed * stats.speed, y: 0 },
+      vel: { x: -config.sharkSpeed * stats.speed * speedMultiplier, y: 0 },
       radius,
       health: maxHealth,
       maxHealth,
       hunger: maxHunger,
       maxHunger,
       hungerDrain: (0.88 + config.level * 0.012) * stats.drain,
-      speed: config.sharkSpeed * stats.speed,
+      speed: config.sharkSpeed * stats.speed * speedMultiplier,
       acceleration: stats.acceleration,
       attackCooldown: 1.35 + index * 0.55,
       attackRate: config.sharkAttackRate,
