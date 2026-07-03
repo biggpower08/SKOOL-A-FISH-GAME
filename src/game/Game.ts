@@ -626,8 +626,11 @@ export class Game {
       const effect = document.createElement("p");
       effect.textContent = artifact.effect;
       const rarity = document.createElement("span");
-      rarity.textContent = `${artifact.rarity} / ${artifact.category}`;
-      const children: HTMLElement[] = [icon, name, effect, rarity];
+      rarity.textContent = artifact.rarity;
+      const status = document.createElement("span");
+      status.className = "artifact-status";
+      status.textContent = owned ? "Owned" : "Available";
+      const children: HTMLElement[] = [icon, name, effect, rarity, status];
 
       if (artifact.maxLevel && artifact.maxLevel > 1) {
         const upgrade = document.createElement("span");

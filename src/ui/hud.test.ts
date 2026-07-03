@@ -35,4 +35,10 @@ describe("HUD school counter", () => {
     expect(hudSource).toContain("const FISH_ROW_HEIGHT = 28");
     expect(hudSource).toContain("drawBar(ctx, x + 41, rowY + 14");
   });
+
+  it("keeps active sidebar focused on current run essentials", () => {
+    expect(hudSource).not.toContain("Best L");
+    expect(hudSource).not.toContain("Build ${buildHintForRun(run)}");
+    expect(hudSource).not.toContain("run.schoolEnergy / 110");
+  });
 });
