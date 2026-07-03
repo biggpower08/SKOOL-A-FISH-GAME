@@ -77,13 +77,17 @@ describe("entities", () => {
   it("creates sharks from level config and moves them toward the school", () => {
     const config = createLevelConfig(12);
     const sharks = createSharks(config, { width: 600, height: 400 });
-    const school = createSchool(4, 0, { width: 600, height: 400 });
-    const startX = sharks[0].pos.x;
+    const school = createSchool(4, 0, { width: 600, height: 400 }, undefined, undefined, config.level);
+    const schoolCenter = {
+      x: school.reduce((sum, fish) => sum + fish.pos.x, 0) / school.length,
+      y: school.reduce((sum, fish) => sum + fish.pos.y, 0) / school.length,
+    };
+    const startGap = distance(sharks[0].pos, schoolCenter);
 
     updateSharks(sharks, school, { width: 600, height: 400 }, 1);
 
     expect(sharks).toHaveLength(config.sharkCount);
     expect(sharks[0].maxHealth).toBeGreaterThan(0);
-    expect(sharks[0].pos.x).toBeLessThan(startX);
+    expect(distance(sharks[0].pos, schoolCenter)).toBeLessThan(startGap);
   });
 });

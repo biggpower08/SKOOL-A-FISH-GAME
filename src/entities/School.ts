@@ -1,6 +1,7 @@
 import type { Bounds, Fish, FishTypeId } from "../game/types";
 import type { SchoolModifiers } from "../systems/artifactEffects";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
+import { schoolStartAnchor } from "../systems/startPositions";
 import { clamp } from "../systems/vector";
 
 let fishId = 0;
@@ -54,9 +55,11 @@ export const createSchool = (
   bounds: Bounds,
   fishCounts?: Partial<Record<FishTypeId, number>>,
   modifiers?: SchoolModifiers,
+  startSeed = 1,
 ): Fish[] => {
-  const centerX = bounds.width * 0.42;
-  const centerY = bounds.height * 0.5;
+  const anchor = schoolStartAnchor(bounds, startSeed);
+  const centerX = anchor.x;
+  const centerY = anchor.y;
   const school: Fish[] = [];
   const counts = { ...(fishCounts ?? { tilapia: basicCount }) };
 

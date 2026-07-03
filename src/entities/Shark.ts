@@ -1,6 +1,7 @@
 import type { Bounds, Fish, LevelConfig, Shark } from "../game/types";
 import type { SchoolModifiers } from "../systems/artifactEffects";
 import { aliveFish, schoolCenter } from "../systems/combat";
+import { schoolStartAnchor, sharkStartPosition } from "../systems/startPositions";
 import { add, centerOf, clamp, distance, limit, normalize, scale, subtract } from "../systems/vector";
 
 const sharkStats = {
@@ -54,37 +55,36 @@ const sharkStats = {
 export const createSharks = (config: LevelConfig, bounds: Bounds, modifiers?: Pick<SchoolModifiers, "sharkSpeedMultiplier">): Shark[] => {
   const sharks: Shark[] = [];
   const speedMultiplier = modifiers?.sharkSpeedMultiplier ?? 1;
+  const schoolAnchor = schoolStartAnchor(bounds, config.level);
 
   for (let index = 0; index < config.sharkCount; index += 1) {
-    const y = ((index + 1) / (config.sharkCount + 1)) * bounds.height;
     const kind = config.sharkTypes[index] ?? "basic";
     const stats = sharkStats[kind];
     const maxHealth = Math.round(config.sharkHealth * stats.health * (1 + index * 0.06));
     const maxHunger = Math.round((28 + config.level * 0.44) * stats.hunger);
     const radius = stats.radius + Math.min(7, Math.floor(config.level / 20));
+    const speed = config.sharkSpeed * stats.speed * speedMultiplier;
+    const start = sharkStartPosition(bounds, config.level, index, config.sharkCount, schoolAnchor, radius, speed);
 
     sharks.push({
       id: `shark-${config.level}-${index}`,
       kind,
-      pos: {
-        x: bounds.width - 70 - index * 12,
-        y,
-      },
-      vel: { x: -config.sharkSpeed * stats.speed * speedMultiplier, y: 0 },
+      pos: start.pos,
+      vel: start.vel,
       radius,
       health: maxHealth,
       maxHealth,
       hunger: maxHunger,
       maxHunger,
       hungerDrain: (0.88 + config.level * 0.012) * stats.drain,
-      speed: config.sharkSpeed * stats.speed * speedMultiplier,
+      speed,
       acceleration: stats.acceleration,
       attackCooldown: 1.35 + index * 0.55,
       attackRate: config.sharkAttackRate,
       attackRadius: (112 + Math.min(38, config.level * 0.42)) * stats.attackRadius,
       feedingRecovery: 0,
       contactCooldown: 0,
-      facingX: -1,
+      facingX: start.vel.x < -0.18 ? -1 : 1,
       starved: false,
     });
   }

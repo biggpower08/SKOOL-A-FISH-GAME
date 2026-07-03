@@ -365,6 +365,57 @@ describe("updateFlocking", () => {
     expect(fish[0].vel.y).toBeGreaterThan(0.35);
   });
 
+  it("does not pull low-danger fish after a retreating shark", () => {
+    const fish: Fish[] = Array.from({ length: 30 }, (_, index) => ({
+      id: `calm-fish-${index}`,
+      kind: "basic",
+      typeId: "tilapia",
+      className: "common",
+      pos: {
+        x: 210 + (index % 6) * 10,
+        y: 145 + Math.floor(index / 6) * 10,
+      },
+      vel: { x: 0, y: 0 },
+      radius: 4,
+      maxSpeed: 2.1,
+      health: 1,
+      maxHealth: 1,
+      threatened: false,
+      caught: false,
+    }));
+    const shark: Shark = {
+      id: "retreating-shark",
+      kind: "basic",
+      pos: { x: 370, y: 170 },
+      vel: { x: 2.2, y: 0 },
+      radius: 24,
+      health: 100,
+      maxHealth: 100,
+      hunger: 60,
+      maxHunger: 60,
+      hungerDrain: 1,
+      speed: 2.2,
+      acceleration: 0.22,
+      attackCooldown: 1,
+      attackRate: 4,
+      attackRadius: 140,
+      starved: false,
+    };
+
+    updateFlocking(fish, [shark], {
+      width: 500,
+      height: 360,
+      threatRadius: 86,
+      dt: 1,
+      schoolIntent: { x: -1, y: 0 },
+    });
+
+    const averageVelocityX = fish.reduce((sum, candidate) => sum + candidate.vel.x, 0) / fish.length;
+
+    expect(averageVelocityX).toBeLessThan(0);
+    expect(fish.filter((candidate) => candidate.threatened)).toHaveLength(0);
+  });
+
   it("lets evasive fish react harder to shark danger paths than tanks", () => {
     const makeFish = (typeId: Fish["typeId"], className: Fish["className"], y: number, maxSpeed: number): Fish => ({
       id: `${typeId}-lane`,

@@ -10,6 +10,7 @@ import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
+import { schoolRoamDestination } from "../systems/startPositions";
 import {
   DEV_FREE_PURCHASES,
   applyArtifactExhaustionFallback,
@@ -102,6 +103,8 @@ export class Game {
   private animationId = 0;
   private devLevelOffset = 1;
   private fishRippleClock = 0;
+  private schoolDestination = { x: 420, y: 270 };
+  private schoolDestinationUntil = 0;
 
   constructor(container: HTMLElement) {
     this.canvas = document.createElement("canvas");
@@ -283,8 +286,15 @@ export class Game {
     this.levelStartFishCounts = { ...this.run.fishCounts };
     const bounds = this.combatBounds();
     const modifiers = getSchoolModifiers(this.run);
-    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts, modifiers);
+    this.fish = createSchool(this.run.fishCount, this.run.supportCount, bounds, this.run.fishCounts, modifiers, this.config.level);
     this.sharks = createSharks(this.config, bounds, modifiers);
+    this.schoolDestination = schoolRoamDestination(
+      bounds,
+      this.config.level,
+      this.currentSchoolCenter(bounds),
+      this.sharks.map((shark) => shark.pos),
+    );
+    this.schoolDestinationUntil = 3.4;
     this.waterDisturbance.resize(bounds.width, bounds.height);
     this.fishRippleClock = 0;
     this.elapsed = 0;
@@ -444,12 +454,37 @@ export class Game {
     this.fish = this.fish.filter((fish) => !fish.caught || (fish.caughtTimer ?? 0) > 0);
   }
 
-  private schoolIntent(): { x: number; y: number } {
-    const angle = this.elapsed * 0.16;
+  private currentSchoolCenter(bounds = this.combatBounds()): { x: number; y: number } {
+    const living = this.fish.filter((fish) => !fish.caught);
+
+    if (living.length === 0) {
+      return { x: bounds.width / 2, y: bounds.height / 2 };
+    }
 
     return {
-      x: Math.cos(angle) * 0.92 + 0.18,
-      y: Math.sin(angle) * 0.34,
+      x: living.reduce((sum, fish) => sum + fish.pos.x, 0) / living.length,
+      y: living.reduce((sum, fish) => sum + fish.pos.y, 0) / living.length,
+    };
+  }
+
+  private schoolIntent(): { x: number; y: number } {
+    const bounds = this.combatBounds();
+    const center = this.currentSchoolCenter(bounds);
+    const distanceToDestination = Math.hypot(this.schoolDestination.x - center.x, this.schoolDestination.y - center.y);
+
+    if (distanceToDestination < 78 || this.elapsed >= this.schoolDestinationUntil) {
+      this.schoolDestination = schoolRoamDestination(
+        bounds,
+        this.config.level * 19 + Math.floor(this.elapsed * 1.7),
+        center,
+        this.sharks.filter((shark) => shark.health > 0 && !shark.starved).map((shark) => shark.pos),
+      );
+      this.schoolDestinationUntil = this.elapsed + 3.6;
+    }
+
+    return {
+      x: this.schoolDestination.x - center.x,
+      y: this.schoolDestination.y - center.y,
     };
   }
 

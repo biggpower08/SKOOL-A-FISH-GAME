@@ -3,6 +3,7 @@ import { createSchool } from "../entities/School";
 import { createSharks, summarizeSharks, targetForShark, updateSharks } from "../entities/Shark";
 import { applySharkAttack, drainSharkHunger } from "./combat";
 import { createLevelConfig } from "./levels";
+import { distance } from "./vector";
 
 describe("shark hunger and predator types", () => {
   it("starves sharks over time and marks them stopped", () => {
@@ -133,7 +134,7 @@ describe("shark hunger and predator types", () => {
     const slowed = createSharks(config, { width: 600, height: 400 }, { sharkSpeedMultiplier: 0.9 })[0];
 
     expect(slowed.speed).toBeLessThan(base.speed);
-    expect(slowed.vel.x).toBeGreaterThan(base.vel.x);
+    expect(Math.hypot(slowed.vel.x, slowed.vel.y)).toBeLessThan(Math.hypot(base.vel.x, base.vel.y));
   });
 
   it("steers sharks back into the arena when they hit an edge", () => {
@@ -155,13 +156,12 @@ describe("shark hunger and predator types", () => {
     const school = createSchool(1, 0, { width: 600, height: 400 });
     const [shark] = createSharks(createLevelConfig(1), { width: 600, height: 400 });
     shark.feedingRecovery = 0.08;
-    shark.vel = { x: -shark.speed, y: 0 };
-    const startX = shark.pos.x;
+    const startPos = { ...shark.pos };
 
     updateSharks([shark], school, { width: 600, height: 400 }, 1, 0.1);
 
     expect(shark.feedingRecovery).toBe(0);
-    expect(shark.pos.x).toBeLessThan(startX);
+    expect(distance(shark.pos, school[0].pos)).toBeLessThan(distance(startPos, school[0].pos));
     expect(Math.hypot(shark.vel.x, shark.vel.y)).toBeGreaterThan(shark.speed * 0.8);
   });
 
