@@ -336,18 +336,34 @@ export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, heig
   drawWaterCurrents(ctx, width - hudWidth(), height, time);
 
   const usableWidth = width - hudWidth();
-  const previewFish = ["tilapia", "salmon", "parrotfish", "mahi-mahi", "grouper"] as ActiveFishTypeId[];
+  const previewFish = [
+    "tilapia",
+    "salmon",
+    "tilapia",
+    "parrotfish",
+    "mahi-mahi",
+    "tilapia",
+    "salmon",
+    "grouper",
+    "parrotfish",
+    "tilapia",
+    "mahi-mahi",
+    "salmon",
+  ] as ActiveFishTypeId[];
 
   for (let index = 0; index < previewFish.length; index += 1) {
     const typeId = previewFish[index];
-    const angle = time * 0.00035 + index * 1.1;
-    const x = usableWidth * 0.42 + Math.cos(angle) * (74 + (index % 2) * 24);
-    const y = height * 0.5 + Math.sin(angle * 1.18) * (46 + (index % 3) * 10);
+    const lane = index % 4;
+    const angle = time * (0.00026 + lane * 0.000025) + index * 0.72;
+    const loop = (time * (0.018 + lane * 0.003) + index * 64) % (usableWidth + 180);
+    const direction = lane % 2 === 0 ? 1 : -1;
+    const x = direction === 1 ? loop - 90 : usableWidth + 90 - loop;
+    const y = height * (0.34 + lane * 0.1) + Math.sin(angle * 1.22) * (18 + (index % 3) * 5);
     const definition = fishTypes[typeId];
     const pos = { x, y };
-    const vel = { x: 1, y: Math.sin(angle) * 0.2 };
+    const vel = { x: direction, y: Math.sin(angle) * 0.2 };
 
-    if (!drawSprite(ctx, getFishSprite(typeId), pos, vel, definition.radius + 4, 1, null, 1)) {
+    if (!drawSprite(ctx, getFishSprite(typeId), pos, vel, definition.radius + (typeId === "grouper" ? 4 : 3), 1, null, direction as 1 | -1)) {
       drawCircle(ctx, x, y, definition.radius + 2, definition.color);
     }
   }
