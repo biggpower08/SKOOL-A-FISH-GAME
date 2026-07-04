@@ -16,6 +16,11 @@ const SOFT_BODY_PADDING = 12;
 const FACING_VELOCITY_THRESHOLD = 0.18;
 const LARGE_SCHOOL_THRESHOLD = 20;
 const LARGE_SCHOOL_INTENT_STRENGTH = 0.7;
+const LOCAL_THREAT_AWARENESS = 94;
+const CHAIN_REACTION_BONUS = 34;
+const PARROTFISH_SUPPORT_RADIUS = 88;
+const PARROTFISH_AWARENESS_BONUS = 24;
+const PARROTFISH_SPEED_BONUS = 0.08;
 
 const zero = (): Vector => ({ x: 0, y: 0 });
 
@@ -96,21 +101,42 @@ const crowdPressure = (fish: Fish, near: Fish[]): Vector => {
   return scale(pressure, 0.38);
 };
 
-const escape = (fish: Fish, sharks: Shark[], threatRadius: number): Vector => {
+const parrotfishSupportLevel = (fish: Fish, school: Fish[]): number =>
+  school.some(
+    (candidate) =>
+      !candidate.caught &&
+      candidate.typeId === "parrotfish" &&
+      distance(candidate.pos, fish.pos) <= PARROTFISH_SUPPORT_RADIUS,
+  )
+    ? 1
+    : 0;
+
+const localAwarenessRadius = (fish: Fish, school: Fish[], threatRadius: number): number => {
+  const roleBonus = fish.typeId === "parrotfish" ? 14 : fish.typeId === "mahi-mahi" ? 8 : 0;
+  const supportBonus = parrotfishSupportLevel(fish, school) * PARROTFISH_AWARENESS_BONUS;
+  return Math.min(threatRadius, LOCAL_THREAT_AWARENESS + roleBonus + supportBonus);
+};
+
+const isDirectlyThreatened = (fish: Fish, sharks: Shark[], awarenessRadius: number): boolean =>
+  sharks.some((shark) => shark.health > 0 && !shark.starved && distance(fish.pos, shark.pos) <= awarenessRadius);
+
+const escape = (fish: Fish, sharks: Shark[], awarenessRadius: number, chainAlarm: boolean): Vector => {
   let threatened = false;
+  const reactionRadius = chainAlarm ? awarenessRadius + CHAIN_REACTION_BONUS : awarenessRadius;
   const flee = sharks.reduce<Vector>((sum, shark) => {
-    if (shark.health <= 0) {
+    if (shark.health <= 0 || shark.starved) {
       return sum;
     }
 
     const gap = distance(fish.pos, shark.pos);
 
-    if (gap > threatRadius || gap === 0) {
+    if (gap > reactionRadius || gap === 0) {
       return sum;
     }
 
     threatened = true;
-    const strength = (threatRadius - gap) / threatRadius;
+    const alarmScale = gap <= awarenessRadius ? 1 : 0.38;
+    const strength = ((reactionRadius - gap) / reactionRadius) * alarmScale;
     return add(sum, scale(normalize(subtract(fish.pos, shark.pos)), strength));
   }, zero());
 
@@ -147,7 +173,7 @@ const dangerPathEscape = (fish: Fish, sharks: Shark[], threatRadius: number): Ve
     }
 
     const side = lateral >= 0 ? 1 : -1;
-    const roleMultiplier = fish.typeId === "parrotfish" ? 1.28 : fish.typeId === "mahi-mahi" ? 1.12 : fish.typeId === "grouper" ? 0.68 : 1;
+    const roleMultiplier = fish.typeId === "mahi-mahi" ? 1.28 : fish.typeId === "parrotfish" ? 1.08 : fish.typeId === "grouper" ? 0.68 : 1;
     const urgency = (1 - forward / laneRange) * (1 - Math.abs(lateral) / laneWidth);
     const perpendicular = { x: -direction.y * side, y: direction.x * side };
 
@@ -184,6 +210,54 @@ const boundaryPush = (fish: Fish, bounds: Bounds): Vector => {
   }
 
   return push;
+};
+
+const openWaterEscape = (fish: Fish, sharks: Shark[], bounds: Bounds, active: boolean): Vector => {
+  if (!active) {
+    return zero();
+  }
+
+  const aliveSharks = sharks.filter((shark) => shark.health > 0 && !shark.starved);
+
+  if (aliveSharks.length === 0) {
+    return zero();
+  }
+
+  const directions: Vector[] = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    normalize({ x: 1, y: 1 }),
+    normalize({ x: 1, y: -1 }),
+    normalize({ x: -1, y: 1 }),
+    normalize({ x: -1, y: -1 }),
+  ];
+  const centerPoint = { x: bounds.width / 2, y: bounds.height / 2 };
+  const maxCenterDistance = Math.hypot(bounds.width / 2, bounds.height / 2);
+  const step = 72;
+
+  let bestDirection = zero();
+  let bestScore = Number.NEGATIVE_INFINITY;
+
+  for (const direction of directions) {
+    const target = {
+      x: fish.pos.x + direction.x * step,
+      y: fish.pos.y + direction.y * step,
+    };
+    const edgePenalty =
+      target.x < 48 || target.x > bounds.width - 48 || target.y < 48 || target.y > bounds.height - 48 ? 86 : 0;
+    const sharkDistance = Math.min(...aliveSharks.map((shark) => distance(target, shark.pos)));
+    const centerBonus = (1 - Math.min(1, distance(target, centerPoint) / maxCenterDistance)) * 42;
+    const score = sharkDistance + centerBonus - edgePenalty;
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestDirection = direction;
+    }
+  }
+
+  return scale(bestDirection, 0.42);
 };
 
 const applySoftBodySeparation = (school: Fish[], bounds: Bounds): void => {
@@ -272,6 +346,16 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
         )
       : { x: options.width / 2, y: options.height / 2 };
 
+  for (const fish of livingSchool) {
+    sanitizeFishMotion(fish, options);
+  }
+
+  const directlyThreatenedIds = new Set(
+    livingSchool
+      .filter((fish) => isDirectlyThreatened(fish, sharks, localAwarenessRadius(fish, livingSchool, options.threatRadius)))
+      .map((fish) => fish.id),
+  );
+
   for (const fish of school) {
     if (fish.caught) {
       continue;
@@ -279,27 +363,31 @@ export const updateFlocking = (school: Fish[], sharks: Shark[], options: Flockin
 
     sanitizeFishMotion(fish, options);
     const near = around(fish, school);
+    const supportLevel = parrotfishSupportLevel(fish, livingSchool);
+    const awarenessRadius = localAwarenessRadius(fish, livingSchool, options.threatRadius);
+    const chainAlarm = near.some((candidate) => directlyThreatenedIds.has(candidate.id));
     const crowding = localCrowding(fish, near);
     const sep = avoid(fish, near);
     const ali = align(fish, near);
     const coh = center(fish, near, crowding);
     const crowd = crowding >= 5 ? crowdPressure(fish, near) : zero();
-    const flee = escape(fish, sharks, options.threatRadius);
+    const flee = escape(fish, sharks, awarenessRadius, chainAlarm);
     const danger = dangerPathEscape(fish, sharks, options.threatRadius);
+    const openWater = openWaterEscape(fish, sharks, options, fish.threatened || chainAlarm);
     const edge = boundaryPush(fish, options);
     const neural = FISH_NEURAL_STEERING_ENABLED
       ? steeringVectorFromModel(fishSteeringFeatureVector(fish, sharks, options, schoolCentroid, crowding, options.threatRadius))
       : zero();
     const intent = fish.threatened ? zero() : scale(sharedIntent, LARGE_SCHOOL_INTENT_STRENGTH);
     const current = options.currentAt ? options.currentAt(fish.pos) : zero();
+    const supportedMaxSpeed = fish.maxSpeed * (1 + supportLevel * PARROTFISH_SPEED_BONUS);
+    let steering = fish.vel;
 
-    fish.vel = limit(
-      add(
-        add(add(add(add(add(add(add(add(add(fish.vel, sep), crowd), ali), coh), intent), scale(flee, 4.8)), danger), scale(edge, 1.45)), neural),
-        scale(current, 0.38),
-      ),
-      fish.maxSpeed,
-    );
+    for (const vector of [sep, crowd, ali, coh, intent, scale(flee, 4.8), danger, openWater, scale(edge, 1.45), neural]) {
+      steering = add(steering, vector);
+    }
+
+    fish.vel = limit(add(steering, scale(current, 0.38)), supportedMaxSpeed);
     fish.pos = {
       x: clamp(fish.pos.x + fish.vel.x * options.dt, fish.radius, options.width - fish.radius),
       y: clamp(fish.pos.y + fish.vel.y * options.dt, fish.radius, options.height - fish.radius),
