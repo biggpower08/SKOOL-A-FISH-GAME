@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createSchool } from "../entities/School";
-import { createSharks, summarizeSharks, targetForShark, updateSharks } from "../entities/Shark";
+import { createSharks, isActiveShark, isDefeatedShark, isVisibleShark, summarizeSharks, targetForShark, updateSharks } from "../entities/Shark";
 import { applySharkAttack, drainSharkHunger } from "./combat";
 import { createLevelConfig } from "./levels";
 import { distance } from "./vector";
@@ -109,6 +109,35 @@ describe("shark hunger and predator types", () => {
     expect(summary.every((entry) => entry.maxHealth > 0)).toBe(true);
     expect(summary.every((entry) => entry.totalHunger >= 0)).toBe(true);
     expect(summary.every((entry) => entry.maxHunger > 0)).toBe(true);
+  });
+
+  it("keeps health-dead sharks hidden even if round-end starvation changes other sharks", () => {
+    const sharks = createSharks({ ...createLevelConfig(12), sharkCount: 2 }, { width: 600, height: 400 });
+    const dead = sharks[0];
+    const survivor = sharks[1];
+
+    dead.health = 0;
+    dead.starved = true;
+    survivor.health = survivor.maxHealth;
+    survivor.starved = true;
+
+    expect(isVisibleShark(dead)).toBe(false);
+    expect(isDefeatedShark(dead)).toBe(true);
+    expect(isVisibleShark(survivor)).toBe(true);
+    expect(isActiveShark(survivor)).toBe(false);
+    expect(summarizeSharks(sharks).reduce((sum, entry) => sum + entry.count, 0)).toBe(1);
+  });
+
+  it("does not summarize fully dead sharks while another shark remains active", () => {
+    const sharks = createSharks({ ...createLevelConfig(12), sharkCount: 2 }, { width: 600, height: 400 });
+    sharks[0].health = 0;
+    sharks[0].starved = false;
+
+    const summary = summarizeSharks(sharks);
+
+    expect(isVisibleShark(sharks[0])).toBe(false);
+    expect(isActiveShark(sharks[1])).toBe(true);
+    expect(summary.reduce((sum, entry) => sum + entry.count, 0)).toBe(1);
   });
 
   it("keeps sharks faster than basic fish by default", () => {

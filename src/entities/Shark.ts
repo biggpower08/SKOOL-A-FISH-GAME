@@ -138,10 +138,16 @@ export type SharkSummary = {
   maxHunger: number;
 };
 
+export const isActiveShark = (shark: Shark): boolean => shark.health > 0 && !shark.starved;
+
+export const isVisibleShark = (shark: Shark): boolean => shark.health > 0;
+
+export const isDefeatedShark = (shark: Shark): boolean => shark.health <= 0 || shark.starved;
+
 export const summarizeSharks = (sharks: Shark[]): SharkSummary[] => {
   const summaries = new Map<Shark["kind"], SharkSummary>();
 
-  for (const shark of sharks.filter((candidate) => candidate.health > 0 || !candidate.starved)) {
+  for (const shark of sharks.filter(isVisibleShark)) {
     const current = summaries.get(shark.kind) ?? {
       kind: shark.kind,
       count: 0,
@@ -163,7 +169,7 @@ export const summarizeSharks = (sharks: Shark[]): SharkSummary[] => {
 
 export const updateSharks = (sharks: Shark[], fish: Fish[], bounds: Bounds, dt: number, dtSeconds = dt / 60): void => {
   for (const shark of sharks) {
-    if (shark.health <= 0 || shark.starved) {
+    if (!isActiveShark(shark)) {
       continue;
     }
 

@@ -1,4 +1,5 @@
 import type { Fish, LevelConfig, RunState, Shark, SpriteManifestEntry, Vector } from "../game/types";
+import { isVisibleShark } from "../entities/Shark";
 import { getFishSprite, getSharkSprite, spriteDrawSize } from "./sprites";
 import type { WaterDisturbanceField } from "./waterDisturbance";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
@@ -348,7 +349,7 @@ export const drawCombat = (
   }
 
   for (const shark of sharks) {
-    if (shark.health <= 0 && !shark.starved) {
+    if (!isVisibleShark(shark)) {
       continue;
     }
 
