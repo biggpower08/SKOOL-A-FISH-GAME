@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { updateFlocking } from "./flocking";
+import flockingSource from "./flocking.ts?raw";
 import type { Fish, Shark } from "../game/types";
 
 describe("updateFlocking", () => {
@@ -241,6 +242,12 @@ describe("updateFlocking", () => {
 
     expect(averageVelocity.x / fish.length).toBeGreaterThan(0.18);
     expect(fish.every(withinMaxSpeed)).toBe(true);
+  });
+
+  it("keeps shared school intent modest so kelp goals guide rather than yank the school", () => {
+    expect(flockingSource).toContain("const LARGE_SCHOOL_INTENT_STRENGTH = 0.52");
+    expect(flockingSource).toContain("const LOCAL_THREAT_AWARENESS = 86");
+    expect(flockingSource).toContain("const CHAIN_REACTION_BONUS = 31");
   });
 
   it("opens dense large schools without exploding them apart", () => {

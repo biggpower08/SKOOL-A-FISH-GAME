@@ -7,3 +7,11 @@ describe("Game artifact UI", () => {
     expect(gameSource).not.toContain('this.artifactButton.textContent = "A"');
   });
 });
+
+describe("Game kelp goals", () => {
+  it("tracks and renders an interior kelp goal during combat", () => {
+    expect(gameSource).toContain("kelpGoalPosition");
+    expect(gameSource).toContain("this.canvas.dataset.kelpGoal");
+    expect(gameSource).toContain("this.kelpGoal.pos.x - center.x");
+  });
+});

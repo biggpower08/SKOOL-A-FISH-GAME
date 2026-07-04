@@ -3,7 +3,7 @@ import { createLevelConfig } from "./levels";
 import { distance } from "./vector";
 import { createSchool } from "../entities/School";
 import { createSharks } from "../entities/Shark";
-import { safeInteriorRect, schoolStartAnchor, sharkStartPosition } from "./startPositions";
+import { kelpGoalPosition, safeInteriorRect, schoolStartAnchor, sharkStartPosition } from "./startPositions";
 
 describe("start positions", () => {
   const bounds = { width: 796, height: 540 };
@@ -45,6 +45,21 @@ describe("start positions", () => {
       };
 
       expect(distance(schoolCenter, sharks[0].pos)).toBeGreaterThan(190);
+    }
+  });
+
+  it("places kelp goals inside the safe interior away from edges", () => {
+    const safe = safeInteriorRect(bounds);
+    const schoolCenter = { x: bounds.width / 2, y: bounds.height / 2 };
+
+    for (let seed = 1; seed <= 12; seed += 1) {
+      const goal = kelpGoalPosition(bounds, seed, schoolCenter, [{ x: safe.left, y: safe.top }]);
+
+      expect(goal.pos.x).toBeGreaterThanOrEqual(safe.left);
+      expect(goal.pos.x).toBeLessThanOrEqual(safe.right);
+      expect(goal.pos.y).toBeGreaterThanOrEqual(safe.top);
+      expect(goal.pos.y).toBeLessThanOrEqual(safe.bottom);
+      expect(goal.radius).toBeGreaterThan(0);
     }
   });
 });
