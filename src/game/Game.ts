@@ -29,58 +29,6 @@ import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, re
 import type { Bounds, Fish, FishTypeId, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
-const artifactIconGlyphs: Record<string, string> = {
-  anklet: "A",
-  bank: "B",
-  beads: "O",
-  bell: "!",
-  bond: "S",
-  bracelet: "O",
-  brief: "L",
-  bumper: "U",
-  button: "!",
-  cape: "^",
-  card: "S",
-  charter: "#",
-  coach: "?",
-  coupon: "%",
-  detour: ">",
-  disco: "*",
-  fan: "~",
-  foil: "^",
-  folder: "F",
-  glow: ".",
-  gym: "+",
-  hat: "H",
-  hype: "+",
-  invite: "+",
-  jar: "J",
-  kelp: "K",
-  lane: "=",
-  limit: "-",
-  manual: "M",
-  map: "X",
-  mask: "?",
-  nap: "Z",
-  net: "#",
-  nose: "N",
-  oracle: "O",
-  party: "*",
-  pearl: "o",
-  permit: "P",
-  rent: "R",
-  ring: "O",
-  sardine: ">",
-  sash: "/",
-  scale: "S",
-  sticker: ">",
-  thermos: "T",
-  tooth: "V",
-  union: "U",
-  whistle: "!",
-  wheel: "O",
-  wrap: "[]",
-};
 
 export class Game {
   private readonly canvas: HTMLCanvasElement;
@@ -707,7 +655,7 @@ export class Game {
       icon.className = "artifact-icon";
       const iconImage = document.createElement("img");
       iconImage.src = uiIconAssets.treasureChest;
-      iconImage.alt = artifactIconGlyphs[artifact.iconKey] ?? "Artifact";
+      iconImage.alt = `${artifact.name} artifact`;
       icon.replaceChildren(iconImage);
       const name = document.createElement("strong");
       name.textContent = artifact.name;
