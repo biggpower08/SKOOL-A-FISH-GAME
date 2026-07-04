@@ -32,8 +32,17 @@ describe("HUD school counter", () => {
   });
 
   it("keeps fish health bars clear of longer sidebar names", () => {
-    expect(hudSource).toContain("const FISH_ROW_HEIGHT = 28");
-    expect(hudSource).toContain("drawBar(ctx, x + 41, rowY + 14");
+    expect(hudSource).toContain("const FISH_ROW_HEIGHT = 34");
+    expect(hudSource).toContain("drawBar(ctx, x + 48, rowY + 17");
+  });
+
+  it("removes recent activity text and gives sidebar sprites room", () => {
+    expect(hudSource).not.toContain("lastRecoverySummary || run.lastRecruitmentSummary");
+    expect(hudSource).toContain("const schoolY = 88");
+    expect(hudSource).toContain("const SHARK_ROW_HEIGHT = 34");
+    expect(hudSource).toContain("maxWidth = kind === \"fast\" ? 44 : 40");
+    expect(hudSource).toContain("uiIcon(uiIconAssets.fishCounter, 170, 129), x + 23, 25, 32, 24");
+    expect(hudSource).toContain("uiIcon(uiIconAssets.shell, 141, 113), x + 23, 50, 30, 24");
   });
 
   it("keeps only shark starvation status in the sidebar", () => {
