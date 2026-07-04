@@ -2,6 +2,7 @@ import type { Fish, LevelConfig, RunState, Shark } from "../game/types";
 import { summarizeSharks } from "../entities/Shark";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { getFishSprite, getSharkSprite } from "../rendering/sprites";
+import { uiIconAssets } from "../rendering/assetPaths";
 import type { SpriteManifestEntry } from "../game/types";
 
 const PANEL_WIDTH = 164;
@@ -13,6 +14,8 @@ type HudSpriteCacheEntry = {
 };
 
 const hudSpriteCache = new Map<string, HudSpriteCacheEntry>();
+
+type HudImageSource = Pick<SpriteManifestEntry, "src" | "width" | "height">;
 
 const drawBar = (
   ctx: CanvasRenderingContext2D,
@@ -33,7 +36,7 @@ const drawBar = (
 
 export const hudWidth = (): number => PANEL_WIDTH;
 
-const getHudSprite = (sprite: SpriteManifestEntry): HudSpriteCacheEntry | undefined => {
+const getHudSprite = (sprite: HudImageSource): HudSpriteCacheEntry | undefined => {
   if (typeof Image === "undefined") {
     return undefined;
   }
@@ -64,7 +67,7 @@ const getHudSprite = (sprite: SpriteManifestEntry): HudSpriteCacheEntry | undefi
 
 const drawHudThumbnail = (
   ctx: CanvasRenderingContext2D,
-  sprite: SpriteManifestEntry | undefined,
+  sprite: HudImageSource | undefined,
   x: number,
   y: number,
   maxWidth: number,
@@ -95,17 +98,7 @@ const fallbackFishMark = (ctx: CanvasRenderingContext2D, x: number, y: number, c
   ctx.fill();
 };
 
-const shellMark = (ctx: CanvasRenderingContext2D, x: number, y: number): void => {
-  ctx.fillStyle = "#d8c27a";
-  ctx.strokeStyle = "#f4e3a3";
-  ctx.beginPath();
-  ctx.arc(x, y + 2, 7, Math.PI, 0);
-  ctx.lineTo(x + 7, y + 6);
-  ctx.lineTo(x - 7, y + 6);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-};
+const uiIcon = (src: string, width: number, height: number): HudImageSource => ({ src, width, height });
 
 const sharkMark = (ctx: CanvasRenderingContext2D, kind: Shark["kind"], x: number, y: number): void => {
   if (drawHudThumbnail(ctx, getSharkSprite(kind), x + 1, y, 28, 16)) {
@@ -203,9 +196,11 @@ export const drawHud = (
   ctx.fillStyle = "#f8fbff";
   ctx.font = "12px system-ui, sans-serif";
   ctx.fillText(`L${config.level}`, x - 42, 26);
-  fallbackFishMark(ctx, x + 22, 24, "#d8e1ea");
+  if (!drawHudThumbnail(ctx, uiIcon(uiIconAssets.fishCounter, 170, 129), x + 22, 24, 24, 18)) {
+    fallbackFishMark(ctx, x + 22, 24, "#d8e1ea");
+  }
   ctx.fillText(schoolCounterText(fish, run), x + 40, 28);
-  shellMark(ctx, x + 22, 43);
+  drawHudThumbnail(ctx, uiIcon(uiIconAssets.shell, 141, 113), x + 22, 43, 21, 17);
   ctx.fillText(String(run.currency), x + 40, 47);
 
   const feedback = run.lastRecoverySummary || run.lastRecruitmentSummary;
