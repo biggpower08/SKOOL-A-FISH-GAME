@@ -1,5 +1,5 @@
 import { createSchool } from "../entities/School";
-import { createSharks, updateSharks } from "../entities/Shark";
+import { createSharks, isActiveShark, isDefeatedShark, updateSharks } from "../entities/Shark";
 import { drawCombat, drawIdleScene } from "../rendering/renderer";
 import { fishWakeFor } from "../rendering/fishMotion";
 import { getSharkSprite, spriteRippleSize } from "../rendering/sprites";
@@ -420,7 +420,7 @@ export class Game {
     drainSharkHunger(this.sharks, dt * modifiers.sharkHungerDrainMultiplier);
 
     const supportCount = this.fish.filter((candidate) => candidate.kind === "support" && !candidate.caught).length;
-    const activeSharks = this.sharks.filter((shark) => shark.health > 0 && !shark.starved).length;
+    const activeSharks = this.sharks.filter(isActiveShark).length;
     this.run.schoolEnergy = clamp(
       this.run.schoolEnergy + supportCount * dt * 0.55 - activeSharks * dt * (0.08 + this.config.level * 0.003),
       0,
@@ -432,11 +432,15 @@ export class Game {
       return;
     }
 
-    const starved = this.sharks.every((shark) => shark.starved || shark.health <= 0);
+    const starved = this.sharks.every(isDefeatedShark);
     const expired = this.elapsed >= this.levelDuration();
 
     if (starved || expired) {
       for (const shark of this.sharks) {
+        if (shark.health <= 0) {
+          continue;
+        }
+
         shark.starved = true;
         shark.hunger = 0;
         shark.vel = { x: 0, y: 0 };
@@ -481,7 +485,7 @@ export class Game {
         bounds,
         this.config.level * 19 + Math.floor(this.elapsed * 1.7),
         center,
-        this.sharks.filter((shark) => shark.health > 0 && !shark.starved).map((shark) => shark.pos),
+        this.sharks.filter(isActiveShark).map((shark) => shark.pos),
       );
       this.schoolDestinationUntil = this.elapsed + 3.6;
     }
@@ -496,7 +500,7 @@ export class Game {
     this.fishRippleClock -= dt;
 
     for (const shark of this.sharks) {
-      if (shark.health <= 0 || shark.starved || Math.hypot(shark.vel.x, shark.vel.y) < 0.45) {
+      if (!isActiveShark(shark) || Math.hypot(shark.vel.x, shark.vel.y) < 0.45) {
         continue;
       }
 
