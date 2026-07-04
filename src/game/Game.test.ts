@@ -7,3 +7,10 @@ describe("Game artifact UI", () => {
     expect(gameSource).not.toContain('this.artifactButton.textContent = "A"');
   });
 });
+
+describe("Game loss conditions", () => {
+  it("does not end the run just because school energy reaches zero", () => {
+    expect(gameSource).toContain("if (!hasLivingSchoolFish(this.fish))");
+    expect(gameSource).not.toContain("|| this.run.schoolEnergy <= 0");
+  });
+});

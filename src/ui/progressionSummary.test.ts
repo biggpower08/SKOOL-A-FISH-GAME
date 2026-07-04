@@ -13,10 +13,9 @@ describe("progression summaries", () => {
   });
 
   it("summarizes run end progress without needing a saved run", () => {
-    expect(gameOverSummaryText({ bestLevel: 9, finalFish: 3, maxFish: 54, schoolEnergy: 0 })).toEqual([
+    expect(gameOverSummaryText({ bestLevel: 9, finalFish: 3, maxFish: 54 })).toEqual([
       "Reached L9",
       "School 3/54",
-      "Energy 0",
     ]);
   });
 });

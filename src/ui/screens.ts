@@ -30,7 +30,6 @@ type GameOverHandlers = {
   bestLevel: number;
   finalFish: number;
   maxFish: number;
-  schoolEnergy: number;
   onHome: () => void;
   onNewCampaign: () => void;
 };
@@ -142,10 +141,9 @@ export const saveSummaryText = (run: RunState): string[] => [
   `Shells ${run.currency}`,
 ];
 
-export const gameOverSummaryText = (summary: Pick<GameOverHandlers, "bestLevel" | "finalFish" | "maxFish" | "schoolEnergy">): string[] => [
+export const gameOverSummaryText = (summary: Pick<GameOverHandlers, "bestLevel" | "finalFish" | "maxFish">): string[] => [
   `Reached L${summary.bestLevel}`,
   `School ${summary.finalFish}/${summary.maxFish}`,
-  `Energy ${Math.round(summary.schoolEnergy)}`,
 ];
 
 export const clearOverlay = (overlay: HTMLElement): void => {
