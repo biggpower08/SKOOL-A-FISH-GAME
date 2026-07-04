@@ -230,6 +230,13 @@ button:disabled {
   background: #101820;
 }
 
+.artifact-edge-button img,
+.artifact-icon img {
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+}
+
 .artifact-edge-button.hidden,
 .artifact-panel.hidden {
   display: none;

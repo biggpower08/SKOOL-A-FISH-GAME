@@ -17,7 +17,8 @@ Each artifact has:
 
 Build tags are internal strategy plumbing. The artifact panel shows player-facing
 effect, rarity, category, and upgrade cost, but does not expose build-tag labels
-as visible card copy.
+as visible card copy. Artifact access and cards currently use the cleaned
+treasure chest PNG as their shared visual marker.
 
 ## Implemented Modifier Pipeline
 
@@ -69,6 +70,10 @@ artifacts are strategy choices rather than basic readability fixes:
 
 Existing saves that own those IDs continue to receive modifiers because runtime
 ownership is ID-based.
+
+The remaining collection copy should stay numeric. Avoid placeholder promises
+such as "feels smoother" or "gets confused" unless the named behavior exists in
+`src/systems/artifactEffects.ts` or another runtime hook.
 
 ## Current Gameplay Hooks
 
