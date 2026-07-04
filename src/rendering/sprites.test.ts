@@ -8,6 +8,8 @@ import {
   spriteDrawSize,
   spriteRippleSize,
 } from "./sprites";
+import combatSource from "../systems/combat.ts?raw";
+import spritesSource from "./sprites.ts?raw";
 
 describe("sprite manifest", () => {
   it("maps every provided cleaned fish sprite and leaves missing fish as fallback", () => {
@@ -45,8 +47,17 @@ describe("sprite manifest", () => {
     const tilapia = getFishSprite("tilapia");
     const shark = getSharkSprite("basic");
 
-    expect(tilapia?.visualScale).toBeGreaterThanOrEqual(6);
-    expect(shark?.visualScale).toBeGreaterThanOrEqual(3.6);
+    expect(tilapia?.visualScale).toBeGreaterThanOrEqual(6.5);
+    expect(shark?.visualScale).toBeGreaterThanOrEqual(3.9);
+    expect(spritesSource).toContain("const PROTOTYPE_FISH_VISUAL_BOOST = 1.28");
+    expect(spritesSource).toContain("const PROTOTYPE_SHARK_VISUAL_BOOST = 1.27");
+  });
+
+  it("keeps gameplay catch sizing separate from sprite readability boosts", () => {
+    expect(spritesSource).not.toContain("CATCH_FISH_BODY_SCALE");
+    expect(spritesSource).not.toContain("CATCH_SHARK_BODY_SCALE");
+    expect(combatSource).toContain("const CATCH_FISH_BODY_SCALE = 2.4");
+    expect(combatSource).toContain("const CATCH_SHARK_BODY_SCALE = 0.25");
   });
 
   it("uses sprite footprint and motion for ripple placement", () => {
