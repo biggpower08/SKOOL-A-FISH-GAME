@@ -66,4 +66,11 @@ describe("artifact definitions", () => {
     expect(artifactDefinitions.find((artifact) => artifact.id === "grouper-hard-hat")?.buildTags).toContain("grouper-protector");
     expect(artifactDefinitions.find((artifact) => artifact.id === "parrotfish-mood-ring")?.buildTags).toContain("parrotfish-evasion");
   });
+
+  it("uses numeric effect copy instead of placeholder promises", () => {
+    for (const artifact of artifactDefinitions) {
+      expect(artifact.effect).toMatch(/\d|%/);
+      expect(artifact.effect).not.toMatch(/feels|cleaner|steadier|confused|sooner|richer|scrapes|stamina|bait|purpose/i);
+    }
+  });
 });

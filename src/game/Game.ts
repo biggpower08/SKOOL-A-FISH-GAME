@@ -10,6 +10,7 @@ import { updateFlocking } from "../systems/flocking";
 import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
+import { uiIconAssets } from "../rendering/assetPaths";
 import { schoolRoamDestination } from "../systems/startPositions";
 import {
   DEV_FREE_PURCHASES,
@@ -122,8 +123,11 @@ export class Game {
     this.artifactButton = document.createElement("button");
     this.artifactButton.type = "button";
     this.artifactButton.className = "artifact-edge-button hidden";
-    this.artifactButton.textContent = "A";
     this.artifactButton.title = "Artifacts";
+    const artifactAccessIcon = document.createElement("img");
+    artifactAccessIcon.src = uiIconAssets.treasureChest;
+    artifactAccessIcon.alt = "Artifacts";
+    this.artifactButton.replaceChildren(artifactAccessIcon);
     this.artifactButton.addEventListener("click", () => this.toggleArtifactPanel());
     this.artifactPanel = document.createElement("div");
     this.artifactPanel.className = "artifact-panel hidden";
@@ -672,7 +676,10 @@ export class Game {
 
       const icon = document.createElement("div");
       icon.className = "artifact-icon";
-      icon.textContent = artifactIconGlyphs[artifact.iconKey] ?? "*";
+      const iconImage = document.createElement("img");
+      iconImage.src = uiIconAssets.treasureChest;
+      iconImage.alt = artifactIconGlyphs[artifact.iconKey] ?? "Artifact";
+      icon.replaceChildren(iconImage);
       const name = document.createElement("strong");
       name.textContent = artifact.name;
       const effect = document.createElement("p");
