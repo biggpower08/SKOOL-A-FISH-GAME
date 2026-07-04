@@ -11,7 +11,7 @@ import { createLevelConfig } from "../systems/levels";
 import { clearRun, hasSavedRun, loadRun, saveRun } from "../systems/save";
 import { artifactDefinitions, isArtifactId } from "../systems/artifacts";
 import { uiIconAssets } from "../rendering/assetPaths";
-import { schoolRoamDestination } from "../systems/startPositions";
+import { kelpGoalPosition, schoolRoamDestination, type KelpGoal } from "../systems/startPositions";
 import {
   DEV_FREE_PURCHASES,
   applyArtifactExhaustionFallback,
@@ -106,6 +106,8 @@ export class Game {
   private fishRippleClock = 0;
   private schoolDestination = { x: 420, y: 270 };
   private schoolDestinationUntil = 0;
+  private kelpGoal: KelpGoal | null = null;
+  private kelpGoalUntil = 0;
 
   constructor(container: HTMLElement) {
     this.canvas = document.createElement("canvas");
@@ -299,6 +301,7 @@ export class Game {
       this.sharks.map((shark) => shark.pos),
     );
     this.schoolDestinationUntil = 3.4;
+    this.refreshKelpGoal(bounds, this.config.level);
     this.waterDisturbance.resize(bounds.width, bounds.height);
     this.fishRippleClock = 0;
     this.elapsed = 0;
@@ -475,9 +478,33 @@ export class Game {
     };
   }
 
+  private refreshKelpGoal(bounds = this.combatBounds(), seed = Math.floor(this.elapsed * 11) + this.config.level): void {
+    this.kelpGoal = kelpGoalPosition(
+      bounds,
+      seed,
+      this.currentSchoolCenter(bounds),
+      this.sharks.filter(isActiveShark).map((shark) => shark.pos),
+    );
+    this.kelpGoalUntil = this.elapsed + 8.5;
+  }
+
   private schoolIntent(): { x: number; y: number } {
     const bounds = this.combatBounds();
     const center = this.currentSchoolCenter(bounds);
+    const activeSharkPositions = this.sharks.filter(isActiveShark).map((shark) => shark.pos);
+    const closeShark = activeSharkPositions.some((shark) => Math.hypot(shark.x - center.x, shark.y - center.y) < 150);
+
+    if (!this.kelpGoal || this.elapsed >= this.kelpGoalUntil || Math.hypot(this.kelpGoal.pos.x - center.x, this.kelpGoal.pos.y - center.y) < 66) {
+      this.refreshKelpGoal(bounds);
+    }
+
+    if (this.kelpGoal && !closeShark) {
+      return {
+        x: this.kelpGoal.pos.x - center.x,
+        y: this.kelpGoal.pos.y - center.y,
+      };
+    }
+
     const distanceToDestination = Math.hypot(this.schoolDestination.x - center.x, this.schoolDestination.y - center.y);
 
     if (distanceToDestination < 78 || this.elapsed >= this.schoolDestinationUntil) {
@@ -485,7 +512,7 @@ export class Game {
         bounds,
         this.config.level * 19 + Math.floor(this.elapsed * 1.7),
         center,
-        this.sharks.filter(isActiveShark).map((shark) => shark.pos),
+        activeSharkPositions,
       );
       this.schoolDestinationUntil = this.elapsed + 3.6;
     }
@@ -738,7 +765,7 @@ export class Game {
     this.updateSmokeDataset();
 
     if (this.screen === "combat" && this.run) {
-      drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks, this.waterDisturbance, time);
+      drawCombat(this.ctx, this.width, this.height, this.run, this.config, this.fish, this.sharks, this.waterDisturbance, time, this.kelpGoal);
       return;
     }
 
@@ -758,6 +785,7 @@ export class Game {
     this.canvas.dataset.artifacts = String(this.run?.ownedArtifacts.length ?? 0);
     this.canvas.dataset.feedback = this.run?.lastRecoverySummary || this.run?.lastRecruitmentSummary || "";
     this.canvas.dataset.waterEnergy = this.waterDisturbance.energy().toFixed(3);
+    this.canvas.dataset.kelpGoal = this.kelpGoal ? `${Math.round(this.kelpGoal.pos.x)},${Math.round(this.kelpGoal.pos.y)}` : "";
   }
 
   destroy(): void {

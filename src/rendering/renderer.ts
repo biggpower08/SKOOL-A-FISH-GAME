@@ -5,6 +5,8 @@ import type { WaterDisturbanceField } from "./waterDisturbance";
 import { type ActiveFishTypeId, fishTypes } from "../systems/fishTypes";
 import { drawHud, hudWidth } from "../ui/hud";
 import { swimPoseForFish } from "./fishMotion";
+import { uiIconAssets } from "./assetPaths";
+import type { KelpGoal } from "../systems/startPositions";
 
 const CAUGHT_FADE_SECONDS = 0.56;
 
@@ -16,6 +18,18 @@ type SpriteCacheEntry = {
 
 const spriteCache = new Map<string, SpriteCacheEntry>();
 const tintCanvasCache = new Map<string, HTMLCanvasElement>();
+const kelpSprite: SpriteManifestEntry = {
+  spriteKey: "kelp-goal",
+  src: uiIconAssets.kelp,
+  frameCount: 1,
+  width: 127,
+  height: 123,
+  anchorX: 0.5,
+  anchorY: 0.5,
+  fallbackColor: "#6fbf82",
+  visualScale: 2.1,
+  rippleScale: 0.5,
+};
 
 const drawCircle = (ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, fill: string): void => {
   ctx.fillStyle = fill;
@@ -304,6 +318,27 @@ const drawWaveGlowFields = (ctx: CanvasRenderingContext2D, width: number, height
   ctx.restore();
 };
 
+const drawKelpGoal = (ctx: CanvasRenderingContext2D, goal: KelpGoal | null | undefined, time: number): void => {
+  if (!goal) {
+    return;
+  }
+
+  const bob = Math.sin(time * 0.0018 + goal.pos.x * 0.01) * 2;
+
+  ctx.save();
+  ctx.globalAlpha = 0.72;
+  ctx.beginPath();
+  ctx.fillStyle = "rgba(76, 150, 112, 0.16)";
+  ctx.ellipse(goal.pos.x, goal.pos.y + 10, goal.radius * 1.35, goal.radius * 0.48, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  if (!drawSprite(ctx, kelpSprite, { x: goal.pos.x, y: goal.pos.y + bob }, { x: 0, y: 0 }, goal.radius, 1)) {
+    drawCircle(ctx, goal.pos.x, goal.pos.y + bob, goal.radius * 0.5, "#6fbf82");
+  }
+
+  ctx.restore();
+};
+
 export const drawCombat = (
   ctx: CanvasRenderingContext2D,
   width: number,
@@ -314,12 +349,14 @@ export const drawCombat = (
   sharks: Shark[],
   waterDisturbance?: WaterDisturbanceField,
   time = 0,
+  kelpGoal?: KelpGoal | null,
 ): void => {
   drawBackground(ctx, width, height);
   drawWaterShade(ctx, width - hudWidth(), height, time);
   drawWaveBands(ctx, width - hudWidth(), height, time);
   drawWaveGlowFields(ctx, width - hudWidth(), height, time);
   waterDisturbance?.draw(ctx);
+  drawKelpGoal(ctx, kelpGoal, time);
 
   for (const candidate of fish) {
     if (candidate.caught && (candidate.caughtTimer ?? 0) <= 0) {

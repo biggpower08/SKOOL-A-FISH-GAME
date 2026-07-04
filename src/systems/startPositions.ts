@@ -13,6 +13,11 @@ export type SharkStart = {
   vel: Vector;
 };
 
+export type KelpGoal = {
+  pos: Vector;
+  radius: number;
+};
+
 export const MIN_SHARK_START_DISTANCE = 230;
 
 const seededUnit = (seed: number, salt: number): number => {
@@ -63,6 +68,35 @@ export const schoolRoamDestination = (bounds: Bounds, seed: number, schoolCenter
 
     return score > bestScore ? candidate : best;
   }, candidates[0]);
+};
+
+export const kelpGoalPosition = (bounds: Bounds, seed: number, schoolCenter: Vector, sharkPositions: Vector[] = []): KelpGoal => {
+  const safe = safeInteriorRect(bounds);
+  const candidates = Array.from({ length: 7 }, (_, index) => ({
+    x: safe.left + (safe.right - safe.left) * seededUnit(seed + index * 7, 9),
+    y: safe.top + (safe.bottom - safe.top) * seededUnit(seed + index * 11, 10),
+  }));
+
+  const pos = candidates.reduce((best, candidate) => {
+    const wallSpace = Math.min(candidate.x - safe.left, safe.right - candidate.x, candidate.y - safe.top, safe.bottom - candidate.y);
+    const sharkSpace = sharkPositions.length > 0 ? Math.min(...sharkPositions.map((shark) => distance(candidate, shark))) : 220;
+    const travel = distance(candidate, schoolCenter);
+    const score = wallSpace * 1.1 + sharkSpace * 1.2 - Math.abs(travel - 150) * 0.32;
+    const bestWallSpace = Math.min(best.x - safe.left, safe.right - best.x, best.y - safe.top, safe.bottom - best.y);
+    const bestSharkSpace = sharkPositions.length > 0 ? Math.min(...sharkPositions.map((shark) => distance(best, shark))) : 220;
+    const bestTravel = distance(best, schoolCenter);
+    const bestScore = bestWallSpace * 1.1 + bestSharkSpace * 1.2 - Math.abs(bestTravel - 150) * 0.32;
+
+    return score > bestScore ? candidate : best;
+  }, candidates[0]);
+
+  return {
+    pos: {
+      x: clamp(pos.x, safe.left, safe.right),
+      y: clamp(pos.y, safe.top, safe.bottom),
+    },
+    radius: 22,
+  };
 };
 
 export const sharkStartPosition = (

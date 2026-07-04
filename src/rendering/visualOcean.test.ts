@@ -70,6 +70,14 @@ describe("visual ocean readability", () => {
     expect(waterDisturbanceSource).not.toContain("quadraticCurveTo");
   });
 
+  it("draws kelp goals with the integrated kelp asset behind fish", () => {
+    expect(rendererSource).toContain("uiIconAssets.kelp");
+    expect(rendererSource).toContain("const drawKelpGoal");
+    expect(rendererSource.indexOf("drawKelpGoal(ctx, kelpGoal, time)")).toBeLessThan(
+      rendererSource.indexOf("for (const candidate of fish)"),
+    );
+  });
+
   it("uses tint and accessories instead of dead shark X-eyes", () => {
     expect(rendererSource).toContain("const sharkTintFor");
     expect(rendererSource).toContain("const drawSharkAccessory");
