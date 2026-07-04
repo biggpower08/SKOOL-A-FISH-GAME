@@ -329,6 +329,7 @@ export class Game {
       threatRadius: this.config.fishThreatRadius,
       dt: step,
       schoolIntent: this.schoolIntent(),
+      kelpGoal: this.kelpGoal,
       currentAt: (position) => this.waterDisturbance.sampleCurrent(position.x, position.y, this.elapsed),
     });
     updateSharks(this.sharks, this.fish, bounds, step, dt);
@@ -734,6 +735,16 @@ export class Game {
     this.canvas.dataset.feedback = this.run?.lastRecoverySummary || this.run?.lastRecruitmentSummary || "";
     this.canvas.dataset.waterEnergy = this.waterDisturbance.energy().toFixed(3);
     this.canvas.dataset.kelpGoal = this.kelpGoal ? `${Math.round(this.kelpGoal.pos.x)},${Math.round(this.kelpGoal.pos.y)}` : "";
+    const behaviorModes = this.fish.reduce<Record<string, number>>((counts, fish) => {
+      if (!fish.caught && fish.behaviorMode) {
+        counts[fish.behaviorMode] = (counts[fish.behaviorMode] ?? 0) + 1;
+      }
+
+      return counts;
+    }, {});
+    this.canvas.dataset.behaviorModes = Object.entries(behaviorModes)
+      .map(([mode, count]) => `${mode}:${count}`)
+      .join(",");
   }
 
   destroy(): void {

@@ -1,10 +1,89 @@
 import { describe, expect, it } from "vitest";
-import { updateFlocking } from "./flocking";
+import { neighborZonesFor, selectFishBehaviorMode, updateFlocking } from "./flocking";
 import flockingSource from "./flocking.ts?raw";
 import type { Fish, Shark } from "../game/types";
 
 describe("updateFlocking", () => {
   const withinMaxSpeed = (fish: Fish): boolean => Math.hypot(fish.vel.x, fish.vel.y) <= fish.maxSpeed + 0.000001;
+  const makeFish = (overrides: Partial<Fish> = {}): Fish => ({
+    id: "fish",
+    kind: "basic",
+    typeId: "tilapia",
+    className: "common",
+    pos: { x: 180, y: 150 },
+    vel: { x: 0, y: 0 },
+    radius: 4,
+    maxSpeed: 2,
+    health: 1,
+    maxHealth: 1,
+    threatened: false,
+    caught: false,
+    ...overrides,
+  });
+
+  const makeShark = (overrides: Partial<Shark> = {}): Shark => ({
+    id: "shark",
+    kind: "basic",
+    pos: { x: 80, y: 150 },
+    vel: { x: 0, y: 0 },
+    radius: 24,
+    health: 100,
+    maxHealth: 100,
+    hunger: 60,
+    maxHunger: 60,
+    hungerDrain: 1,
+    speed: 2.2,
+    acceleration: 0.22,
+    attackCooldown: 1,
+    attackRate: 4,
+    attackRadius: 140,
+    starved: false,
+    ...overrides,
+  });
+
+  it("selects behavior modes from kelp, shark distance, attack lanes, and recovery", () => {
+    const fish = makeFish({ pos: { x: 180, y: 150 } });
+    const school = [fish];
+
+    expect(selectFishBehaviorMode({ fish, sharks: [], school, threatRadius: 120, kelpGoal: { pos: { x: 260, y: 160 }, radius: 22 } })).toBe(
+      "forage",
+    );
+    expect(selectFishBehaviorMode({ fish, sharks: [], school, threatRadius: 120 })).toBe("school");
+    expect(selectFishBehaviorMode({ fish, sharks: [makeShark({ pos: { x: 95, y: 150 } })], school, threatRadius: 120 })).toBe("flee");
+    expect(selectFishBehaviorMode({ fish, sharks: [makeShark({ pos: { x: 20, y: 150 } })], school, threatRadius: 120 })).toBe("alert");
+    expect(
+      selectFishBehaviorMode({
+        fish,
+        sharks: [makeShark({ pos: { x: 340, y: 150 } })],
+        school,
+        threatRadius: 120,
+        previousMode: "flee",
+      }),
+    ).toBe("recover");
+    expect(
+      selectFishBehaviorMode({
+        fish,
+        sharks: [makeShark({ pos: { x: 100, y: 150 }, vel: { x: 2.2, y: 0 } })],
+        school,
+        threatRadius: 120,
+      }),
+    ).toBe("flee");
+  });
+
+  it("classifies neighbors into repulsion orientation and attraction zones", () => {
+    const fish = makeFish({ id: "center", pos: { x: 100, y: 100 } });
+    const zones = neighborZonesFor(fish, [
+      fish,
+      makeFish({ id: "repulsion", pos: { x: 112, y: 100 } }),
+      makeFish({ id: "orientation", pos: { x: 142, y: 100 } }),
+      makeFish({ id: "attraction", pos: { x: 169, y: 100 } }),
+      makeFish({ id: "outside", pos: { x: 220, y: 100 } }),
+    ]);
+
+    expect(zones.repulsion.map((candidate) => candidate.id)).toEqual(["repulsion"]);
+    expect(zones.orientation.map((candidate) => candidate.id)).toEqual(["orientation"]);
+    expect(zones.attraction.map((candidate) => candidate.id)).toEqual(["attraction"]);
+  });
 
   it("marks fish threatened and pushes them away from a nearby shark", () => {
     const fish: Fish[] = [
@@ -240,7 +319,8 @@ describe("updateFlocking", () => {
       { x: 0, y: 0 },
     );
 
-    expect(averageVelocity.x / fish.length).toBeGreaterThan(0.18);
+    expect(averageVelocity.x / fish.length).toBeGreaterThan(0.12);
+    expect(averageVelocity.x / fish.length).toBeLessThan(0.35);
     expect(fish.every(withinMaxSpeed)).toBe(true);
   });
 
@@ -248,6 +328,65 @@ describe("updateFlocking", () => {
     expect(flockingSource).toContain("const LARGE_SCHOOL_INTENT_STRENGTH = 0.52");
     expect(flockingSource).toContain("const LOCAL_THREAT_AWARENESS = 86");
     expect(flockingSource).toContain("const CHAIN_REACTION_BONUS = 31");
+    expect(flockingSource).toContain('export type FishBehaviorModeInput');
+    expect(flockingSource).toContain('export const behaviorWeights');
+    expect(flockingSource).toContain('export const neighborZonesFor');
+  });
+
+  it("uses forage mode to follow kelp without shark pressure", () => {
+    const fish = [makeFish({ id: "forager", pos: { x: 160, y: 150 }, maxSpeed: 2.1 })];
+
+    updateFlocking(fish, [], {
+      width: 420,
+      height: 320,
+      threatRadius: 120,
+      dt: 1,
+      schoolIntent: { x: 1, y: 0 },
+      kelpGoal: { pos: { x: 260, y: 150 }, radius: 22 },
+    });
+
+    expect(fish[0].behaviorMode).toBe("forage");
+    expect(fish[0].vel.x).toBeGreaterThan(0);
+  });
+
+  it("keeps far sharks from forcing the whole school into flee mode", () => {
+    const fish: Fish[] = Array.from({ length: 8 }, (_, index) =>
+      makeFish({
+        id: `calm-${index}`,
+        pos: { x: 170 + index * 8, y: 150 + (index % 2) * 8 },
+      }),
+    );
+    const shark = makeShark({ pos: { x: 390, y: 150 } });
+
+    updateFlocking(fish, [shark], {
+      width: 460,
+      height: 320,
+      threatRadius: 120,
+      dt: 1,
+      kelpGoal: { pos: { x: 260, y: 170 }, radius: 22 },
+    });
+
+    expect(fish.filter((candidate) => candidate.behaviorMode === "flee")).toHaveLength(0);
+    expect(fish.some((candidate) => candidate.behaviorMode === "forage" || candidate.behaviorMode === "school")).toBe(true);
+  });
+
+  it("makes close shark pressure local by putting only nearby fish into flee", () => {
+    const fish = [
+      makeFish({ id: "near", pos: { x: 150, y: 150 } }),
+      makeFish({ id: "far", pos: { x: 300, y: 150 } }),
+    ];
+    const shark = makeShark({ pos: { x: 90, y: 150 } });
+
+    updateFlocking(fish, [shark], {
+      width: 420,
+      height: 320,
+      threatRadius: 120,
+      dt: 1,
+      kelpGoal: { pos: { x: 300, y: 170 }, radius: 22 },
+    });
+
+    expect(fish[0].behaviorMode).toBe("flee");
+    expect(fish[1].behaviorMode).not.toBe("flee");
   });
 
   it("opens dense large schools without exploding them apart", () => {

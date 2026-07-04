@@ -298,10 +298,12 @@ Use current fish definitions:
 
 ## Recommended Implementation Phases
 
-1. `feature/fish-behavior-modes`
+1. `feature/fish-behavior-modes-and-zones`
    - Add `FishBehaviorMode`.
    - Add pure mode selection helper with tests.
    - Apply mode weights to existing steering formula.
+   - Replace the one-radius neighbor blend with repulsion, orientation, and attraction zones.
+   - Give repulsion priority over alignment/cohesion when fish are too close.
    - Preserve current playability.
 
 2. `feature/kelp-lifecycle-feeding`
@@ -376,15 +378,15 @@ Recommended default:
 ## Exact Next Branch Prompt
 
 Plain-English Summary:
-Implement the first step of the SKOOL-A-FISH-GAME fish-schooling model engine: behavior modes and mode-based steering weights. Do not implement the full density grid, kelp lifecycle, or local memory yet. Preserve playability and keep the change small enough to browser-QA.
+Implement the first step of the SKOOL-A-FISH-GAME fish-schooling model engine: behavior modes, mode-based steering weights, and simple repulsion/orientation/attraction neighbor zones. Do not implement the full density grid, kelp lifecycle, or local memory yet. Preserve playability and keep the change small enough to browser-QA.
 
 Caleb
 
 Branch:
-`feature/fish-behavior-modes`
+`feature/fish-behavior-modes-and-zones`
 
 Goal:
-Replace the current always-on steering soup with a lightweight behavior-mode layer that chooses `forage`, `school`, `alert`, `flee`, or `recover`, then applies mode-specific steering weights to the existing flocking vectors.
+Replace the current always-on steering soup with a lightweight behavior-mode layer that chooses `forage`, `school`, `alert`, `flee`, or `recover`, then applies mode-specific steering weights to the existing flocking vectors. At the same time, split neighbor handling into simple zones so close fish prioritize spacing before alignment or cohesion.
 
 Rules:
 - Do not copy outside code in this branch.
@@ -397,12 +399,16 @@ Implementation:
 - Add `FishBehaviorMode` and `behaviorWeights`.
 - Add a pure mode selector with tests.
 - Use local shark distance, attack lane danger, kelp availability, and recent threat flag if available.
+- Add a zone helper that classifies nearby fish into repulsion, orientation, and attraction zones.
+- Let repulsion override alignment/cohesion when fish are too close.
+- Let zone sizes vary lightly by fish type where it helps readability.
 - Apply weights to existing steering terms instead of adding a second movement system.
 - Keep `openWaterEscape` but weight it by mode.
 - Keep large-school shared intent modest.
 
 Tests:
 - Mode selector returns all modes under deterministic conditions.
+- Zone helper classifies neighbors into repulsion, orientation, and attraction.
 - Far shark does not put all fish into flee.
 - Close shark puts only locally threatened fish into flee.
 - Kelp/no-shark case favors forage.
