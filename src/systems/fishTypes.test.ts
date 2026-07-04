@@ -24,9 +24,11 @@ describe("fish type definitions", () => {
       buildTags: expect.arrayContaining(["salmon-generalist", "balanced-school"]),
     });
     expect(fishTypes.parrotfish).toMatchObject({
-      role: "Evasive control fish",
+      className: "support",
+      role: "School support fish",
       recruitAmount: 4,
-      buildTags: expect.arrayContaining(["parrotfish-evasion"]),
+      support: "minor",
+      buildTags: expect.arrayContaining(["parrotfish-evasion", "balanced-school"]),
     });
     expect(fishTypes["mahi-mahi"]).toMatchObject({
       role: "Tempo sprinter",
@@ -45,8 +47,9 @@ describe("fish type definitions", () => {
     expect(fishTypes.salmon.maxSpeed).toBeGreaterThanOrEqual(2.2);
     expect(fishTypes.grouper.maxSpeed).toBeGreaterThanOrEqual(1.6);
     expect(fishTypes.parrotfish.maxSpeed).toBeGreaterThan(fishTypes.salmon.maxSpeed);
+    expect(fishTypes["mahi-mahi"].maxSpeed).toBeGreaterThan(fishTypes.parrotfish.maxSpeed);
+    expect(fishTypes["mahi-mahi"].evasion).toBeGreaterThanOrEqual(fishTypes.parrotfish.evasion);
     expect(fishTypes.parrotfish.evasion).toBeGreaterThan(fishTypes.salmon.evasion);
-    expect(fishTypes.parrotfish.evasion - fishTypes["mahi-mahi"].evasion).toBeGreaterThanOrEqual(0.14);
     expect(fishTypes["mahi-mahi"].maxSpeed - fishTypes.parrotfish.maxSpeed).toBeGreaterThanOrEqual(0.35);
     expect(fishTypes["mahi-mahi"].maxHealth).toBeLessThanOrEqual(fishTypes.salmon.maxHealth);
     expect(fishTypes.grouper.maxHealth).toBeGreaterThan(fishTypes.salmon.maxHealth);
