@@ -34,6 +34,19 @@ Original SVG placeholders now live in `public/assets/icons/`:
 These are repo-owned placeholders, not downloaded clipart. They are safe to use
 until final transparent PNG artifact icons are generated or commissioned.
 
+Cleaned transparent PNG assets from the July asset pack now live in:
+
+- `public/assets/ui/shell_icon_transparent.png`
+- `public/assets/ui/fish_counter_icon_transparent.png`
+- `public/assets/ui/kelp_icon_transparent.png`
+- `public/assets/ui/treasure_chest_icon_transparent.png`
+- `public/assets/sharks/grog_steampunk_hat_shark_clean.png`
+- `public/assets/sharks/bill_bandana_shark_clean.png`
+- `public/assets/sharks/steezy_nose_piercing_shark_clean.png`
+
+Runtime code should reference these through `src/rendering/assetPaths.ts` so the
+GitHub Pages base path stays correct.
+
 ## Sprite/Icon Rules
 
 - Transparent PNG with true alpha.
