@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { aliveFish, applyContactSharkBite, applySharkAttack, hasLivingSchoolFish, summarizeAliveFishCounts } from "./combat";
+import {
+  aliveFish,
+  applyContactSharkBite,
+  applySharkAttack,
+  hasLivingSchoolFish,
+  sharkHungerRestoredForMeal,
+  summarizeAliveFishCounts,
+} from "./combat";
 import { createLevelConfig } from "./levels";
 import type { Fish, Shark } from "../game/types";
 
@@ -261,6 +268,16 @@ describe("applySharkAttack", () => {
     expect(shark.hunger).toBeGreaterThan(20);
     expect(shark.feedingRecovery).toBe(0);
     expect(shark.contactCooldown).toBeGreaterThan(0);
+  });
+
+  it("restores shark hunger with diminishing returns for large meals", () => {
+    const config = createLevelConfig(8);
+    const singleFishRestore = sharkHungerRestoredForMeal(1, config);
+    const fourFishRestore = sharkHungerRestoredForMeal(4, config);
+
+    expect(singleFishRestore).toBeGreaterThan(0);
+    expect(fourFishRestore).toBeGreaterThan(singleFishRestore);
+    expect(fourFishRestore).toBeLessThan(singleFishRestore * 4);
   });
 
   it("does not contact-bite again while the shark cooldown is active", () => {

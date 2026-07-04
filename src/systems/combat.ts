@@ -75,6 +75,17 @@ const damageForFish = (fish: Fish, config: LevelConfig): number => {
   return 1 + config.level * 0.08;
 };
 
+export const sharkHungerRestoredForMeal = (caught: number, config: LevelConfig): number => {
+  const baseRestore = 5.5 + config.level * 0.08;
+  let restored = 0;
+
+  for (let index = 0; index < caught; index += 1) {
+    restored += baseRestore * Math.max(0.35, 1 - index * 0.12);
+  }
+
+  return restored;
+};
+
 type CombatModifiers = Partial<Pick<SchoolModifiers, "catchResistance" | "evasionBonusByType" | "protectionBonusByType">>;
 
 const typeBonus = (
@@ -149,7 +160,7 @@ export const applySharkAttack = (
   }
 
   if (caught > 0) {
-    shark.hunger = Math.min(shark.maxHunger, shark.hunger + caught * (5.5 + config.level * 0.08));
+    shark.hunger = Math.min(shark.maxHunger, shark.hunger + sharkHungerRestoredForMeal(caught, config));
     shark.feedingRecovery = 0;
   }
 
@@ -196,7 +207,7 @@ export const applyContactSharkBite = (
 
   if (result.caught) {
     caught = 1;
-    shark.hunger = Math.min(shark.maxHunger, shark.hunger + 5.5 + config.level * 0.08);
+    shark.hunger = Math.min(shark.maxHunger, shark.hunger + sharkHungerRestoredForMeal(1, config));
   }
 
   shark.feedingRecovery = 0;
