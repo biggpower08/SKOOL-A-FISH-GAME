@@ -47,6 +47,9 @@ describe("HUD school counter", () => {
   });
 
   it("keeps active sidebar focused on current run essentials", () => {
+    expect(hudSource).toContain("uiIconAssets.fishCounter");
+    expect(hudSource).toContain("uiIconAssets.shell");
+    expect(hudSource).not.toContain("shellMark");
     expect(hudSource).not.toContain("Best L");
     expect(hudSource).not.toContain("Build ${buildHintForRun(run)}");
     expect(hudSource).not.toContain("run.schoolEnergy / 110");

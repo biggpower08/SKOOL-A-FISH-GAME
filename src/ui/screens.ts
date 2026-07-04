@@ -3,6 +3,7 @@ import { artifactDefinitions } from "../systems/artifacts";
 import { type ActiveFishTypeId, fishTypes, formatFishCountSummary, recruitmentChoicesForLevel } from "../systems/fishTypes";
 import { DEV_FREE_PURCHASES } from "../systems/upgrades";
 import { getFishSprite } from "../rendering/sprites";
+import { uiIconAssets } from "../rendering/assetPaths";
 
 type HomeHandlers = {
   hasSave: boolean;
@@ -91,6 +92,15 @@ const marker = (className: string, text: string): HTMLDivElement => {
   const element = document.createElement("div");
   element.className = className;
   element.textContent = text;
+  return element;
+};
+
+const iconMarker = (className: string, src: string, alt: string): HTMLDivElement => {
+  const element = marker(className, "");
+  const image = document.createElement("img");
+  image.src = src;
+  image.alt = alt;
+  element.replaceChildren(image);
   return element;
 };
 
@@ -211,7 +221,7 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
         choices.map((artifact) => {
           const chooseArtifact = () => handlers.onChoose(artifact.id as ArtifactId);
           return clickableCard("choice-card clickable-choice-card", [
-            marker("artifact-card-marker", "*"),
+            iconMarker("artifact-card-marker", uiIconAssets.treasureChest, "Artifact"),
             note(artifact.name),
             small(artifact.rarity),
             small(artifact.effect),
@@ -241,34 +251,47 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
   const recoverableFish = Math.max(missingFish, totalFishCounts(handlers.run.lostFishCounts));
   const canKelp = handlers.run.currency >= 100 && recoverableFish > 0;
   const canInvest = handlers.run.currency >= 100 && handlers.run.invested === 0;
+  const breakCards = [
+    recoverableFish > 0
+      ? card("choice-card", [
+          iconMarker("fish-card-marker", uiIconAssets.kelp, "Kelp"),
+          note("Feed Kelp"),
+          small("100 Shells"),
+          small(`Recover up to ${Math.min(5, recoverableFish)} fish`),
+          button("Feed Kelp", () => handlers.onChoose("heal"), !canKelp),
+        ])
+      : card("choice-card", [
+          iconMarker("fish-card-marker", uiIconAssets.kelp, "Kelp"),
+          note("Continue"),
+          small("Nothing to heal"),
+          small("The school endures."),
+          button("Continue", handlers.onContinue),
+        ]),
+    card("choice-card", [
+      iconMarker("artifact-card-marker", uiIconAssets.shell, "Shells"),
+      note("Questionable Investment"),
+      small("100 Shells now"),
+      small("+200 after 3 rounds"),
+      button("Invest Shells", () => handlers.onChoose("invest"), !canInvest),
+    ]),
+    ...(recoverableFish > 0
+      ? [
+          card("choice-card", [
+            iconMarker("artifact-card-marker", uiIconAssets.fishCounter, "Continue"),
+            note("Continue"),
+            small("Skip spending"),
+            small("The school endures."),
+            button("Continue", handlers.onContinue),
+          ]),
+        ]
+      : []),
+  ];
 
   overlay.replaceChildren(
     title("Break"),
     note(`Fish ${handlers.run.fishCount}/${handlers.run.maxFishCount}`),
     ...feedbackNotes(handlers.run),
-    card("choice-grid small-choice-grid", [
-      card("choice-card", [
-        marker("fish-card-marker", "o"),
-        note("Feed Kelp"),
-        small("100 Shells"),
-        small(`Recover up to ${Math.min(5, recoverableFish)} fish`),
-        button("Feed Kelp", () => handlers.onChoose("heal"), !canKelp),
-      ]),
-      card("choice-card", [
-        marker("artifact-card-marker", "S"),
-        note("Questionable Investment"),
-        small("100 Shells now"),
-        small("+200 after 3 rounds"),
-        button("Invest Shells", () => handlers.onChoose("invest"), !canInvest),
-      ]),
-      card("choice-card", [
-        marker("artifact-card-marker", ">"),
-        note("Continue"),
-        small("Skip spending"),
-        small("The school endures."),
-        button("Continue", handlers.onContinue),
-      ]),
-    ]),
+    card("choice-grid small-choice-grid", breakCards),
     button("Home", handlers.onHome),
     button("End Run", handlers.onEndRun),
   );
