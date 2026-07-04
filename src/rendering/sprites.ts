@@ -1,4 +1,5 @@
 import type { FishTypeId, SharkKind, SpriteManifestEntry, Vector } from "../game/types";
+import { cleanedSharkAssets } from "./assetPaths";
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/skool-a-fish/sprites`;
 const PROTOTYPE_FISH_VISUAL_BOOST = 1.18;
@@ -79,6 +80,42 @@ export const sharkSpriteManifest: Partial<Record<SharkKind, SpriteManifestEntry>
     fallbackColor: "#151a20",
     visualScale: 3.1 * PROTOTYPE_SHARK_VISUAL_BOOST,
     rippleScale: 0.78,
+  },
+  fast: {
+    spriteKey: "steezy-shark",
+    src: cleanedSharkAssets.steezy,
+    frameCount: 1,
+    width: 1232,
+    height: 718,
+    anchorX: 0.5,
+    anchorY: 0.52,
+    fallbackColor: "#151a20",
+    visualScale: 3.1 * PROTOTYPE_SHARK_VISUAL_BOOST,
+    rippleScale: 0.78,
+  },
+  center: {
+    spriteKey: "bill-shark",
+    src: cleanedSharkAssets.bill,
+    frameCount: 1,
+    width: 1229,
+    height: 848,
+    anchorX: 0.5,
+    anchorY: 0.52,
+    fallbackColor: "#151a20",
+    visualScale: 3.05 * PROTOTYPE_SHARK_VISUAL_BOOST,
+    rippleScale: 0.78,
+  },
+  barracuda: {
+    spriteKey: "grog-shark",
+    src: cleanedSharkAssets.grog,
+    frameCount: 1,
+    width: 1228,
+    height: 777,
+    anchorX: 0.5,
+    anchorY: 0.52,
+    fallbackColor: "#151a20",
+    visualScale: 2.85 * PROTOTYPE_SHARK_VISUAL_BOOST,
+    rippleScale: 0.76,
   },
 };
 

@@ -232,11 +232,10 @@ export const drawHud = (
   const enemyY = schoolY + 12 + summarizeFish(fish).length * FISH_ROW_HEIGHT;
 
   summarizeSharks(sharks).forEach((summary, index) => {
-    const rowY = enemyY + index * 31;
+    const rowY = enemyY + index * 25;
     sharkMark(ctx, summary.kind, x + 23, rowY + 4);
     ctx.fillStyle = "#d8e1ea";
     ctx.fillText(`${sharkLabels[summary.kind]} ${summary.count}`, x + 41, rowY + 2);
-    drawBar(ctx, x + 41, rowY + 8, 92, 5, summary.totalHealth / summary.maxHealth, "#d8e1ea");
-    drawBar(ctx, x + 41, rowY + 16, 92, 5, summary.totalHunger / summary.maxHunger, "#5f7186");
+    drawBar(ctx, x + 41, rowY + 10, 92, 6, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
 };

@@ -189,11 +189,9 @@ const drawSharkShape = (ctx: CanvasRenderingContext2D, shark: Shark): void => {
   const sharkSprite = getSharkSprite(shark.kind);
   const tint = sharkTintFor(shark);
   const alpha = shark.starved ? 0.68 : 1;
-  const spriteSize = sharkSprite ? spriteDrawSize(sharkSprite, shark.radius) : { width: shark.radius * 2, height: shark.radius * 2 };
   const drewSprite = drawSprite(ctx, sharkSprite, shark.pos, shark.vel, shark.radius, alpha, tint, shark.facingX);
 
   if (drewSprite) {
-    drawSharkAccessory(ctx, shark, spriteSize.width, spriteSize.height);
     return;
   }
 

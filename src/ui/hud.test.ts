@@ -36,11 +36,14 @@ describe("HUD school counter", () => {
     expect(hudSource).toContain("drawBar(ctx, x + 41, rowY + 14");
   });
 
-  it("keeps shark health and hunger status in the sidebar", () => {
+  it("keeps only shark starvation status in the sidebar", () => {
     expect(hudSource).toContain("sharkLabels");
-    expect(hudSource).toContain("summary.totalHealth / summary.maxHealth");
     expect(hudSource).toContain("summary.totalHunger / summary.maxHunger");
+    expect(hudSource).not.toContain("summary.totalHealth / summary.maxHealth");
     expect(hudSource).toContain('"Norman"');
+    expect(hudSource).toContain('"Steezy"');
+    expect(hudSource).toContain('"Bill"');
+    expect(hudSource).toContain('"Grog"');
   });
 
   it("keeps active sidebar focused on current run essentials", () => {

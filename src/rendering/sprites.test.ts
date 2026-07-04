@@ -4,6 +4,7 @@ import {
   getFishSprite,
   getSharkSprite,
   rippleOriginForMotion,
+  sharkSpriteManifest,
   spriteDrawSize,
   spriteRippleSize,
 } from "./sprites";
@@ -20,6 +21,13 @@ describe("sprite manifest", () => {
 
   it("maps the provided shark sprite", () => {
     expect(getSharkSprite("basic")?.src).toContain("shark.png");
+  });
+
+  it("maps named shark variants to the cleaned transparent assets", () => {
+    expect(getSharkSprite("fast")?.src).toContain("steezy_nose_piercing_shark_clean.png");
+    expect(getSharkSprite("center")?.src).toContain("bill_bandana_shark_clean.png");
+    expect(getSharkSprite("barracuda")?.src).toContain("grog_steampunk_hat_shark_clean.png");
+    expect(Object.values(sharkSpriteManifest).every((entry) => !entry.src.includes("_white_edges"))).toBe(true);
   });
 
   it("scales sprite draw boxes without changing gameplay radius", () => {
