@@ -2,8 +2,8 @@ import type { FishTypeId, SharkKind, SpriteManifestEntry, Vector } from "../game
 import { cleanedSharkAssets } from "./assetPaths";
 
 const SPRITE_BASE = `${import.meta.env.BASE_URL}assets/skool-a-fish/sprites`;
-const PROTOTYPE_FISH_VISUAL_BOOST = 1.18;
-const PROTOTYPE_SHARK_VISUAL_BOOST = 1.18;
+const PROTOTYPE_FISH_VISUAL_BOOST = 1.28;
+const PROTOTYPE_SHARK_VISUAL_BOOST = 1.27;
 
 export const fishSpriteManifest: Partial<Record<FishTypeId, SpriteManifestEntry>> = {
   tilapia: {
