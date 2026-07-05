@@ -13,9 +13,18 @@ export type SharkStart = {
   vel: Vector;
 };
 
+export type KelpGoalState = "dormant" | "feeding" | "consumed" | "respawning";
+
 export type KelpGoal = {
   pos: Vector;
   radius: number;
+  state: KelpGoalState;
+  progress: number;
+  alpha: number;
+};
+
+export type FeedableKelpGoal = KelpGoal & {
+  state: "dormant" | "feeding";
 };
 
 export const MIN_SHARK_START_DISTANCE = 230;
@@ -96,6 +105,59 @@ export const kelpGoalPosition = (bounds: Bounds, seed: number, schoolCenter: Vec
       y: clamp(pos.y, safe.top, safe.bottom),
     },
     radius: 22,
+    state: "dormant",
+    progress: 0,
+    alpha: 1,
+  };
+};
+
+export const isFeedableKelpGoal = (goal: KelpGoal | null | undefined): goal is FeedableKelpGoal =>
+  goal?.state === "dormant" || goal?.state === "feeding";
+
+export const advanceKelpFeeding = (goal: KelpGoal, fishOverlapping: number, dt: number): KelpGoal => {
+  if (!isFeedableKelpGoal(goal)) {
+    return goal;
+  }
+
+  const cappedFeeders = Math.min(8, Math.max(0, fishOverlapping));
+
+  if (cappedFeeders === 0) {
+    return {
+      ...goal,
+      state: goal.progress > 0.02 ? "feeding" : "dormant",
+    };
+  }
+
+  const progress = clamp(goal.progress + cappedFeeders * dt * 0.014, 0, 1);
+
+  if (progress >= 1) {
+    return {
+      ...goal,
+      state: "consumed",
+      progress: 1,
+      alpha: 1,
+    };
+  }
+
+  return {
+    ...goal,
+    state: "feeding",
+    progress,
+    alpha: 1,
+  };
+};
+
+export const fadeConsumedKelp = (goal: KelpGoal, dt: number): KelpGoal => {
+  if (goal.state !== "consumed") {
+    return goal;
+  }
+
+  const alpha = clamp(goal.alpha - dt * 0.75, 0, 1);
+
+  return {
+    ...goal,
+    alpha,
+    state: alpha <= 0 ? "respawning" : "consumed",
   };
 };
 

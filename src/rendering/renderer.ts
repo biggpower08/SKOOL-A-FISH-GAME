@@ -324,16 +324,24 @@ const drawKelpGoal = (ctx: CanvasRenderingContext2D, goal: KelpGoal | null | und
   }
 
   const bob = Math.sin(time * 0.0018 + goal.pos.x * 0.01) * 2;
+  const feedingGlow = goal.state === "feeding" ? 0.2 + goal.progress * 0.42 : 0;
+  const alpha = goal.state === "respawning" ? 0 : goal.alpha;
+  const tint =
+    goal.state === "dormant"
+      ? "rgba(112, 128, 118, 0.58)"
+      : goal.state === "feeding"
+        ? `rgba(68, 214, 126, ${0.22 + goal.progress * 0.38})`
+        : "rgba(128, 137, 132, 0.7)";
 
   ctx.save();
-  ctx.globalAlpha = 0.72;
+  ctx.globalAlpha = 0.72 * alpha;
   ctx.beginPath();
-  ctx.fillStyle = "rgba(76, 150, 112, 0.16)";
-  ctx.ellipse(goal.pos.x, goal.pos.y + 10, goal.radius * 1.35, goal.radius * 0.48, 0, 0, Math.PI * 2);
+  ctx.fillStyle = `rgba(76, ${150 + Math.round(feedingGlow * 90)}, 112, ${0.12 + feedingGlow * 0.28})`;
+  ctx.ellipse(goal.pos.x, goal.pos.y + 10, goal.radius * (1.35 + goal.progress * 0.24), goal.radius * 0.48, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  if (!drawSprite(ctx, kelpSprite, { x: goal.pos.x, y: goal.pos.y + bob }, { x: 0, y: 0 }, goal.radius, 1)) {
-    drawCircle(ctx, goal.pos.x, goal.pos.y + bob, goal.radius * 0.5, "#6fbf82");
+  if (!drawSprite(ctx, kelpSprite, { x: goal.pos.x, y: goal.pos.y + bob }, { x: 0, y: 0 }, goal.radius, 1, tint)) {
+    drawCircle(ctx, goal.pos.x, goal.pos.y + bob, goal.radius * 0.5, goal.state === "dormant" ? "#788078" : "#6fbf82");
   }
 
   ctx.restore();

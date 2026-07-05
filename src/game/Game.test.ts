@@ -26,7 +26,16 @@ describe("Game kelp goals", () => {
   it("tracks and renders an interior kelp goal during combat", () => {
     expect(gameSource).toContain("kelpGoalPosition");
     expect(gameSource).toContain("this.canvas.dataset.kelpGoal");
+    expect(gameSource).toContain("this.canvas.dataset.kelpState");
+    expect(gameSource).toContain("this.canvas.dataset.kelpProgress");
     expect(gameSource).toContain("this.canvas.dataset.behaviorModes");
-    expect(gameSource).toContain("this.kelpGoal.pos.x - center.x");
+    expect(gameSource).toContain("feedableKelp.pos.x - center.x");
+  });
+
+  it("keeps consumed kelp out of forage steering until it respawns", () => {
+    expect(gameSource).toContain("private feedableKelpGoal()");
+    expect(gameSource).toContain("kelpGoal: this.feedableKelpGoal()");
+    expect(gameSource).toContain("advanceKelpFeeding");
+    expect(gameSource).toContain("fadeConsumedKelp");
   });
 });

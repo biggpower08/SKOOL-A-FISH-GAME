@@ -3,7 +3,7 @@ import { createLevelConfig } from "./levels";
 import { distance } from "./vector";
 import { createSchool } from "../entities/School";
 import { createSharks } from "../entities/Shark";
-import { kelpGoalPosition, safeInteriorRect, schoolStartAnchor, sharkStartPosition } from "./startPositions";
+import { advanceKelpFeeding, fadeConsumedKelp, isFeedableKelpGoal, kelpGoalPosition, safeInteriorRect, schoolStartAnchor, sharkStartPosition } from "./startPositions";
 
 describe("start positions", () => {
   const bounds = { width: 796, height: 540 };
@@ -60,6 +60,33 @@ describe("start positions", () => {
       expect(goal.pos.y).toBeGreaterThanOrEqual(safe.top);
       expect(goal.pos.y).toBeLessThanOrEqual(safe.bottom);
       expect(goal.radius).toBeGreaterThan(0);
+      expect(goal.state).toBe("dormant");
+      expect(goal.progress).toBe(0);
+      expect(goal.alpha).toBe(1);
     }
+  });
+
+  it("advances kelp feeding without letting large schools consume it instantly", () => {
+    const goal = kelpGoalPosition(bounds, 3, { x: bounds.width / 2, y: bounds.height / 2 });
+    const fed = advanceKelpFeeding(goal, 54, 1);
+
+    expect(fed.state).toBe("feeding");
+    expect(fed.progress).toBeGreaterThan(0);
+    expect(fed.progress).toBeLessThan(0.2);
+  });
+
+  it("transitions kelp to consumed and then respawning as it fades", () => {
+    const goal = {
+      ...kelpGoalPosition(bounds, 4, { x: bounds.width / 2, y: bounds.height / 2 }),
+      state: "feeding" as const,
+      progress: 0.98,
+    };
+    const consumed = advanceKelpFeeding(goal, 4, 1);
+    const faded = fadeConsumedKelp(consumed, 2);
+
+    expect(consumed.state).toBe("consumed");
+    expect(isFeedableKelpGoal(consumed)).toBe(false);
+    expect(faded.state).toBe("respawning");
+    expect(faded.alpha).toBe(0);
   });
 });

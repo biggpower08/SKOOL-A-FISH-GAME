@@ -73,6 +73,10 @@ describe("visual ocean readability", () => {
   it("draws kelp goals with the integrated kelp asset behind fish", () => {
     expect(rendererSource).toContain("uiIconAssets.kelp");
     expect(rendererSource).toContain("const drawKelpGoal");
+    expect(rendererSource).toContain('goal.state === "dormant"');
+    expect(rendererSource).toContain('goal.state === "feeding"');
+    expect(rendererSource).toContain("goal.progress");
+    expect(rendererSource).toContain("goal.alpha");
     expect(rendererSource.indexOf("drawKelpGoal(ctx, kelpGoal, time)")).toBeLessThan(
       rendererSource.indexOf("for (const candidate of fish)"),
     );
