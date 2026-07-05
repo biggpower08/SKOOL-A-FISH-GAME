@@ -114,7 +114,7 @@ export const sharkSpriteManifest: Partial<Record<SharkKind, SpriteManifestEntry>
     anchorX: 0.5,
     anchorY: 0.52,
     fallbackColor: "#151a20",
-    visualScale: 2.85 * PROTOTYPE_SHARK_VISUAL_BOOST,
+    visualScale: 3.35 * PROTOTYPE_SHARK_VISUAL_BOOST,
     rippleScale: 0.76,
   },
 };
