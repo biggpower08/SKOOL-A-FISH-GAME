@@ -32,6 +32,15 @@ describe("sprite manifest", () => {
     expect(Object.values(sharkSpriteManifest).every((entry) => !entry.src.includes("_white_edges"))).toBe(true);
   });
 
+  it("keeps Grog large enough for the steampunk hat to read", () => {
+    const grog = getSharkSprite("barracuda");
+    const basic = getSharkSprite("basic");
+
+    expect(grog?.spriteKey).toBe("grog-shark");
+    expect(grog?.visualScale).toBeGreaterThan(basic?.visualScale ?? 0);
+    expect(spritesSource).toContain("visualScale: 3.35 * PROTOTYPE_SHARK_VISUAL_BOOST");
+  });
+
   it("scales sprite draw boxes without changing gameplay radius", () => {
     const tilapia = getFishSprite("tilapia");
 
