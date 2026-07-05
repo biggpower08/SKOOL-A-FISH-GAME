@@ -185,8 +185,8 @@ button:disabled {
 
 .fish-card-marker,
 .artifact-card-marker {
-  width: 18px;
-  height: 18px;
+  width: 22px;
+  height: 22px;
   display: grid;
   place-items: center;
   border: 1px solid #65717f;
@@ -207,15 +207,15 @@ button:disabled {
 }
 
 .fish-card-sprite {
-  width: 52px;
-  height: 36px;
+  width: 62px;
+  height: 42px;
   border-radius: 7px;
   background: rgba(23, 43, 49, 0.86);
 }
 
 .fish-card-sprite img {
-  max-width: 48px;
-  max-height: 32px;
+  max-width: 58px;
+  max-height: 38px;
   object-fit: contain;
 }
 
@@ -238,9 +238,15 @@ button:disabled {
 }
 
 .artifact-edge-button img,
-.artifact-icon img {
+.artifact-card-marker img {
   max-width: 24px;
   max-height: 24px;
+  object-fit: contain;
+}
+
+.artifact-icon img {
+  max-width: 28px;
+  max-height: 28px;
   object-fit: contain;
 }
 
@@ -351,8 +357,8 @@ button:disabled {
 }
 
 .artifact-icon {
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
   display: grid;
   place-items: center;
   border: 1px solid #65717f;
