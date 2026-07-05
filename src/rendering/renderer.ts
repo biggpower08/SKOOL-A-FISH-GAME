@@ -364,13 +364,13 @@ export const drawCombat = (
     }
 
     const definition = candidate.typeId === "support" ? null : fishTypes[candidate.typeId as ActiveFishTypeId];
-    const fill = candidate.threatened ? "#ff4058" : (definition?.color ?? "#ffffff");
+    const fill = candidate.caught ? "#7f8890" : candidate.threatened ? "#ff4058" : (definition?.color ?? "#ffffff");
     const fade = candidate.caught ? Math.max(0.16, Math.min(1, (candidate.caughtTimer ?? 0) / CAUGHT_FADE_SECONDS)) : 1;
     const pose = swimPoseForFish(candidate, time);
     ctx.save();
     ctx.globalAlpha = fade;
     const sprite = getFishSprite(candidate.typeId);
-    const tint = candidate.threatened ? "rgba(255, 42, 68, 0.32)" : null;
+    const tint = candidate.caught ? "rgba(128, 136, 142, 0.62)" : candidate.threatened ? "rgba(255, 42, 68, 0.32)" : null;
 
     if (!drawSprite(ctx, sprite, candidate.pos, candidate.vel, candidate.radius, 1, tint, candidate.facingX, pose.offsetY, pose.rotation)) {
       drawCircle(ctx, candidate.pos.x, candidate.pos.y + pose.offsetY, candidate.radius, fill);
