@@ -47,10 +47,10 @@ describe("sprite manifest", () => {
     const tilapia = getFishSprite("tilapia");
     const shark = getSharkSprite("basic");
 
-    expect(tilapia?.visualScale).toBeGreaterThanOrEqual(6.5);
-    expect(shark?.visualScale).toBeGreaterThanOrEqual(3.9);
-    expect(spritesSource).toContain("const PROTOTYPE_FISH_VISUAL_BOOST = 1.28");
-    expect(spritesSource).toContain("const PROTOTYPE_SHARK_VISUAL_BOOST = 1.27");
+    expect(tilapia?.visualScale).toBeGreaterThanOrEqual(6.8);
+    expect(shark?.visualScale).toBeGreaterThanOrEqual(4);
+    expect(spritesSource).toContain("const PROTOTYPE_FISH_VISUAL_BOOST = 1.34");
+    expect(spritesSource).toContain("const PROTOTYPE_SHARK_VISUAL_BOOST = 1.32");
   });
 
   it("keeps gameplay catch sizing separate from sprite readability boosts", () => {
