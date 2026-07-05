@@ -63,6 +63,12 @@ describe("visual ocean readability", () => {
     expect(rendererSource).not.toContain("shark.health / shark.maxHealth");
   });
 
+  it("renders caught fish as gray fade instead of threat red", () => {
+    expect(rendererSource).toContain('candidate.caught ? "#7f8890"');
+    expect(rendererSource).toContain('candidate.caught ? "rgba(128, 136, 142, 0.62)"');
+    expect(rendererSource.indexOf("candidate.caught ?")).toBeLessThan(rendererSource.indexOf("candidate.threatened ?"));
+  });
+
   it("uses filled wave fields instead of clunky wake line strokes", () => {
     expect(rendererSource).toContain("const drawWaveGlowFields");
     expect(rendererSource).not.toContain("const drawWaterCurrents");
