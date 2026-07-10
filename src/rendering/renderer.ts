@@ -443,10 +443,58 @@ export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, heig
     }
   }
 
-  const sharkPos = { x: usableWidth * 0.72, y: height * 0.48 };
-  const sharkVel = { x: -1, y: 0 };
+  const schoolFocus = {
+    x: usableWidth * 0.45 + Math.sin(time * 0.00032) * 28,
+    y: height * 0.48 + Math.cos(time * 0.00028) * 18,
+  };
+  const previewSharks: Shark[] = [
+    {
+      id: "idle-norman",
+      kind: "basic",
+      pos: {
+        x: schoolFocus.x + 235 + Math.sin(time * 0.00045) * 34,
+        y: schoolFocus.y - 24 + Math.cos(time * 0.00038) * 24,
+      },
+      vel: { x: -1, y: Math.sin(time * 0.0004) * 0.28 },
+      radius: 30,
+      health: 1,
+      maxHealth: 1,
+      hunger: 1,
+      maxHunger: 1,
+      hungerDrain: 1,
+      speed: 1,
+      acceleration: 0.2,
+      attackCooldown: 1,
+      attackRate: 1,
+      attackRadius: 1,
+      facingX: -1,
+      starved: false,
+    },
+    {
+      id: "idle-grog",
+      kind: "barracuda",
+      pos: {
+        x: schoolFocus.x - 205 + Math.cos(time * 0.00042) * 26,
+        y: schoolFocus.y + 74 + Math.sin(time * 0.00036) * 18,
+      },
+      vel: { x: 1, y: Math.cos(time * 0.00034) * 0.22 },
+      radius: 22,
+      health: 1,
+      maxHealth: 1,
+      hunger: 1,
+      maxHunger: 1,
+      hungerDrain: 1,
+      speed: 1,
+      acceleration: 0.2,
+      attackCooldown: 1,
+      attackRate: 1,
+      attackRadius: 1,
+      facingX: 1,
+      starved: false,
+    },
+  ];
 
-  if (!drawSprite(ctx, getSharkSprite("basic"), sharkPos, sharkVel, 30, 1, null, -1)) {
-    drawCircle(ctx, sharkPos.x, sharkPos.y, 30, "#151a20");
+  for (const shark of previewSharks) {
+    drawSharkShape(ctx, shark);
   }
 };

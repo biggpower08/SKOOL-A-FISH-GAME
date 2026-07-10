@@ -7,16 +7,21 @@ import { uiIconAssets } from "../rendering/assetPaths";
 
 type HomeHandlers = {
   hasSave: boolean;
-  onContinuePlayer: () => void;
-  onContinueDev: () => void;
-  onNewPlayer: () => void;
-  onNewDev: () => void;
+  onPlay: () => void;
+  onContinue: () => void;
   onSaves: () => void;
+  onSettings: () => void;
+};
+
+type SettingsHandlers = {
+  onDevMode: () => void;
+  onBack: () => void;
 };
 
 type ChoiceHandlers = {
   run: RunState;
   mode: RewardFlow;
+  isDevMode: boolean;
   onChoose: (choice: RewardChoiceId) => void;
   onContinue: () => void;
   onHome: () => void;
@@ -157,11 +162,22 @@ export const renderHome = (overlay: HTMLElement, handlers: HomeHandlers): void =
   overlay.className = "overlay menu";
   overlay.replaceChildren(
     title("SKOOL-A"),
-    button("Player Mode", handlers.onNewPlayer),
-    button("Dev Mode", handlers.onNewDev),
-    button("Continue Player", handlers.onContinuePlayer, !handlers.hasSave),
-    button("Continue Dev", handlers.onContinueDev, !handlers.hasSave),
+    note("Build a school. Outlast the sharks."),
+    button("New Game", handlers.onPlay),
+    button("Continue", handlers.onContinue, !handlers.hasSave),
     button("Saves", handlers.onSaves),
+    button("Settings", handlers.onSettings),
+  );
+};
+
+export const renderSettings = (overlay: HTMLElement, handlers: SettingsHandlers): void => {
+  overlay.className = "overlay menu compact";
+  overlay.replaceChildren(
+    title("Settings"),
+    note("Player Mode is the public game."),
+    button("Dev Mode", handlers.onDevMode),
+    small("Testing tools: level jump, recruit test, artifact toggles."),
+    button("Back", handlers.onBack),
   );
 };
 
@@ -177,10 +193,10 @@ export const renderChoice = (overlay: HTMLElement, handlers: ChoiceHandlers): vo
         "choice-grid recruit-choice-grid",
         recruitmentChoicesForLevel(handlers.run.level).map((option) => {
           const definition = fishTypes[option.id];
-          const affordable = handlers.run.currency >= option.shellCost || DEV_FREE_PURCHASES;
+          const affordable = handlers.run.currency >= option.shellCost || (handlers.isDevMode && DEV_FREE_PURCHASES);
           const costText = option.shellCost === 0 ? "Free" : `${option.shellCost} Shells`;
           const lockedText = `Need ${option.shellCost - handlers.run.currency} Shells`;
-          const buttonText = handlers.run.currency < option.shellCost && DEV_FREE_PURCHASES ? "Dev Buy" : "Add to School";
+          const buttonText = handlers.run.currency < option.shellCost && handlers.isDevMode && DEV_FREE_PURCHASES ? "Dev Buy" : "Add to School";
 
           return card(`choice-card recruit-choice-card${affordable ? "" : " locked"}`, [
             fishMarker(option.id),

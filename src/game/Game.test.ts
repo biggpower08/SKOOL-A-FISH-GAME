@@ -13,6 +13,30 @@ describe("Game artifact UI", () => {
     expect(gameSource).not.toContain('coupon: "%"');
     expect(gameSource).toContain('iconImage.alt = `${artifact.name} artifact`');
   });
+
+  it("keeps player artifacts read-only and dev artifacts toggleable", () => {
+    expect(gameSource).toContain('this.mode === "dev"');
+    expect(gameSource).toContain("Click to add debug artifact");
+    expect(gameSource).toContain("Owned artifact");
+    expect(gameSource).toContain("if (!this.run || this.mode !== \"dev\")");
+  });
+});
+
+describe("Game mode routing", () => {
+  it("uses Settings as the Dev Mode entry point and hides dev controls from Home", () => {
+    expect(gameSource).toContain("private showSettings()");
+    expect(gameSource).toContain("renderSettings(this.overlay");
+    expect(gameSource).toContain('onPlay: () => this.newCampaign("player")');
+    expect(gameSource).toContain('onDevMode: () => this.newCampaign("dev")');
+    expect(gameSource).toContain("this.hideDevLevelScroller()");
+  });
+
+  it("keeps dev controls and cheats behind dev mode", () => {
+    expect(gameSource).toContain('if (this.mode !== "dev")');
+    expect(gameSource).toContain('this.canvas.dataset.mode = this.mode');
+    expect(gameSource).toContain('isDevMode: this.mode === "dev"');
+    expect(gameSource).toContain("freePurchases: this.mode === \"dev\" && DEV_FREE_PURCHASES");
+  });
 });
 
 describe("Game loss conditions", () => {

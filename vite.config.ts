@@ -1,5 +1,5 @@
 import { defineConfig } from "vite";
 
-export default defineConfig({
-  base: "/SKOOL-A-FISH-GAME/",
-});
+export default defineConfig(({ mode }) => ({
+  base: mode === "itch" ? "./" : "/SKOOL-A-FISH-GAME/",
+}));

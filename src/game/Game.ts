@@ -25,7 +25,7 @@ import {
   rewardFlowForCompletedLevel,
 } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
-import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
+import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves, renderSettings } from "../ui/screens";
 import type { Bounds, Fish, FishTypeId, GameMode, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
@@ -126,6 +126,10 @@ export class Game {
       return;
     }
 
+    if (this.mode !== "dev") {
+      return;
+    }
+
     if (event.key === "]") {
       this.run.currency += 5;
       saveRun(this.run);
@@ -139,21 +143,15 @@ export class Game {
 
   private readonly handleLevelScrollerWheel = (event: WheelEvent): void => {
     if (this.mode !== "dev") {
-  return;
+      return;
     }
+
     event.preventDefault();
     const delta = Math.abs(event.deltaX) >= Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
 
     if (delta === 0) {
       return;
     }
-    if (this.mode !== "dev") {
-  this.devLevelScroller.replaceChildren();
-  this.devLevelScroller.classList.add("hidden");
-  return;
-    }
-
-    this.devLevelScroller.classList.remove("hidden");
 
     this.devLevelOffset = clamp(this.devLevelOffset + Math.sign(delta), 1, 66);
     this.renderDevLevelScroller();
@@ -181,15 +179,24 @@ export class Game {
   private showHome(): void {
     this.screen = "home";
     this.hideArtifactPanel();
+    this.hideDevLevelScroller();
     renderHome(this.overlay, {
-  hasSave: hasSavedRun(),
-  onContinuePlayer: () => this.continueCampaign("player"),
-  onContinueDev: () => this.continueCampaign("dev"),
-  onNewPlayer: () => this.newCampaign("player"),
-  onNewDev: () => this.newCampaign("dev"),
-  onSaves: () => this.showSaves(),
-});
-    this.renderDevLevelScroller();
+      hasSave: hasSavedRun(),
+      onPlay: () => this.newCampaign("player"),
+      onContinue: () => this.continueCampaign("player"),
+      onSaves: () => this.showSaves(),
+      onSettings: () => this.showSettings(),
+    });
+  }
+
+  private showSettings(): void {
+    this.screen = "settings";
+    this.hideArtifactPanel();
+    this.hideDevLevelScroller();
+    renderSettings(this.overlay, {
+      onDevMode: () => this.newCampaign("dev"),
+      onBack: () => this.showHome(),
+    });
   }
 
   private returnHome(): void {
@@ -224,6 +231,7 @@ export class Game {
   private showSaves(): void {
     this.screen = "saves";
     this.hideArtifactPanel();
+    this.hideDevLevelScroller();
     renderSaves(this.overlay, {
       run: loadRun(),
       onBack: () => this.showHome(),
@@ -276,10 +284,11 @@ export class Game {
   }
 
   private jumpToLevel(level: number): void {
-  if (this.mode !== "dev") {
-    return;
+    if (this.mode !== "dev") {
+      return;
     }
-  this.run = {
+
+    this.run = {
       ...(this.run ?? createNewRun()),
       level,
       bestLevel: Math.max(this.run?.bestLevel ?? 1, level),
@@ -291,6 +300,12 @@ export class Game {
   }
 
   private renderDevLevelScroller(): void {
+    if (this.mode !== "dev" || this.screen === "home" || this.screen === "settings" || this.screen === "saves") {
+      this.hideDevLevelScroller();
+      return;
+    }
+
+    this.devLevelScroller.classList.remove("hidden");
     const label = document.createElement("span");
     label.textContent = "DEV";
     const buttons: HTMLButtonElement[] = [];
@@ -309,7 +324,7 @@ export class Game {
 
     const recruitButton = document.createElement("button");
     recruitButton.type = "button";
-    recruitButton.textContent = "$";
+    recruitButton.textContent = "R";
     recruitButton.title = "Open recruit test";
     recruitButton.addEventListener("click", () => this.openRecruitTest());
 
@@ -317,10 +332,11 @@ export class Game {
   }
 
   private openRecruitTest(): void {
-  if (this.mode !== "dev") {
-    return;
+    if (this.mode !== "dev") {
+      return;
     }
-  this.run ??= createNewRun();
+
+    this.run ??= createNewRun();
     saveRun(this.run);
     this.hideArtifactPanel();
     this.showIntermission("recruit");
@@ -615,6 +631,7 @@ export class Game {
       renderChoice(this.overlay, {
         run: this.run,
         mode: "investment-return",
+        isDevMode: this.mode === "dev",
         onChoose: (choice) => this.choose(choice),
         onContinue: () => this.showIntermission(rewardMode),
         onHome: () => this.returnHome(),
@@ -641,6 +658,7 @@ export class Game {
     renderChoice(this.overlay, {
       run: this.run,
       mode: rewardMode,
+      isDevMode: this.mode === "dev",
       onChoose: (choice) => this.choose(choice),
       onContinue: () => this.startLevel(),
       onHome: () => this.returnHome(),
@@ -654,8 +672,8 @@ export class Game {
     }
 
     this.run = isArtifactId(choice)
-  ? applyArtifactReward(this.run, choice)
-  : applyChoice(this.run, choice, { freePurchases: this.mode === "dev" && DEV_FREE_PURCHASES });
+      ? applyArtifactReward(this.run, choice)
+      : applyChoice(this.run, choice, { freePurchases: this.mode === "dev" && DEV_FREE_PURCHASES });
     saveRun(this.run);
     this.startLevel();
   }
@@ -710,18 +728,19 @@ export class Game {
       const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
       artifactCard.className = owned ? "artifact-card owned" : "artifact-card";
       artifactCard.tabIndex = 0;
-    if (this.mode === "dev") {
-      artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
-      artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
-      artifactCard.addEventListener("keydown", (event) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      this.toggleOwnedArtifact(artifact.id);
-    }
-    });
-} else {
-  artifactCard.title = owned ? "Owned artifact" : "Locked artifact";
-}
+
+      if (this.mode === "dev") {
+        artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
+        artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
+        artifactCard.addEventListener("keydown", (event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            this.toggleOwnedArtifact(artifact.id);
+          }
+        });
+      } else {
+        artifactCard.title = owned ? "Owned artifact" : "Locked artifact";
+      }
 
       const icon = document.createElement("div");
       icon.className = "artifact-icon";
@@ -756,7 +775,7 @@ export class Game {
   }
 
   private toggleOwnedArtifact(artifactId: (typeof artifactDefinitions)[number]["id"]): void {
-    if (!this.run) {
+    if (!this.run || this.mode !== "dev") {
       return;
     }
 
@@ -778,6 +797,11 @@ export class Game {
   private hideArtifactPanel(): void {
     this.artifactButton.classList.add("hidden");
     this.closeArtifactPanel();
+  }
+
+  private hideDevLevelScroller(): void {
+    this.devLevelScroller.replaceChildren();
+    this.devLevelScroller.classList.add("hidden");
   }
 
   private render(time: number): void {
@@ -804,6 +828,7 @@ export class Game {
     this.canvas.dataset.grouper = String(this.run?.fishCounts.grouper ?? 0);
     this.canvas.dataset.artifacts = String(this.run?.ownedArtifacts.length ?? 0);
     this.canvas.dataset.feedback = this.run?.lastRecoverySummary || this.run?.lastRecruitmentSummary || "";
+    this.canvas.dataset.mode = this.mode;
     this.canvas.dataset.waterEnergy = this.waterDisturbance.energy().toFixed(3);
     this.canvas.dataset.kelpGoal = this.kelpGoal ? `${Math.round(this.kelpGoal.pos.x)},${Math.round(this.kelpGoal.pos.y)}` : "";
     this.canvas.dataset.kelpState = this.kelpGoal?.state ?? "";

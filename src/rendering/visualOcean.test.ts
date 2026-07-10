@@ -111,6 +111,9 @@ describe("visual ocean readability", () => {
 
   it("uses a larger animated fish school on the idle screen", () => {
     expect(rendererSource).toContain("const previewFish = [");
+    expect(rendererSource).toContain("const previewSharks");
+    expect(rendererSource).toContain('"idle-norman"');
+    expect(rendererSource).toContain('"idle-grog"');
     expect(rendererSource.match(/\"tilapia\"|\"salmon\"|\"parrotfish\"|\"mahi-mahi\"|\"grouper\"/g)?.length).toBeGreaterThanOrEqual(12);
     expect(rendererSource).toContain("const loop = (time *");
   });

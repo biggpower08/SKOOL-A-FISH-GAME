@@ -106,7 +106,7 @@ button:disabled {
 .overlay.menu {
   align-content: center;
   justify-items: center;
-  gap: 12px;
+  gap: 11px;
   pointer-events: auto;
 }
 
@@ -115,8 +115,8 @@ button:disabled {
 }
 
 .overlay h1 {
-  margin: 0 0 6px;
-  font-size: 34px;
+  margin: 0 0 4px;
+  font-size: 38px;
   font-weight: 700;
   letter-spacing: 0;
   text-shadow:
@@ -125,9 +125,15 @@ button:disabled {
 }
 
 .overlay p {
-  margin: 0;
+  max-width: min(360px, calc(100vw - 36px));
+  margin: 0 0 2px;
   color: #a9b4c0;
   font-size: 14px;
+  text-align: center;
+}
+
+.overlay.menu button {
+  font-weight: 700;
 }
 
 .choice-grid {
@@ -327,6 +333,11 @@ button:disabled {
   border-radius: 6px;
   background: rgba(12, 18, 24, 0.96);
   box-shadow: 0 2px 0 rgba(0, 0, 0, 0.45);
+}
+
+.artifact-card[title="Owned artifact"],
+.artifact-card[title="Locked artifact"] {
+  cursor: default;
 }
 
 .artifact-card.owned {

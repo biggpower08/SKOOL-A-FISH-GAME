@@ -91,6 +91,23 @@ The Vite base path is currently set for:
 biggpower08/SKOOL-A-FISH-GAME
 ```
 
+## Itch.io Build
+
+Use the itch build when uploading SKOOL-A as an HTML5 browser game:
+
+```bash
+npm run build:itch
+npm run pack:itch
+```
+
+The upload ZIP is created at:
+
+```text
+releases/skool-a-fish-game-itch.zip
+```
+
+See `docs/ITCH_RELEASE.md` for itch.io upload settings and why this build uses relative asset paths.
+
 ## Finished-for-now Scope
 
 This version should focus on polish, stability, and readability before adding new content.
