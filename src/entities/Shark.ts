@@ -118,11 +118,11 @@ const isolatedFish = (fish: Fish[]): Fish | undefined => {
 };
 
 export const targetForShark = (shark: Shark, fish: Fish[]) => {
-  if (shark.kind === "center") {
+  if (shark.kind === "barracuda") {
     return centerOf(aliveFish(fish).map((candidate) => candidate.pos));
   }
 
-  if (shark.kind === "barracuda") {
+  if (shark.kind === "center") {
     return isolatedFish(fish)?.pos ?? schoolCenter(fish);
   }
 

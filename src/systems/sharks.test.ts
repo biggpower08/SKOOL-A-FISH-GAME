@@ -37,59 +37,68 @@ describe("shark hunger and predator types", () => {
     expect(kinds.has("center")).toBe(true);
   });
 
-  it("uses different targeting logic for center and striker sharks", () => {
-    const school = createSchool(0, 0, { width: 600, height: 400 });
-    school.push(
-      {
-        id: "near",
-        kind: "basic",
-        typeId: "tilapia",
-        className: "common",
-        pos: { x: 120, y: 120 },
-        vel: { x: 0, y: 0 },
-        radius: 4,
-        maxSpeed: 1.8,
-        health: 1,
-        maxHealth: 1,
-        threatened: false,
-        caught: false,
-      },
-      {
-        id: "outer",
-        kind: "basic",
-        typeId: "tilapia",
-        className: "common",
-        pos: { x: 420, y: 310 },
-        vel: { x: 0, y: 0 },
-        radius: 4,
-        maxSpeed: 1.8,
-        health: 1,
-        maxHealth: 1,
-        threatened: false,
-        caught: false,
-      },
-      {
-        id: "cluster",
-        kind: "basic",
-        typeId: "tilapia",
-        className: "common",
-        pos: { x: 130, y: 125 },
-        vel: { x: 0, y: 0 },
-        radius: 4,
-        maxSpeed: 1.8,
-        health: 1,
-        maxHealth: 1,
-        threatened: false,
-        caught: false,
-      },
-    );
-    const [centerShark] = createSharks({ ...createLevelConfig(12), sharkTypes: ["center"] }, { width: 600, height: 400 });
-    const [striker] = createSharks({ ...createLevelConfig(12), sharkTypes: ["barracuda"] }, { width: 600, height: 400 });
+  it("uses distinct targeting logic for Norman, Steezy, Bill, and Grog", () => {
+  const school = createSchool(0, 0, { width: 600, height: 400 });
+  school.push(
+    {
+      id: "near",
+      kind: "basic",
+      typeId: "tilapia",
+      className: "common",
+      pos: { x: 120, y: 120 },
+      vel: { x: 0, y: 0 },
+      radius: 4,
+      maxSpeed: 1.8,
+      health: 1,
+      maxHealth: 1,
+      threatened: false,
+      caught: false,
+    },
+    {
+      id: "outer",
+      kind: "basic",
+      typeId: "tilapia",
+      className: "common",
+      pos: { x: 420, y: 310 },
+      vel: { x: 0, y: 0 },
+      radius: 4,
+      maxSpeed: 1.8,
+      health: 1,
+      maxHealth: 1,
+      threatened: false,
+      caught: false,
+    },
+    {
+      id: "cluster",
+      kind: "basic",
+      typeId: "tilapia",
+      className: "common",
+      pos: { x: 130, y: 125 },
+      vel: { x: 0, y: 0 },
+      radius: 4,
+      maxSpeed: 1.8,
+      health: 1,
+      maxHealth: 1,
+      threatened: false,
+      caught: false,
+    },
+  );
 
-    expect(targetForShark(centerShark, school).x).toBeCloseTo((120 + 420 + 130) / 3);
-    expect(targetForShark(striker, school)).toEqual({ x: 420, y: 310 });
-  });
+  const [norman] = createSharks({ ...createLevelConfig(12), sharkTypes: ["basic"] }, { width: 600, height: 400 });
+  const [steezy] = createSharks({ ...createLevelConfig(12), sharkTypes: ["fast"] }, { width: 600, height: 400 });
+  const [bill] = createSharks({ ...createLevelConfig(12), sharkTypes: ["center"] }, { width: 600, height: 400 });
+  const [grog] = createSharks({ ...createLevelConfig(12), sharkTypes: ["barracuda"] }, { width: 600, height: 400 });
 
+  expect(targetForShark(grog, school).x).toBeCloseTo((120 + 420 + 130) / 3);
+  expect(targetForShark(grog, school).y).toBeCloseTo((120 + 310 + 125) / 3);
+
+  expect(targetForShark(grog, school).x).toBeCloseTo((120 + 420 + 130) / 3);
+expect(targetForShark(grog, school).y).toBeCloseTo((120 + 310 + 125) / 3);
+
+expect(targetForShark(bill, school)).toEqual({ x: 420, y: 310 });
+expect(targetForShark(norman, school)).toEqual({ x: 120, y: 120 });
+expect(targetForShark(steezy, school)).toEqual({ x: 120, y: 120 });
+});
   it("summarizes active enemy composition by shark type", () => {
     const sharks = createSharks(createLevelConfig(24), { width: 600, height: 400 });
     const summary = summarizeSharks(sharks);

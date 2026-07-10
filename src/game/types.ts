@@ -14,6 +14,7 @@ export type GameScreen = "home" | "saves" | "combat" | "choice" | "pause" | "gam
 export type ChoiceId = FishTypeId | "artifact" | "invest" | "heal";
 export type RewardChoiceId = ChoiceId | ArtifactId;
 export type RewardFlow = "none" | "artifact" | "recruit" | "investment-return";
+export type GameMode = "player" | "dev";
 
 export type LevelConfig = {
   level: number;

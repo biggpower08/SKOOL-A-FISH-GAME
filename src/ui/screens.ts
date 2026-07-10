@@ -7,8 +7,10 @@ import { uiIconAssets } from "../rendering/assetPaths";
 
 type HomeHandlers = {
   hasSave: boolean;
-  onContinue: () => void;
-  onNewCampaign: () => void;
+  onContinuePlayer: () => void;
+  onContinueDev: () => void;
+  onNewPlayer: () => void;
+  onNewDev: () => void;
   onSaves: () => void;
 };
 
@@ -155,8 +157,10 @@ export const renderHome = (overlay: HTMLElement, handlers: HomeHandlers): void =
   overlay.className = "overlay menu";
   overlay.replaceChildren(
     title("SKOOL-A"),
-    button("Continue Campaign", handlers.onContinue, !handlers.hasSave),
-    button("New Campaign", handlers.onNewCampaign),
+    button("Player Mode", handlers.onNewPlayer),
+    button("Dev Mode", handlers.onNewDev),
+    button("Continue Player", handlers.onContinuePlayer, !handlers.hasSave),
+    button("Continue Dev", handlers.onContinueDev, !handlers.hasSave),
     button("Saves", handlers.onSaves),
   );
 };

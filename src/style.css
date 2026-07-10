@@ -69,6 +69,10 @@ button:disabled {
   pointer-events: auto;
 }
 
+.dev-level-scroller.hidden {
+  display: none;
+}
+
 .dev-level-scroller span {
   color: #7f8a96;
   font-size: 10px;

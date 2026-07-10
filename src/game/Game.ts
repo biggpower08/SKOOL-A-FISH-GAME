@@ -26,7 +26,7 @@ import {
 } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves } from "../ui/screens";
-import type { Bounds, Fish, FishTypeId, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
+import type { Bounds, Fish, FishTypeId, GameMode, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
 
 const HUD_WIDTH = 164;
 
@@ -39,6 +39,7 @@ export class Game {
   private readonly devLevelScroller: HTMLDivElement;
   private screen: GameScreen = "home";
   private run: RunState | null = null;
+  private mode: GameMode = "player";
   private config: LevelConfig = createLevelConfig(1);
   private fish: Fish[] = [];
   private sharks: Shark[] = [];
@@ -137,12 +138,22 @@ export class Game {
   };
 
   private readonly handleLevelScrollerWheel = (event: WheelEvent): void => {
+    if (this.mode !== "dev") {
+  return;
+    }
     event.preventDefault();
     const delta = Math.abs(event.deltaX) >= Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
 
     if (delta === 0) {
       return;
     }
+    if (this.mode !== "dev") {
+  this.devLevelScroller.replaceChildren();
+  this.devLevelScroller.classList.add("hidden");
+  return;
+    }
+
+    this.devLevelScroller.classList.remove("hidden");
 
     this.devLevelOffset = clamp(this.devLevelOffset + Math.sign(delta), 1, 66);
     this.renderDevLevelScroller();
@@ -171,11 +182,13 @@ export class Game {
     this.screen = "home";
     this.hideArtifactPanel();
     renderHome(this.overlay, {
-      hasSave: hasSavedRun(),
-      onContinue: () => this.continueCampaign(),
-      onNewCampaign: () => this.newCampaign(),
-      onSaves: () => this.showSaves(),
-    });
+  hasSave: hasSavedRun(),
+  onContinuePlayer: () => this.continueCampaign("player"),
+  onContinueDev: () => this.continueCampaign("dev"),
+  onNewPlayer: () => this.newCampaign("player"),
+  onNewDev: () => this.newCampaign("dev"),
+  onSaves: () => this.showSaves(),
+});
     this.renderDevLevelScroller();
   }
 
@@ -217,13 +230,15 @@ export class Game {
     });
   }
 
-  private newCampaign(): void {
+  private newCampaign(mode: GameMode): void {
+    this.mode = mode;
     this.run = createNewRun();
     saveRun(this.run);
     this.startLevel();
   }
 
-  private continueCampaign(): void {
+  private continueCampaign(mode: GameMode): void {
+    this.mode = mode;
     this.run = loadRun() ?? createNewRun();
     this.startLevel();
   }
@@ -261,7 +276,10 @@ export class Game {
   }
 
   private jumpToLevel(level: number): void {
-    this.run = {
+  if (this.mode !== "dev") {
+    return;
+    }
+  this.run = {
       ...(this.run ?? createNewRun()),
       level,
       bestLevel: Math.max(this.run?.bestLevel ?? 1, level),
@@ -291,7 +309,7 @@ export class Game {
 
     const recruitButton = document.createElement("button");
     recruitButton.type = "button";
-    recruitButton.textContent = "R";
+    recruitButton.textContent = "$";
     recruitButton.title = "Open recruit test";
     recruitButton.addEventListener("click", () => this.openRecruitTest());
 
@@ -299,7 +317,10 @@ export class Game {
   }
 
   private openRecruitTest(): void {
-    this.run ??= createNewRun();
+  if (this.mode !== "dev") {
+    return;
+    }
+  this.run ??= createNewRun();
     saveRun(this.run);
     this.hideArtifactPanel();
     this.showIntermission("recruit");
@@ -632,7 +653,9 @@ export class Game {
       return;
     }
 
-    this.run = isArtifactId(choice) ? applyArtifactReward(this.run, choice) : applyChoice(this.run, choice, { freePurchases: DEV_FREE_PURCHASES });
+    this.run = isArtifactId(choice)
+  ? applyArtifactReward(this.run, choice)
+  : applyChoice(this.run, choice, { freePurchases: this.mode === "dev" && DEV_FREE_PURCHASES });
     saveRun(this.run);
     this.startLevel();
   }
@@ -649,7 +672,7 @@ export class Game {
       finalFish,
       maxFish,
       onHome: () => this.showHome(),
-      onNewCampaign: () => this.newCampaign(),
+      onNewCampaign: () => this.newCampaign(this.mode),
     });
   }
 
@@ -687,14 +710,18 @@ export class Game {
       const owned = this.run?.ownedArtifacts.includes(artifact.id) ?? false;
       artifactCard.className = owned ? "artifact-card owned" : "artifact-card";
       artifactCard.tabIndex = 0;
+    if (this.mode === "dev") {
       artifactCard.title = owned ? "Click to remove debug artifact" : "Click to add debug artifact";
       artifactCard.addEventListener("click", () => this.toggleOwnedArtifact(artifact.id));
       artifactCard.addEventListener("keydown", (event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          this.toggleOwnedArtifact(artifact.id);
-        }
-      });
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      this.toggleOwnedArtifact(artifact.id);
+    }
+    });
+} else {
+  artifactCard.title = owned ? "Owned artifact" : "Locked artifact";
+}
 
       const icon = document.createElement("div");
       icon.className = "artifact-icon";
@@ -710,7 +737,7 @@ export class Game {
       rarity.textContent = artifact.rarity;
       const status = document.createElement("span");
       status.className = "artifact-status";
-      status.textContent = owned ? "Owned" : "Available";
+      status.textContent = owned ? "Owned" : this.mode === "dev" ? "Available" : "Locked";
       const children: HTMLElement[] = [icon, name, effect, rarity, status];
 
       if (artifact.maxLevel && artifact.maxLevel > 1) {
