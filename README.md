@@ -98,6 +98,7 @@ Use the itch build when uploading SKOOL-A as an HTML5 browser game:
 ```bash
 npm run build:itch
 npm run pack:itch
+npm run verify:itch
 ```
 
 The upload ZIP is created at:
@@ -107,6 +108,8 @@ releases/skool-a-fish-game-itch.zip
 ```
 
 See `docs/ITCH_RELEASE.md` for itch.io upload settings and why this build uses relative asset paths.
+
+The browser build now supports responsive canvas sizing, tappable menus, a touch pause button, and tap/drag school guidance for phones and tablets. Landscape fullscreen is recommended for the best mobile play area.
 
 ## Finished-for-now Scope
 

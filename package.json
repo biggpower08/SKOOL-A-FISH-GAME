@@ -8,6 +8,7 @@
     "build": "tsc --noEmit && vite build",
     "build:itch": "tsc --noEmit && vite build --mode itch --base ./",
     "pack:itch": "npm run build:itch && node scripts/package-itch.mjs",
+    "verify:itch": "node scripts/verify-itch.mjs",
     "preview:itch": "npm run build:itch && vite preview --host 127.0.0.1",
     "preview": "vite preview",
     "test": "vitest run",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Fish, RunState } from "../game/types";
 import hudSource from "./hud.ts?raw";
-import { schoolCounterText } from "./hud";
+import { hudWidth, schoolCounterText } from "./hud";
 import { createNewRun } from "../systems/upgrades";
 
 const makeFish = (id: string, caught = false): Fish => ({
@@ -33,7 +33,7 @@ describe("HUD school counter", () => {
 
   it("keeps fish health bars clear of longer sidebar names", () => {
     expect(hudSource).toContain("const FISH_ROW_HEIGHT = 34");
-    expect(hudSource).toContain("drawBar(ctx, x + 48, rowY + 17");
+    expect(hudSource).toContain("drawBar(ctx, textX, rowY + 17");
   });
 
   it("removes recent activity text and gives sidebar sprites room", () => {
@@ -41,8 +41,13 @@ describe("HUD school counter", () => {
     expect(hudSource).toContain("const schoolY = 88");
     expect(hudSource).toContain("const SHARK_ROW_HEIGHT = 34");
     expect(hudSource).toContain("maxWidth = kind === \"fast\" ? 44 : 40");
-    expect(hudSource).toContain("uiIcon(uiIconAssets.fishCounter, 170, 129), x + 23, 25, 32, 24");
-    expect(hudSource).toContain("uiIcon(uiIconAssets.shell, 141, 113), x + 23, 50, 30, 24");
+    expect(hudSource).toContain("uiIcon(uiIconAssets.fishCounter, 170, 129), iconX, 25");
+    expect(hudSource).toContain("uiIcon(uiIconAssets.shell, 141, 113), iconX, 50");
+  });
+
+  it("uses a compact sidebar on phone-width canvases", () => {
+    expect(hudWidth(390)).toBe(104);
+    expect(hudWidth(960)).toBe(164);
   });
 
   it("keeps only shark starvation status in the sidebar", () => {

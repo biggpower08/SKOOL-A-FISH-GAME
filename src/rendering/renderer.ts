@@ -359,10 +359,11 @@ export const drawCombat = (
   time = 0,
   kelpGoal?: KelpGoal | null,
 ): void => {
+  const playWidth = width - hudWidth(width);
   drawBackground(ctx, width, height);
-  drawWaterShade(ctx, width - hudWidth(), height, time);
-  drawWaveBands(ctx, width - hudWidth(), height, time);
-  drawWaveGlowFields(ctx, width - hudWidth(), height, time);
+  drawWaterShade(ctx, playWidth, height, time);
+  drawWaveBands(ctx, playWidth, height, time);
+  drawWaveGlowFields(ctx, playWidth, height, time);
   waterDisturbance?.draw(ctx);
   drawKelpGoal(ctx, kelpGoal, time);
 
@@ -406,11 +407,11 @@ export const drawCombat = (
 
 export const drawIdleScene = (ctx: CanvasRenderingContext2D, width: number, height: number, time: number): void => {
   drawBackground(ctx, width, height);
-  drawWaterShade(ctx, width - hudWidth(), height, time);
-  drawWaveBands(ctx, width - hudWidth(), height, time);
-  drawWaveGlowFields(ctx, width - hudWidth(), height, time);
+  const usableWidth = width - hudWidth(width);
+  drawWaterShade(ctx, usableWidth, height, time);
+  drawWaveBands(ctx, usableWidth, height, time);
+  drawWaveGlowFields(ctx, usableWidth, height, time);
 
-  const usableWidth = width - hudWidth();
   const previewFish = [
     "tilapia",
     "salmon",

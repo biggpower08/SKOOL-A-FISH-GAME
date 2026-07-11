@@ -6,6 +6,7 @@ import { uiIconAssets } from "../rendering/assetPaths";
 import type { SpriteManifestEntry } from "../game/types";
 
 const PANEL_WIDTH = 164;
+const COMPACT_PANEL_WIDTH = 104;
 
 type HudSpriteCacheEntry = {
   image: HTMLImageElement;
@@ -34,7 +35,7 @@ const drawBar = (
   ctx.strokeRect(x, y, width, height);
 };
 
-export const hudWidth = (): number => PANEL_WIDTH;
+export const hudWidth = (viewportWidth = 960): number => (viewportWidth < 520 ? COMPACT_PANEL_WIDTH : PANEL_WIDTH);
 
 const getHudSprite = (sprite: HudImageSource): HudSpriteCacheEntry | undefined => {
   if (typeof Image === "undefined") {
@@ -187,10 +188,15 @@ export const drawHud = (
   sharks: Shark[],
   fish: Fish[],
 ): void => {
-  const x = width - PANEL_WIDTH;
+  const panelWidth = hudWidth(width);
+  const compact = panelWidth < PANEL_WIDTH;
+  const x = width - panelWidth;
+  const iconX = x + (compact ? 16 : 23);
+  const textX = x + (compact ? 32 : 45);
+  const barWidth = compact ? 56 : 86;
 
   ctx.fillStyle = "#05070a";
-  ctx.fillRect(x, 0, PANEL_WIDTH, height);
+  ctx.fillRect(x, 0, panelWidth, height);
   ctx.strokeStyle = "#1e252d";
   ctx.beginPath();
   ctx.moveTo(x, 0);
@@ -198,37 +204,37 @@ export const drawHud = (
   ctx.stroke();
 
   ctx.fillStyle = "#f8fbff";
-  ctx.font = "12px system-ui, sans-serif";
+  ctx.font = `${compact ? 10 : 12}px system-ui, sans-serif`;
   ctx.fillText(`L${config.level}`, x - 42, 26);
-  if (!drawHudThumbnail(ctx, uiIcon(uiIconAssets.fishCounter, 170, 129), x + 23, 25, 32, 24)) {
-    fallbackFishMark(ctx, x + 22, 24, "#d8e1ea");
+  if (!drawHudThumbnail(ctx, uiIcon(uiIconAssets.fishCounter, 170, 129), iconX, 25, compact ? 24 : 32, compact ? 18 : 24)) {
+    fallbackFishMark(ctx, iconX, 24, "#d8e1ea");
   }
-  ctx.fillText(schoolCounterText(fish, run), x + 45, 29);
-  drawHudThumbnail(ctx, uiIcon(uiIconAssets.shell, 141, 113), x + 23, 50, 30, 24);
-  ctx.fillText(String(run.currency), x + 45, 54);
+  ctx.fillText(schoolCounterText(fish, run), textX, 29);
+  drawHudThumbnail(ctx, uiIcon(uiIconAssets.shell, 141, 113), iconX, 50, compact ? 22 : 30, compact ? 18 : 24);
+  ctx.fillText(String(run.currency), textX, 54);
 
   const schoolY = 88;
 
-  ctx.font = "12px system-ui, sans-serif";
+  ctx.font = `${compact ? 9 : 12}px system-ui, sans-serif`;
 
   summarizeFish(fish).forEach((summary, index) => {
     const definition = fishTypes[summary.typeId];
     const rowY = schoolY + index * FISH_ROW_HEIGHT;
-    if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), x + 24, rowY + 8, 36, 24)) {
-      fallbackFishMark(ctx, x + 24, rowY + 8, definition.color);
+    if (!drawHudThumbnail(ctx, getFishSprite(summary.typeId), iconX, rowY + 8, compact ? 26 : 36, compact ? 18 : 24)) {
+      fallbackFishMark(ctx, iconX, rowY + 8, definition.color);
     }
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`${definition.label} ${summary.alive.length}`, x + 48, rowY + 7);
-    drawBar(ctx, x + 48, rowY + 17, 86, 5, groupHealthRatio(summary.alive), definition.color);
+    ctx.fillText(`${compact ? definition.label.slice(0, 5) : definition.label} ${summary.alive.length}`, textX, rowY + 7);
+    drawBar(ctx, textX, rowY + 17, barWidth, 5, groupHealthRatio(summary.alive), definition.color);
   });
 
   const enemyY = schoolY + 18 + summarizeFish(fish).length * FISH_ROW_HEIGHT;
 
   summarizeSharks(sharks).forEach((summary, index) => {
     const rowY = enemyY + index * SHARK_ROW_HEIGHT;
-    sharkMark(ctx, summary.kind, x + 24, rowY + 7);
+    sharkMark(ctx, summary.kind, iconX, rowY + 7);
     ctx.fillStyle = "#d8e1ea";
-    ctx.fillText(`${sharkLabels[summary.kind]} ${summary.count}`, x + 48, rowY + 5);
-    drawBar(ctx, x + 48, rowY + 16, 86, 6, summary.totalHunger / summary.maxHunger, "#5f7186");
+    ctx.fillText(`${compact ? sharkLabels[summary.kind].slice(0, 5) : sharkLabels[summary.kind]} ${summary.count}`, textX, rowY + 5);
+    drawBar(ctx, textX, rowY + 16, barWidth, 6, summary.totalHunger / summary.maxHunger, "#5f7186");
   });
 };

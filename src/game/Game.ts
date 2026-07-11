@@ -26,15 +26,15 @@ import {
 } from "../systems/upgrades";
 import { clamp } from "../systems/vector";
 import { clearOverlay, renderChoice, renderGameOver, renderHome, renderPause, renderSaves, renderSettings } from "../ui/screens";
+import { hudWidth } from "../ui/hud";
 import type { Bounds, Fish, FishTypeId, GameMode, GameScreen, LevelConfig, RewardChoiceId, RunState, Shark } from "./types";
-
-const HUD_WIDTH = 164;
 
 export class Game {
   private readonly canvas: HTMLCanvasElement;
   private readonly ctx: CanvasRenderingContext2D;
   private readonly overlay: HTMLDivElement;
   private readonly artifactButton: HTMLButtonElement;
+  private readonly pauseButton: HTMLButtonElement;
   private readonly artifactPanel: HTMLDivElement;
   private readonly devLevelScroller: HTMLDivElement;
   private screen: GameScreen = "home";
@@ -81,15 +81,27 @@ export class Game {
     artifactAccessIcon.alt = "Artifacts";
     this.artifactButton.replaceChildren(artifactAccessIcon);
     this.artifactButton.addEventListener("click", () => this.toggleArtifactPanel());
+    this.pauseButton = document.createElement("button");
+    this.pauseButton.type = "button";
+    this.pauseButton.className = "pause-edge-button hidden";
+    this.pauseButton.title = "Pause";
+    this.pauseButton.textContent = "II";
+    this.pauseButton.addEventListener("click", () => {
+      if (this.screen === "combat") {
+        this.showPause();
+      }
+    });
     this.artifactPanel = document.createElement("div");
     this.artifactPanel.className = "artifact-panel hidden";
     this.devLevelScroller = document.createElement("div");
     this.devLevelScroller.className = "dev-level-scroller";
     this.devLevelScroller.addEventListener("wheel", this.handleLevelScrollerWheel, { passive: false });
-    container.replaceChildren(this.canvas, this.devLevelScroller, this.artifactButton, this.artifactPanel, this.overlay);
+    container.replaceChildren(this.canvas, this.devLevelScroller, this.artifactButton, this.pauseButton, this.artifactPanel, this.overlay);
 
     window.addEventListener("resize", this.resize);
     window.addEventListener("keydown", this.handleKeyDown);
+    this.canvas.addEventListener("pointerdown", this.handleCanvasPointer);
+    this.canvas.addEventListener("pointermove", this.handleCanvasPointer);
     this.resize();
   }
 
@@ -100,14 +112,40 @@ export class Game {
 
   private readonly resize = (): void => {
     const dpr = window.devicePixelRatio || 1;
-    this.width = Math.max(720, window.innerWidth);
-    this.height = Math.max(420, window.innerHeight);
+    this.width = Math.max(320, window.innerWidth);
+    this.height = Math.max(320, window.innerHeight);
     this.canvas.width = Math.floor(this.width * dpr);
     this.canvas.height = Math.floor(this.height * dpr);
     this.canvas.style.width = `${this.width}px`;
     this.canvas.style.height = `${this.height}px`;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    this.waterDisturbance.resize(this.width - HUD_WIDTH, this.height);
+    this.waterDisturbance.resize(this.width - hudWidth(this.width), this.height);
+  };
+
+  private readonly handleCanvasPointer = (event: PointerEvent): void => {
+    if (this.screen !== "combat" || !this.run) {
+      return;
+    }
+
+    if (event.type === "pointermove" && event.pointerType !== "touch" && event.buttons !== 1) {
+      return;
+    }
+
+    const rect = this.canvas.getBoundingClientRect();
+    const bounds = this.combatBounds();
+    const x = ((event.clientX - rect.left) / Math.max(1, rect.width)) * this.width;
+    const y = ((event.clientY - rect.top) / Math.max(1, rect.height)) * this.height;
+
+    if (x > bounds.width) {
+      return;
+    }
+
+    event.preventDefault();
+    this.schoolDestination = {
+      x: clamp(x, 24, bounds.width - 24),
+      y: clamp(y, 24, bounds.height - 24),
+    };
+    this.schoolDestinationUntil = this.elapsed + 4.5;
   };
 
   private readonly handleKeyDown = (event: KeyboardEvent): void => {
@@ -171,7 +209,7 @@ export class Game {
 
   private combatBounds(): Bounds {
     return {
-      width: Math.max(360, this.width - HUD_WIDTH),
+      width: Math.max(220, this.width - hudWidth(this.width)),
       height: this.height,
     };
   }
@@ -210,6 +248,7 @@ export class Game {
   private showPause(): void {
     this.screen = "pause";
     this.hideArtifactPanel();
+    this.pauseButton.classList.add("hidden");
     renderPause(this.overlay, {
       onContinue: () => this.resumeCombat(),
       onHome: () => this.returnHome(),
@@ -226,6 +265,7 @@ export class Game {
     this.screen = "combat";
     clearOverlay(this.overlay);
     this.showArtifactAccess();
+    this.pauseButton.classList.remove("hidden");
   }
 
   private showSaves(): void {
@@ -696,6 +736,7 @@ export class Game {
 
   private showArtifactAccess(): void {
     this.artifactButton.classList.remove("hidden");
+    this.pauseButton.classList.remove("hidden");
   }
 
   private toggleArtifactPanel(): void {
@@ -796,6 +837,7 @@ export class Game {
 
   private hideArtifactPanel(): void {
     this.artifactButton.classList.add("hidden");
+    this.pauseButton.classList.add("hidden");
     this.closeArtifactPanel();
   }
 
@@ -850,5 +892,7 @@ export class Game {
     window.cancelAnimationFrame(this.animationId);
     window.removeEventListener("resize", this.resize);
     window.removeEventListener("keydown", this.handleKeyDown);
+    this.canvas.removeEventListener("pointerdown", this.handleCanvasPointer);
+    this.canvas.removeEventListener("pointermove", this.handleCanvasPointer);
   }
 }
