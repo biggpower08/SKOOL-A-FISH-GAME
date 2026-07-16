@@ -67,6 +67,12 @@ This project uses Vite, TypeScript, and Canvas.
 
 The game is designed to stay lightweight and GitHub Pages-friendly. Avoid adding large frameworks or major systems unless they clearly improve the core game.
 
+## License
+
+The SKOOL-A Fish Game source code is licensed under the PolyForm Noncommercial License 1.0.0. Commercial use is not permitted without written permission from Caleb Power.
+
+Sprites, images, music, logos, names, and other game assets are not automatically licensed for reuse unless explicitly stated.
+
 Codex MCP usage for this repo is documented in:
 
 ```text
